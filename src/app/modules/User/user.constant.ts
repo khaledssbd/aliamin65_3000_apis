@@ -1,7 +1,8 @@
 import config from '../../config';
 
 export const ROLE = {
-  USER: 'USER',
+  CUSTOMER: 'CUSTOMER',
+  DRIVER: 'DRIVER',
   ADMIN: 'ADMIN',
   SUPER_ADMIN: 'SUPER_ADMIN',
 } as const;
@@ -23,6 +24,6 @@ export type TDeactiveAccountPayload = {
 
 export type TUpdateUserPayload = {
   name: string;
-  address: string;
+  // address: string;
   phone: string;
 };

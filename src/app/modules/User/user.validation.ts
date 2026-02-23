@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ROLE } from './user.constant';
 
 // Reusable validators
 export const zodEnumFromObject = <T extends Record<string, string>>(obj: T) =>
@@ -10,9 +11,9 @@ const createUserSchema = z.object({
     name: z.string({
       error: 'Name is required',
     }),
-    address: z.string({
-      error: 'Address is required',
-    }),
+    // address: z.string({
+    //   error: 'Address is required',
+    // }),
     phone: z.string({
       error: 'Phone is required',
     }),
@@ -33,6 +34,8 @@ const createUserSchema = z.object({
       })
       .min(6, { message: 'Password must be at least 6 characters long' })
       .max(20, { message: 'Password cannot exceed 20 characters' }),
+
+    role: zodEnumFromObject(ROLE),
   }),
 });
 
@@ -213,7 +216,7 @@ const updateUserDataSchema = z.object({
   body: z.object({
     name: z.string({ error: 'Name is required!' }),
 
-    address: z.string({ error: 'Address is required!' }),
+    // address: z.string({ error: 'Address is required!' }),
 
     phone: z.string({
       error: 'Phone is required',

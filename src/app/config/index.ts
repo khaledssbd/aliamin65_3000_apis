@@ -41,7 +41,7 @@ export default {
 
   superAdmin: {
     name: process.env.SUPER_ADMIN_NAME,
-    address: process.env.SUPER_ADMIN_ADDRESS,
+    // address: process.env.SUPER_ADMIN_ADDRESS,
     phone: process.env.SUPER_ADMIN_PHONE,
     email: process.env.SUPER_ADMIN_EMAIL,
     password: process.env.SUPER_ADMIN_PASSWORD,

@@ -6,7 +6,7 @@ export interface IUser extends Document {
   _id: Types.ObjectId;
 
   name: string;
-  address: string;
+  // address: string;
   phone: string;
   image: string;
 

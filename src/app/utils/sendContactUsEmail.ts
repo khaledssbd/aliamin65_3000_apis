@@ -100,8 +100,8 @@ const sendContactUsEmail = async (payload: IContactMessage) => {
 
     // Email options: from, to, subject, and HTML body
     const mailOptions = {
-      from: config.nodemailer.email, // Sender's email address
-      to: config.contact_us_email, // Admin's email address
+      from: config.nodemailer.email, // Sender's email
+      to: config.contact_us_email, // Admin's email
       subject: `New Contact Us Message from ${payload.name}`,
       html: htmlTemplate,
     };

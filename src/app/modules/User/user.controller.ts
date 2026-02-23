@@ -197,27 +197,27 @@ const adminGetAllUsers = asyncHandler(async (req, res) => {
 });
 
 // 17. adminGetAllMetaData
-const adminGetAllMetaData = asyncHandler(async (req, res) => {
-  const result = await UserService.adminGetAllMetaDataFromDB();
+// const adminGetAllMetaData = asyncHandler(async (req, res) => {
+//   const result = await UserService.adminGetAllMetaDataFromDB();
 
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    message: 'Dashboard data retrieved successfully!',
-    data: result,
-  });
-});
+//   sendResponse(res, {
+//     statusCode: httpStatus.OK,
+//     message: 'Dashboard data retrieved successfully!',
+//     data: result,
+//   });
+// });
 
 // 18. getAllUser
-const getAllUser = asyncHandler(async (req, res) => {
-  const result = await UserService.getAllUserFromDB(req.query);
+// const getAllUser = asyncHandler(async (req, res) => {
+//   const result = await UserService.getAllUserFromDB(req.query);
 
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    message: 'Users retrieved successfully!',
-    data: result.data,
-    meta: result.meta,
-  });
-});
+//   sendResponse(res, {
+//     statusCode: httpStatus.OK,
+//     message: 'Users retrieved successfully!',
+//     data: result.data,
+//     meta: result.meta,
+//   });
+// });
 
 export const UserController = {
   createUser,
@@ -236,6 +236,6 @@ export const UserController = {
   getNewAccessToken,
   updateUserData,
   adminGetAllUsers,
-  adminGetAllMetaData,
-  getAllUser,
+  // adminGetAllMetaData,
+  // getAllUser,
 };
