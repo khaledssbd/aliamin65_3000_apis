@@ -120,7 +120,7 @@ const generateEmailHTML = (
       margin-bottom: 25px;
     }
     .header h2 {
-      color: ${config.emailColor || '#ff7e5f'};
+      color: ${config.emailColor || '#01a1ff'};
       font-size: 28px;
       margin-bottom: 10px;
       font-weight: bold;
@@ -128,10 +128,10 @@ const generateEmailHTML = (
     .otp {
       font-size: 26px;
       font-weight: bold;
-      color: #ff7e5f;
+      color: #01a1ff;
       padding: 15px;
       background-color: #FFF8E1; /* Light background */
-      border-left: 6px solid #ff7e5f; /* Purple left border */
+      border-left: 6px solid #01a1ff; /* Purple left border */
       text-align: center;
       margin: 30px 0;
       border-radius: 8px;
