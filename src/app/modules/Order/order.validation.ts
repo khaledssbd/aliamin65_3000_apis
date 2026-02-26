@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { PICKUP_TYPE_VALUES, SERVICE_TYPE_VALUES } from './order.constant';
+import {
+  PICKUP_TYPE_VALUES,
+  SERVICE_TYPE_VALUES,
+  ORDER_STATUS_VALUES,
+  ORDER_STAGE_VALUES,
+} from './order.constant';
 
 export const OrderValidation = {
   create: z.object({
@@ -22,7 +27,7 @@ export const OrderValidation = {
   status: z.object({
     params: z.object({ id: z.string() }),
     body: z.object({
-      status: z.string(),
+      status: z.enum(ORDER_STATUS_VALUES as [string, ...string[]]),
     }),
   }),
   bagCount: z.object({
@@ -40,7 +45,7 @@ export const OrderValidation = {
   stage: z.object({
     params: z.object({ id: z.string() }),
     body: z.object({
-      stage: z.enum(['WASHING', 'DRYING', 'FOLDING', 'DELIVERY']),
+      stage: z.enum(ORDER_STAGE_VALUES as [string, ...string[]]),
     }),
   }),
 };

@@ -45,7 +45,8 @@ const listMine = async (customerId: Types.ObjectId) => {
 };
 
 const getById = async (id: string, userId?: Types.ObjectId) => {
-  const filter: any = { _id: id };
+  const filter: Record<string, unknown> = { _id: id };
+
   if (userId) filter.$or = [{ customer: userId }, { driver: userId }];
   return OrderModel.findOne(filter)
     .populate('driver')
@@ -68,7 +69,7 @@ const assignDriver = async (id: string, driverId: string) => {
 };
 
 const updateStatus = async (id: string, status: string) => {
-  const patch: any = { status };
+  const patch: Record<string, unknown> = { status };
   const now = new Date();
   if (status === ORDER_STATUS.PICKED_UP) patch['timeline.pickedUpAt'] = now;
   if (status === ORDER_STATUS.WASHING_DRYING)
