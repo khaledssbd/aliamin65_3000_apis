@@ -70,7 +70,7 @@ const jobsAvailable = asyncHandler(async (req, res) => {
 const acceptJob = asyncHandler(async (req, res) => {
   const result = await DriverService.acceptJob(
     req.user._id,
-    req.params.orderId as string,
+    String(req.params.orderId),
   );
   getIO()?.emit('driver:job:locked', { orderId: req.params.orderId });
   sendResponse(res, {
@@ -83,7 +83,7 @@ const acceptJob = asyncHandler(async (req, res) => {
 const declineJob = asyncHandler(async (req, res) => {
   const result = await DriverService.declineJob(
     req.user._id,
-    req.params.orderId as string,
+    String(req.params.orderId),
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -95,7 +95,7 @@ const declineJob = asyncHandler(async (req, res) => {
 const cancelJob = asyncHandler(async (req, res) => {
   const result = await DriverService.cancelJob(
     req.user._id,
-    req.params.orderId as string,
+    String(req.params.orderId),
     req.body?.reason,
   );
   sendResponse(res, {

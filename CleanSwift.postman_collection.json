@@ -11,6 +11,7 @@
     { "key": "token_driver", "value": "" },
     { "key": "token_admin", "value": "" },
     { "key": "token_superadmin", "value": "" },
+    { "key": "refreshToken", "value": "" },
     { "key": "addressId", "value": "66f000000000000000000001" },
     { "key": "addressId2", "value": "66f000000000000000000002" },
     { "key": "orderId", "value": "66f0000000000000000000a1" },
@@ -22,6 +23,59 @@
     { "key": "cardId", "value": "66f0000000000000000000c1" },
     { "key": "invoiceNumber", "value": "INV-66f0000000000000000000a1" },
     { "key": "backgroundId", "value": "66f0000000000000000000b1" }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "try {",
+          "    const response = pm.response.json();",
+          "    const accessToken = response.data?.accessToken;",
+          "    const refreshToken = response.data?.refreshToken;",
+          "",
+          "    if (accessToken) {",
+          "        const accessTokenParts = accessToken.split('.');",
+          "        if (accessTokenParts.length === 3) {",
+          "            const payload = accessTokenParts[1];",
+          "            const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');",
+          "            const decodedPayload = JSON.parse(atob(base64));",
+          "            const role = decodedPayload.role;",
+          "",
+          "            switch (role) {",
+          "                case \"SUPER_ADMIN\":",
+          "                    pm.collectionVariables.set(\"token_superadmin\", accessToken);",
+          "                    console.log(\"✅ Super_Admin access token saved.\");",
+          "                    break;",
+          "                case \"ADMIN\":",
+          "                    pm.collectionVariables.set(\"token_admin\", accessToken);",
+          "                    console.log(\"✅ Admin access token saved.\");",
+          "                    break;",
+          "                case \"CUSTOMER\":",
+          "                    pm.collectionVariables.set(\"token_customer\", accessToken);",
+          "                    console.log(\"✅ Customer access token saved.\");",
+          "                    break;",
+          "                case \"DRIVER\":",
+          "                    pm.collectionVariables.set(\"token_driver\", accessToken);",
+          "                    console.log(\"✅ Driver access token saved.\");",
+          "                    break;",
+          "                default:",
+          "                    console.warn(\"⚠️ Unknown role:\", role);",
+          "            }",
+          "        }",
+          "    }",
+          "",
+          "    if (refreshToken) {",
+          "        pm.collectionVariables.set(\"refreshToken\", refreshToken);",
+          "        console.log(\"✅ Refresh token saved.\");",
+          "    }",
+          "} catch (e) {",
+          "    // Silently fail for non-JSON or unrelated responses",
+          "}"
+        ]
+      }
+    }
   ],
   "item": [
     {
