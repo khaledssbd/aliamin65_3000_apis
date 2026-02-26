@@ -88,7 +88,7 @@ import app from './app';
 import config from './app/config';
 import seedSuperAdmin from './app/seed';
 import colors from 'colors';
-import { createServer, Server as HttpServer } from 'http';
+import { createServer } from 'http';
 import { initSocket } from './app/socket';
 
 let server: Server | null = null;
@@ -100,7 +100,7 @@ async function connectToDatabase() {
     console.log(colors.green('✅ Database connected successfully!  🛢').bold);
   } catch (err) {
     console.error(colors.red('Failed to connect to database:'), err);
-    process.exit(1); // Database কানেক্টেড না থাকলে অ্যাপ চালানোর দরকার নেই, তাই অ্যাপ বন্ধ করে দেওয়া হচ্ছে
+    process.exit(1);
   }
 }
 
@@ -110,7 +110,7 @@ function gracefulShutdown(signal: string) {
   if (server) {
     server.close(() => {
       console.log(colors.red('Server closed gracefully! ✅'));
-      process.exit(0); // সবকিছু ঠিকঠাক বন্ধ হলে অ্যাপ সম্পূর্ণভাবে বন্ধ করে দেওয়া হচ্ছে
+      process.exit(0);
     });
   } else {
     process.exit(0);
@@ -124,9 +124,9 @@ async function main() {
     // Seed function
     await seedSuperAdmin();
 
-    // Initialize in-app event bus (mock socket)
-    initSocket();
-    server = createServer(app).listen(config.port, () => {
+    const httpServer = createServer(app);
+    initSocket(httpServer);
+    server = httpServer.listen(config.port, () => {
       console.log(
         colors.green(
           `🚀 ${config.preffered_website_name} server is running on port ${config.port}! ✨  ⚡`,
@@ -138,22 +138,19 @@ async function main() {
     process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-    // Handling uncaught exceptions (যদি কোডে কোনো অপ্রত্যাশিত ভুল হয়)
+    // Handling uncaught exceptions
     process.on('uncaughtException', (error) => {
       console.error(colors.red('😈 Uncaught Exception:'), error);
-      // সার্ভার চলছে, তাই অ্যাপ বন্ধ করে দেওয়া হচ্ছে
       gracefulShutdown('uncaughtException');
     });
 
-    // Handling unhandled promise rejections (যদি কোনো প্রমিস রিজেক্ট হয় কিন্তু ক্যাচ করা না হয়)
+    // Handling unhandled promise rejections
     process.on('unhandledRejection', (error) => {
       console.error(colors.red('😈 Unhandled Rejection:'), error);
-      // সার্ভার চলছে, তাই অ্যাপ বন্ধ করে দেওয়া হচ্ছে
       gracefulShutdown('unhandledRejection');
     });
   } catch (error) {
     console.error(colors.red('😈 Error during bootstrap:'), error);
-    // যদি সার্ভার চালু না হয়, তাহলে অ্যাপ সাথে সাথে বন্ধ করে দেওয়া হবে
     process.exit(1);
   }
 }
