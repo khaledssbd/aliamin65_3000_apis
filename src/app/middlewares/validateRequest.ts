@@ -22,7 +22,7 @@ export const validateRequest = (schema: ZodObject<any, any>) => {
       // req.params = (parsedData.params as any) || req.params;
 
       next();
-    }
+    },
   );
 };
 
@@ -48,9 +48,9 @@ export const validateRequestFromFormData = (schema: ZodObject<any, any>) => {
       } else {
         throw new AppError(
           httpStatus.BAD_REQUEST,
-          "Hey bro use these values in object format in form-data with name 'data' and type 'text'!"
+          "Hey bro use these values in object format in form-data with name 'data' and type 'text'!",
         );
       }
-    }
+    },
   );
 };

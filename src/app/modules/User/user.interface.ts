@@ -29,7 +29,7 @@ export interface IUser extends Document {
   // Instance methods
   isPasswordMatched(plainTextPassword: string): Promise<boolean>;
   isJWTIssuedBeforePasswordChanged(
-    jwtIssuedTimestamp: number | undefined
+    jwtIssuedTimestamp: number | undefined,
   ): boolean;
 }
 

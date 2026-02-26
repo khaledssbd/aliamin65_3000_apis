@@ -3,7 +3,7 @@ import { TErrorSources, TGenericErrorResponse } from '../interface/error';
 
 // if provided _id is invalid, mongoose will throw a CastError
 const handleCastError = (
-  err: mongoose.Error.CastError
+  err: mongoose.Error.CastError,
 ): TGenericErrorResponse => {
   const statusCode = 400;
 

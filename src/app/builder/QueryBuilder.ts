@@ -16,7 +16,7 @@ class QueryBuilder<T> {
         (field) =>
           ({
             [field]: { $regex: searchTerm, $options: 'i' },
-          } as FilterQuery<T>)
+          }) as FilterQuery<T>,
       );
 
       this.modelQuery = this?.modelQuery?.find({ $or: searchConditions });
@@ -104,6 +104,5 @@ class QueryBuilder<T> {
 }
 
 export default QueryBuilder;
-
 
 // ?searchTerm=javascript&minPrice=100&maxPrice=1000&sort=price,-rating&page=2&limit=10&fields=title,author,price,tag,status&category=programming&language=english

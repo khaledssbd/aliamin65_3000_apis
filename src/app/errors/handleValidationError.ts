@@ -3,7 +3,7 @@ import { TErrorSources, TGenericErrorResponse } from '../interface/error';
 
 // mongoose schema validation error handler
 const handleValidationError = (
-  err: mongoose.Error.ValidationError
+  err: mongoose.Error.ValidationError,
 ): TGenericErrorResponse => {
   const statusCode = 400;
 
@@ -13,7 +13,7 @@ const handleValidationError = (
         path: val?.path,
         message: val?.message,
       };
-    }
+    },
   );
 
   return {

@@ -111,7 +111,7 @@ const sendContactUsEmail = async (payload: IContactMessage) => {
   } catch {
     throw new AppError(
       httpStatus.INTERNAL_SERVER_ERROR,
-      'Failed to send contact us message'
+      'Failed to send contact us message',
     );
   }
 };

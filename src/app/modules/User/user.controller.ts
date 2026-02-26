@@ -136,7 +136,7 @@ const fetchProfile = asyncHandler(async (req, res) => {
 const deactivateUserAccount = asyncHandler(async (req, res) => {
   const result = await UserService.deactivateUserAccountFromDB(
     req.user,
-    req.body
+    req.body,
   );
 
   sendResponse(res, {

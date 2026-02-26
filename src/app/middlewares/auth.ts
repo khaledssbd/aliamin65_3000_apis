@@ -47,7 +47,7 @@ const auth = (...requiredRoles: TRole[]) => {
     if (requiredRoles.length && !requiredRoles.includes(user.role)) {
       throw new AppError(
         httpStatus.UNAUTHORIZED,
-        'You have no access to this route, Forbidden!'
+        'You have no access to this route, Forbidden!',
       );
     }
 

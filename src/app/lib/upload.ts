@@ -246,12 +246,12 @@ const getPublicIdFromUrl = (imageUrl: string): string => {
 /* -------------------------------------------------------- */
 
 export const sendImageToCloudinary = (
-  file: Express.Multer.File
+  file: Express.Multer.File,
 ): Promise<UploadApiResponse> => {
   const uniqueImageName = `${Math.random()
     .toString(36)
     .substring(2)}-${Date.now()}-${file.fieldname}-${removeExtension(
-    file.originalname
+    file.originalname,
   )}`;
 
   return new Promise((resolve, reject) => {
@@ -266,7 +266,7 @@ export const sendImageToCloudinary = (
         } else {
           resolve(result as UploadApiResponse);
         }
-      }
+      },
     );
 
     const readableStream = new Readable();
@@ -281,7 +281,7 @@ export const sendImageToCloudinary = (
 /* -------------------------------------------------------- */
 
 export const deleteImageFromCloudinary = async (
-  imageUrl: string
+  imageUrl: string,
 ): Promise<void> => {
   const publicId = getPublicIdFromUrl(imageUrl);
 

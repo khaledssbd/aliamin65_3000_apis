@@ -88,6 +88,8 @@ import app from './app';
 import config from './app/config';
 import seedSuperAdmin from './app/seed';
 import colors from 'colors';
+import { createServer, Server as HttpServer } from 'http';
+import { initSocket } from './app/socket';
 
 let server: Server | null = null;
 
@@ -122,11 +124,13 @@ async function main() {
     // Seed function
     await seedSuperAdmin();
 
-    server = app.listen(config.port, () => {
+    // Initialize in-app event bus (mock socket)
+    initSocket();
+    server = createServer(app).listen(config.port, () => {
       console.log(
         colors.green(
-          `🚀 ${config.preffered_website_name} server is running on port ${config.port}! ✨  ⚡`
-        )
+          `🚀 ${config.preffered_website_name} server is running on port ${config.port}! ✨  ⚡`,
+        ),
       );
     });
 

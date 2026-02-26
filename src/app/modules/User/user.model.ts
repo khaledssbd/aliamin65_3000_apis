@@ -61,7 +61,7 @@ const userSchema = new Schema<IUser, IUserModel>(
     role: {
       type: String,
       enum: Object.values(ROLE),
-      default: ROLE.USER,
+      default: ROLE.CUSTOMER,
     },
     isActive: {
       type: Boolean,
@@ -75,7 +75,7 @@ const userSchema = new Schema<IUser, IUserModel>(
       type: String,
     },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 // Custom hooks/methods
@@ -85,13 +85,13 @@ userSchema.pre('save', async function (next) {
   if (this.isNew || this.isModified('password')) {
     if (!this.password) {
       return next(
-        new AppError(httpStatus.BAD_REQUEST, 'Password is required!')
+        new AppError(httpStatus.BAD_REQUEST, 'Password is required!'),
       );
     }
 
     this.password = await bcrypt.hash(
       this.password,
-      Number(config.bcrypt_salt_rounds)
+      Number(config.bcrypt_salt_rounds),
     );
   }
   next();
@@ -160,21 +160,21 @@ userSchema.pre('aggregate', function (next) {
 
 // isUserExistsByEmailWithPassword
 userSchema.statics.isUserExistsByEmailWithPassword = async function (
-  email: string
+  email: string,
 ): Promise<IUser | null> {
   return await UserModel.findOne({ email }).select('+password');
 };
 
 // isPasswordMatched
 userSchema.methods.isPasswordMatched = async function (
-  plainTextPassword: string
+  plainTextPassword: string,
 ): Promise<boolean> {
   return await bcrypt.compare(plainTextPassword, this.password);
 };
 
 // isJWTIssuedBeforePasswordChanged
 userSchema.methods.isJWTIssuedBeforePasswordChanged = function (
-  jwtIssuedTimestamp: number
+  jwtIssuedTimestamp: number,
 ): boolean {
   const passwordChangedTime = new Date(this.passwordChangedAt).getTime() / 1000;
   return passwordChangedTime > jwtIssuedTimestamp;

@@ -20,7 +20,7 @@ class AppError extends Error {
     //   Error.captureStackTrace(this, this.constructor);
     // }
 
-    if (process.env.NODE_ENV === "development") {
+    if (process.env.NODE_ENV === 'development') {
       Error.captureStackTrace(this, this.constructor);
     }
   }

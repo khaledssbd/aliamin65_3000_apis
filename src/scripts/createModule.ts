@@ -40,20 +40,20 @@ const createModule = (moduleName: string): void => {
         content = `export const ${moduleName}Service = {\n  async getAll() {\n    // Example service logic\n    return [{ message: 'Service logic here' }];\n  },\n};\n`;
       } else if (file.endsWith('.interface.ts')) {
         content = `export interface I${capitalize(
-          moduleName
+          moduleName,
         )} {\n  id: string;\n  name: string;\n}\n`;
       } else if (file.endsWith('.validation.ts')) {
         content = `import { z } from 'zod';\n\nexport const ${moduleName}Validation = {\n  create: z.object({\n    name: z.string().min(1, 'Name is required'),\n  }),\n  update: z.object({\n    id: z.string().uuid('Invalid ID format'),\n    name: z.string().optional(),\n  }),\n};\n`;
       } else if (file.endsWith('.model.ts')) {
         // Template for the model.ts file
         content = `import { Schema, model, Document } from 'mongoose';\n\nexport interface I${capitalize(
-          moduleName
+          moduleName,
         )}Model extends Document {\n  name: string;\n  // add more fields here\n}\n\nconst ${moduleName}Schema = new Schema<I${capitalize(
-          moduleName
+          moduleName,
         )}Model>({\n  name: { type: String, required: true },\n  // add more fields here\n});\n\nconst ${moduleName}Model = model<I${capitalize(
-          moduleName
+          moduleName,
         )}Model>('${capitalize(
-          moduleName
+          moduleName,
         )}', ${moduleName}Schema);\n\nexport default ${moduleName}Model;\n`;
       }
 
@@ -66,7 +66,8 @@ const createModule = (moduleName: string): void => {
 };
 
 // Utility function to capitalize the module name
-const capitalize = (str: string): string => str.charAt(0).toUpperCase() + str.slice(1);
+const capitalize = (str: string): string =>
+  str.charAt(0).toUpperCase() + str.slice(1);
 
 // Get the module name from command-line arguments
 
