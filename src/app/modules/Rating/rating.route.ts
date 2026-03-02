@@ -12,6 +12,7 @@ router.post(
   validateRequest(RatingValidation.create),
   RatingController.create,
 );
+
 router.get('/driver/:driverId', RatingController.byDriver);
 
 export const RatingRoutes = router;

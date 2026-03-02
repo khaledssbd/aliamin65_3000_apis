@@ -10,16 +10,19 @@ router.get(
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
   NotificationController.listMine,
 );
+
 router.patch(
   '/:id/read',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
   NotificationController.markRead,
 );
+
 router.patch(
   '/read-all',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
   NotificationController.markAllRead,
 );
+
 router.delete(
   '/:id',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),

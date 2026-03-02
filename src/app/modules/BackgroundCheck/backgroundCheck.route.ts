@@ -10,11 +10,13 @@ router.post(
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
   BackgroundCheckController.start,
 );
+
 router.get(
   '/driver/:driverId',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN, ROLE.DRIVER),
   BackgroundCheckController.byDriver,
 );
+
 router.get(
   '/:id',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),

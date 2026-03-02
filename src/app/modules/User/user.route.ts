@@ -112,6 +112,7 @@ router
   );
 
 // 14. getNewAccessToken
+
 router.route('/access-token').get(
   // validateRequest(UserValidation.getNewAccessTokenSchema),
   UserController.getNewAccessToken,

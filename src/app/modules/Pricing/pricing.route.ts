@@ -7,12 +7,14 @@ import { PricingValidation } from './pricing.validation';
 const router = Router();
 
 router.get('/active', PricingController.getActive);
+
 router.post(
   '/',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
   validateRequest(PricingValidation.create),
   PricingController.create,
 );
+
 router.patch(
   '/:id/activate',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),

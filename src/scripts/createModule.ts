@@ -33,7 +33,8 @@ const createModule = (moduleName: string): void => {
 
       // Basic template for each file
       if (file.endsWith('.routes.ts')) {
-        content = `import { Router } from 'express';\nimport { ${moduleName}Controller } from './${moduleName}.controller';\n\nconst router = Router();\n\n// Define routes\nrouter.get('/', ${moduleName}Controller.getAll);\n\nexport default router;\n`;
+        content = `import { Router } from 'express';\nimport { ${moduleName}Controller } from './${moduleName}.controller';\n\nconst router = Router();\n\n// Define routes\n
+router.get('/', ${moduleName}Controller.getAll);\n\nexport default router;\n`;
       } else if (file.endsWith('.controller.ts')) {
         content = `import { Request, Response } from 'express';\nimport { ${moduleName}Service } from './${moduleName}.service';\n\nexport const ${moduleName}Controller = {\n  async getAll(req: Request, res: Response) {\n    const data = await ${moduleName}Service.getAll();\n    res.json(data);\n  },\n};\n`;
       } else if (file.endsWith('.service.ts')) {

@@ -10,11 +10,13 @@ router.get(
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
   InvoiceController.getByOrder,
 );
+
 router.get(
   '/:invoiceNumber',
   auth(ROLE.CUSTOMER, ROLE.DRIVER, ROLE.ADMIN, ROLE.SUPER_ADMIN),
   InvoiceController.getByNumber,
 );
+
 router.post(
   '/generate/:orderId',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),

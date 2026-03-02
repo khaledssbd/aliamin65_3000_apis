@@ -10,6 +10,7 @@ router.get(
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
   ChatController.listByOrder,
 );
+
 router.get(
   '/threads',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
