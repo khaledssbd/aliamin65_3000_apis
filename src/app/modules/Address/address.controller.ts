@@ -4,6 +4,7 @@ import { AddressService } from './address.service';
 
 const listMine = asyncHandler(async (req, res) => {
   const result = await AddressService.listMine(req.user._id);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Addresses retrieved',
@@ -13,6 +14,7 @@ const listMine = asyncHandler(async (req, res) => {
 
 const create = asyncHandler(async (req, res) => {
   const result = await AddressService.create(req.user._id, req.body);
+
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     message: 'Address created',
@@ -26,6 +28,7 @@ const update = asyncHandler(async (req, res) => {
     String(req.params.id),
     req.body,
   );
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Address updated',
@@ -38,6 +41,7 @@ const remove = asyncHandler(async (req, res) => {
     req.user._id,
     String(req.params.id),
   );
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Address deleted',
@@ -50,6 +54,7 @@ const setDefault = asyncHandler(async (req, res) => {
     req.user._id,
     String(req.params.id),
   );
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Default updated',

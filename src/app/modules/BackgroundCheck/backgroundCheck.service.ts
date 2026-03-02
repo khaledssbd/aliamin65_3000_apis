@@ -22,4 +22,8 @@ const getById = async (id: string) => {
   return BackgroundCheckModel.findById(id);
 };
 
-export const BackgroundCheckService = { start, byDriver, getById };
+export const BackgroundCheckService = {
+  start,
+  byDriver,
+  getById,
+};

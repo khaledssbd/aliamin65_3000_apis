@@ -10,6 +10,7 @@ const create = asyncHandler(async (req, res) => {
     description: req.body.description,
     attachments: req.body.attachments,
   });
+
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     message: 'Dispute created',
@@ -19,6 +20,7 @@ const create = asyncHandler(async (req, res) => {
 
 const byOrder = asyncHandler(async (req, res) => {
   const docs = await DisputeService.byOrder(String(req.params.orderId));
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Disputes',
@@ -31,6 +33,7 @@ const updateStatus = asyncHandler(async (req, res) => {
     String(req.params.id),
     req.body.status,
   );
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Status updated',
@@ -43,6 +46,7 @@ const setNotes = asyncHandler(async (req, res) => {
     String(req.params.id),
     req.body.adminNotes,
   );
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Notes updated',
@@ -50,4 +54,9 @@ const setNotes = asyncHandler(async (req, res) => {
   });
 });
 
-export const DisputeController = { create, byOrder, updateStatus, setNotes };
+export const DisputeController = {
+  create,
+  byOrder,
+  updateStatus,
+  setNotes,
+};

@@ -25,4 +25,10 @@ const toggle = async (id: string) => {
   return page;
 };
 
-export const PageService = { getBySlug, list, create, update, toggle };
+export const PageService = {
+  getBySlug,
+  list,
+  create,
+  update,
+  toggle,
+};

@@ -38,4 +38,9 @@ const setNotes = async (id: string, adminNotes: string) => {
   );
 };
 
-export const DisputeService = { create, byOrder, updateStatus, setNotes };
+export const DisputeService = {
+  create,
+  byOrder,
+  updateStatus,
+  setNotes,
+};

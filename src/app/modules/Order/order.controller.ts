@@ -6,6 +6,7 @@ import { getIO } from '../../socket';
 const create = asyncHandler(async (req, res) => {
   const result = await OrderService.create(req.user._id, req.body);
   getIO()?.emit('order:created', { orderId: result._id });
+
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     message: 'Order created',
@@ -15,6 +16,7 @@ const create = asyncHandler(async (req, res) => {
 
 const listMine = asyncHandler(async (req, res) => {
   const result = await OrderService.listMine(req.user._id);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Orders retrieved',
@@ -27,6 +29,7 @@ const getById = asyncHandler(async (req, res) => {
     String(req.params.id),
     req.user._id,
   );
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Order details',
@@ -43,6 +46,7 @@ const assignDriver = asyncHandler(async (req, res) => {
     orderId: result?._id,
     driverId: result?.driver,
   });
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Driver assigned',
@@ -59,6 +63,7 @@ const updateStatus = asyncHandler(async (req, res) => {
     orderId: result?._id,
     status: req.body.status,
   });
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Status updated',
@@ -77,6 +82,7 @@ const setPickupBagCount = asyncHandler(async (req, res) => {
     type: 'pickup',
     bagCount: req.body.bagCount,
   });
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Pickup bag count set',
@@ -95,6 +101,7 @@ const setDeliveryBagCount = asyncHandler(async (req, res) => {
     type: 'delivery',
     bagCount: req.body.bagCount,
   });
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Delivery bag count set',
@@ -111,6 +118,7 @@ const setReadyTime = asyncHandler(async (req, res) => {
     orderId: result?._id,
     isoTime: req.body.isoTime,
   });
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Ready time set',

@@ -29,4 +29,8 @@ const activate = async (id: string) => {
   return doc;
 };
 
-export const PricingService = { getActive, create, activate };
+export const PricingService = {
+  getActive,
+  create,
+  activate,
+};

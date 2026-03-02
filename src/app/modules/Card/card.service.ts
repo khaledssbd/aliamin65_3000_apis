@@ -46,4 +46,9 @@ const detach = async (userId: Types.ObjectId, id: string) => {
   return CardModel.findOneAndDelete({ _id: id, user: userId });
 };
 
-export const CardService = { listMine, attach, setDefault, detach };
+export const CardService = {
+  listMine,
+  attach,
+  setDefault,
+  detach,
+};

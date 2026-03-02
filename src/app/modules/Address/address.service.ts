@@ -57,4 +57,10 @@ const setDefault = async (userId: Types.ObjectId, id: string) => {
   return doc;
 };
 
-export const AddressService = { listMine, create, update, remove, setDefault };
+export const AddressService = {
+  listMine,
+  create,
+  update,
+  remove,
+  setDefault,
+};

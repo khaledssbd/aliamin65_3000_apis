@@ -10,6 +10,7 @@ const create = asyncHandler(async (req, res) => {
     rating: req.body.rating,
     feedback: req.body.feedback,
   });
+
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     message: 'Rating submitted',
@@ -21,6 +22,7 @@ const byDriver = asyncHandler(async (req, res) => {
   const result = await RatingService.getDriverRatings(
     String(req.params.driverId),
   );
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Ratings',
@@ -28,4 +30,7 @@ const byDriver = asyncHandler(async (req, res) => {
   });
 });
 
-export const RatingController = { create, byDriver };
+export const RatingController = {
+  create,
+  byDriver,
+};

@@ -4,6 +4,7 @@ import { ChatService } from './chat.service';
 
 const listByOrder = asyncHandler(async (req, res) => {
   const docs = await ChatService.listByOrder(String(req.params.orderId));
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Messages',
@@ -13,6 +14,7 @@ const listByOrder = asyncHandler(async (req, res) => {
 
 const threadsMine = asyncHandler(async (req, res) => {
   const docs = await ChatService.threadsMine(req.user._id);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Threads',
@@ -20,4 +22,7 @@ const threadsMine = asyncHandler(async (req, res) => {
   });
 });
 
-export const ChatController = { listByOrder, threadsMine };
+export const ChatController = {
+  listByOrder,
+  threadsMine,
+};

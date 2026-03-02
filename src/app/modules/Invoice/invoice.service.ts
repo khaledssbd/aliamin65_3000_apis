@@ -38,4 +38,8 @@ const generate = async (orderId: string) => {
   return doc;
 };
 
-export const InvoiceService = { getByOrder, getByNumber, generate };
+export const InvoiceService = {
+  getByOrder,
+  getByNumber,
+  generate,
+};

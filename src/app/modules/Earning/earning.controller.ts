@@ -4,6 +4,7 @@ import { EarningService } from './earning.service';
 
 const driverMe = asyncHandler(async (req, res) => {
   const docs = await EarningService.driverMe(req.user._id);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Earnings',
@@ -16,6 +17,7 @@ const driverByOrder = asyncHandler(async (req, res) => {
     req.user._id,
     String(req.params.orderId),
   );
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Earning',
@@ -25,6 +27,7 @@ const driverByOrder = asyncHandler(async (req, res) => {
 
 const driverSummaryToday = asyncHandler(async (req, res) => {
   const summary = await EarningService.driverSummaryToday(req.user._id);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Today summary',

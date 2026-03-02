@@ -28,4 +28,8 @@ const byOrder = async (orderId: string) => {
   return PaymentModel.findOne({ order: orderId });
 };
 
-export const PaymentService = { createIntent, confirm, byOrder };
+export const PaymentService = {
+  createIntent,
+  confirm,
+  byOrder,
+};

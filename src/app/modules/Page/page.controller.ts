@@ -4,11 +4,13 @@ import { PageService } from './page.service';
 
 const getBySlug = asyncHandler(async (req, res) => {
   const doc = await PageService.getBySlug(String(req.params.slug));
+
   sendResponse(res, { statusCode: httpStatus.OK, message: 'Page', data: doc });
 });
 
 const list = asyncHandler(async (_req, res) => {
   const docs = await PageService.list();
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Pages',
@@ -18,6 +20,7 @@ const list = asyncHandler(async (_req, res) => {
 
 const create = asyncHandler(async (req, res) => {
   const doc = await PageService.create(req.body);
+
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     message: 'Page created',
@@ -27,6 +30,7 @@ const create = asyncHandler(async (req, res) => {
 
 const update = asyncHandler(async (req, res) => {
   const doc = await PageService.update(String(req.params.id), req.body);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Page updated',
@@ -42,6 +46,7 @@ const toggle = asyncHandler(async (req, res) => {
       message: 'Not found',
       data: null,
     });
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Publish toggled',
@@ -49,4 +54,10 @@ const toggle = asyncHandler(async (req, res) => {
   });
 });
 
-export const PageController = { getBySlug, list, create, update, toggle };
+export const PageController = {
+  getBySlug,
+  list,
+  create,
+  update,
+  toggle,
+};

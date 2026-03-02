@@ -4,6 +4,7 @@ import { CardService } from './card.service';
 
 const listMine = asyncHandler(async (req, res) => {
   const docs = await CardService.listMine(req.user._id);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Cards',
@@ -13,6 +14,7 @@ const listMine = asyncHandler(async (req, res) => {
 
 const attach = asyncHandler(async (req, res) => {
   const doc = await CardService.attach(req.user._id, req.body);
+
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     message: 'Card attached',
@@ -22,6 +24,7 @@ const attach = asyncHandler(async (req, res) => {
 
 const setDefault = asyncHandler(async (req, res) => {
   const doc = await CardService.setDefault(req.user._id, String(req.params.id));
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Default set',
@@ -31,6 +34,7 @@ const setDefault = asyncHandler(async (req, res) => {
 
 const detach = asyncHandler(async (req, res) => {
   const doc = await CardService.detach(req.user._id, String(req.params.id));
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Card detached',
@@ -38,4 +42,9 @@ const detach = asyncHandler(async (req, res) => {
   });
 });
 
-export const CardController = { listMine, attach, setDefault, detach };
+export const CardController = {
+  listMine,
+  attach,
+  setDefault,
+  detach,
+};

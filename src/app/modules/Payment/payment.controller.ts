@@ -8,6 +8,7 @@ const createIntent = asyncHandler(async (req, res) => {
     req.body.orderId,
     req.body.amount,
   );
+
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     message: 'Payment intent created',
@@ -27,6 +28,7 @@ const confirm = asyncHandler(async (req, res) => {
 
 const byOrder = asyncHandler(async (req, res) => {
   const doc = await PaymentService.byOrder(String(req.params.orderId));
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Payment',
@@ -34,4 +36,6 @@ const byOrder = asyncHandler(async (req, res) => {
   });
 });
 
-export const PaymentController = { createIntent, confirm, byOrder };
+export const PaymentController = {
+  createIntent, confirm, byOrder
+};

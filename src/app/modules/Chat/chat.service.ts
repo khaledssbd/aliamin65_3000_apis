@@ -13,4 +13,7 @@ const threadsMine = async (userId: Types.ObjectId) => {
   ]);
 };
 
-export const ChatService = { listByOrder, threadsMine };
+export const ChatService = {
+  listByOrder,
+  threadsMine,
+};

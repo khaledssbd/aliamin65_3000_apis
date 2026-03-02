@@ -4,6 +4,7 @@ import { PricingService } from './pricing.service';
 
 const getActive = asyncHandler(async (_req, res) => {
   const result = await PricingService.getActive();
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Active pricing',
@@ -13,6 +14,7 @@ const getActive = asyncHandler(async (_req, res) => {
 
 const create = asyncHandler(async (req, res) => {
   const result = await PricingService.create(req.body);
+
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     message: 'Pricing created',
@@ -22,6 +24,7 @@ const create = asyncHandler(async (req, res) => {
 
 const activate = asyncHandler(async (req, res) => {
   const result = await PricingService.activate(req.params.id as string);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Pricing activated',
@@ -29,4 +32,8 @@ const activate = asyncHandler(async (req, res) => {
   });
 });
 
-export const PricingController = { getActive, create, activate };
+export const PricingController = {
+  getActive,
+  create,
+  activate,
+};

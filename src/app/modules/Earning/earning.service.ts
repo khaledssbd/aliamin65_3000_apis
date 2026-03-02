@@ -32,4 +32,8 @@ const driverSummaryToday = async (driverId: Types.ObjectId) => {
   return agg[0] ?? {};
 };
 
-export const EarningService = { driverMe, driverByOrder, driverSummaryToday };
+export const EarningService = {
+  driverMe,
+  driverByOrder,
+  driverSummaryToday,
+};

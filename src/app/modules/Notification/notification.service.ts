@@ -25,4 +25,9 @@ const remove = async (userId: Types.ObjectId, id: string) => {
   return NotificationModel.findOneAndDelete({ _id: id, user: userId });
 };
 
-export const NotificationService = { listMine, markRead, markAllRead, remove };
+export const NotificationService = {
+  listMine,
+  markRead,
+  markAllRead,
+  remove,
+};

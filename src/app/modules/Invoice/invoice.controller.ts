@@ -4,6 +4,7 @@ import { InvoiceService } from './invoice.service';
 
 const getByOrder = asyncHandler(async (req, res) => {
   const doc = await InvoiceService.getByOrder(String(req.params.orderId));
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Invoice',
@@ -15,6 +16,7 @@ const getByNumber = asyncHandler(async (req, res) => {
   const doc = await InvoiceService.getByNumber(
     String(req.params.invoiceNumber),
   );
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Invoice',
@@ -30,6 +32,7 @@ const generate = asyncHandler(async (req, res) => {
       message: 'Order not found',
       data: null,
     });
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Invoice generated',
@@ -37,4 +40,8 @@ const generate = asyncHandler(async (req, res) => {
   });
 });
 
-export const InvoiceController = { getByOrder, getByNumber, generate };
+export const InvoiceController = {
+  getByOrder,
+  getByNumber,
+  generate,
+};

@@ -4,6 +4,7 @@ import { DispatchService } from './dispatch.service';
 
 const create = asyncHandler(async (req, res) => {
   const result = await DispatchService.create(req.body);
+
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     message: 'Batch created',
@@ -16,6 +17,7 @@ const assign = asyncHandler(async (req, res) => {
     String(req.params.id),
     req.body.driverId,
   );
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Reassigned',
@@ -28,6 +30,7 @@ const sequence = asyncHandler(async (req, res) => {
     String(req.params.id),
     req.body.sequence,
   );
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Sequence updated',
@@ -40,6 +43,7 @@ const status = asyncHandler(async (req, res) => {
     String(req.params.id),
     req.body.status,
   );
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Status updated',
@@ -49,6 +53,7 @@ const status = asyncHandler(async (req, res) => {
 
 const driverMe = asyncHandler(async (req, res) => {
   const result = await DispatchService.driverMe(req.user._id);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'My routes',
@@ -58,6 +63,7 @@ const driverMe = asyncHandler(async (req, res) => {
 
 const getById = asyncHandler(async (req, res) => {
   const result = await DispatchService.getById(String(req.params.id));
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Batch detail',

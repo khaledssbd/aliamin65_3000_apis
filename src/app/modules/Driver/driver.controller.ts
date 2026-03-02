@@ -5,6 +5,7 @@ import { getIO } from '../../socket';
 
 const onboarding = asyncHandler(async (req, res) => {
   const result = await DriverService.upsertMine(req.user._id, req.body);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Onboarding saved',
@@ -16,6 +17,7 @@ const insurance = asyncHandler(async (req, res) => {
   const result = await DriverService.upsertMine(req.user._id, {
     insurance: req.body,
   });
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Insurance updated',
@@ -27,6 +29,7 @@ const vehicle = asyncHandler(async (req, res) => {
   const result = await DriverService.upsertMine(req.user._id, {
     vehicle: req.body,
   });
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Vehicle updated',
@@ -36,6 +39,7 @@ const vehicle = asyncHandler(async (req, res) => {
 
 const me = asyncHandler(async (req, res) => {
   const result = await DriverService.me(req.user._id);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Profile',
@@ -51,6 +55,7 @@ const availability = asyncHandler(async (req, res) => {
   getIO()?.emit('driver:availability:updated', {
     isAvailable: req.body.isAvailable,
   });
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Availability updated',
@@ -60,6 +65,7 @@ const availability = asyncHandler(async (req, res) => {
 
 const jobsAvailable = asyncHandler(async (req, res) => {
   const result = await DriverService.jobsAvailable(req.user._id);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Jobs available',
@@ -73,6 +79,7 @@ const acceptJob = asyncHandler(async (req, res) => {
     String(req.params.orderId),
   );
   getIO()?.emit('driver:job:locked', { orderId: req.params.orderId });
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Job accepted',
@@ -85,6 +92,7 @@ const declineJob = asyncHandler(async (req, res) => {
     req.user._id,
     String(req.params.orderId),
   );
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Job declined',
@@ -98,6 +106,7 @@ const cancelJob = asyncHandler(async (req, res) => {
     String(req.params.orderId),
     req.body?.reason,
   );
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Job canceled',

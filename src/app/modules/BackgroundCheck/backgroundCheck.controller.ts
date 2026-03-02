@@ -7,6 +7,7 @@ const start = asyncHandler(async (req, res) => {
     driverId: req.body.driverId,
     provider: req.body.provider,
   });
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Background check started',
@@ -18,6 +19,7 @@ const byDriver = asyncHandler(async (req, res) => {
   const doc = await BackgroundCheckService.byDriver(
     String(req.params.driverId),
   );
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Background status',
@@ -27,6 +29,7 @@ const byDriver = asyncHandler(async (req, res) => {
 
 const getById = asyncHandler(async (req, res) => {
   const doc = await BackgroundCheckService.getById(String(req.params.id));
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Background detail',
@@ -34,4 +37,8 @@ const getById = asyncHandler(async (req, res) => {
   });
 });
 
-export const BackgroundCheckController = { start, byDriver, getById };
+export const BackgroundCheckController = {
+  start,
+  byDriver,
+  getById,
+};
