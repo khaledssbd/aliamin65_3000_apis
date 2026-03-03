@@ -1,5 +1,9 @@
 import { Router } from 'express';
-import { auth, validateRequest } from '../../middlewares';
+import {
+  auth,
+  validateRequest,
+  validateRequestFromFormData,
+} from '../../middlewares';
 import { UserValidation } from './user.validation';
 import { UserController } from './user.controller';
 import { multerUpload } from '../../lib';
@@ -23,7 +27,7 @@ router.route('/create-driver-account').post(
     { name: 'selfie', maxCount: 1 },
     { name: 'insuranceDocument', maxCount: 1 },
   ]),
-  validateRequest(UserValidation.createDriverAccountSchema),
+  validateRequestFromFormData(UserValidation.createDriverAccountSchema),
   UserController.createDriverAccount,
 );
 
