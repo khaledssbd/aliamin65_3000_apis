@@ -10,7 +10,6 @@ const orderSchema = new Schema<IOrder>(
       index: true,
     },
     driver: { type: Schema.Types.ObjectId, ref: 'User' },
-    pendingDriver: { type: Schema.Types.ObjectId, ref: 'User' },
     pickupAddress: {
       type: Schema.Types.ObjectId,
       ref: 'Address',

@@ -35,8 +35,8 @@ Driver role user creation + required onboarding images are handled by User modul
 
 - `driver:job:new` `{ orderId }` – New job offer in zone.
 - `driver:availability:updated` `{ isAvailable }`.
-- `driver:job:locked` `{ orderId }` – Broadcast when another driver accepted.
 - `driver:eta:update` `{ orderId, eta }` – Optional ETA pings.
+- `order:hidden` `{ orderId }` – Hide order from other drivers when a driver accepts.
 
 ## Data Model
 

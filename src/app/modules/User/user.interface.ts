@@ -7,6 +7,11 @@ export interface IUser extends Document {
 
   name: string;
   address: string;
+  currentLocation?: {
+    type: 'Point';
+    coordinates: [number, number];
+    updatedAt?: Date;
+  };
   phone: string;
   image: string;
 

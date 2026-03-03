@@ -3,6 +3,7 @@ import { asyncHandler, sendResponse } from '../../utils';
 import { DriverService } from './driver.service';
 import { getIO } from '../../socket';
 import OrderModel from '../Order/order.model';
+import DriverModel from './driver.model';
 
 const onboarding = asyncHandler(async (req, res) => {
   const result = await DriverService.upsertMine(req.user._id, req.body);
@@ -82,7 +83,9 @@ const acceptJob = asyncHandler(async (req, res) => {
 
   const ordersNs = getIO()?.of('/orders');
   if (result) {
-    const order = await OrderModel.findById(String(req.params.orderId));
+    const order = await OrderModel.findById(String(req.params.orderId)).select(
+      'customer',
+    );
     if (order) {
       ordersNs
         ?.to(`customer:${String(order.customer)}`)
@@ -91,9 +94,20 @@ const acceptJob = asyncHandler(async (req, res) => {
           driverUserId: String(req.user._id),
         });
     }
-  }
 
-  ordersNs?.emit('driver:job:locked', { orderId: req.params.orderId });
+    const availableDrivers = await DriverModel.find({
+      isAvailable: true,
+    }).select('user');
+
+    availableDrivers
+      .map((d) => String(d.user))
+      .filter((id) => id !== String(req.user._id))
+      .forEach((id) => {
+        ordersNs?.to(`driver:${id}`).emit('order:hidden', {
+          orderId: req.params.orderId,
+        });
+      });
+  }
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

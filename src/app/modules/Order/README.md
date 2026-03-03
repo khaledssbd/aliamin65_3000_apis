@@ -30,16 +30,12 @@ Events are emitted on the `/orders` namespace.
 - Server → Client
   - `order:created` `{ orderId }` (to `customer:{userId}`)
   - `driver:job:new` `{ orderId }` (to nearby `driver:{userId}`)
-  - `driver:job:locked` `{ orderId }`
   - `order:driver:accepted` `{ orderId, driverUserId }` (to customer)
-  - `order:confirmed` `{ orderId, driverUserId }` (to customer) / `{ orderId, customerUserId }` (to driver)
-  - `order:hidden` `{ orderId }` (to other drivers after confirm)
+  - `order:hidden` `{ orderId }` (to other drivers after a driver accepts)
   - `order:tracking:location` `{ orderId, lat, lng }` (to `order:{orderId}` room)
 
 - Client → Server
   - `orders:join` `{ userId, role, orderId? }` (joins `customer:{id}` / `driver:{id}` / `order:{orderId}`)
-  - `order:driver:accept` `{ orderId, driverUserId }`
-  - `order:customer:confirm` `{ orderId, customerUserId }`
   - `order:tracking:location:push` `{ orderId, driverUserId, lat, lng }` (driver)
 
 ## Data Model

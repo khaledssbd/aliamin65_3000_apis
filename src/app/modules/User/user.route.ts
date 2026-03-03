@@ -17,7 +17,7 @@ router
 
 // registerDriverSchema
 router.route('/create-driver-account').post(
-  auth(ROLE.DRIVER),
+  auth(ROLE.CUSTOMER, ROLE.DRIVER),
   multerUpload.fields([
     { name: 'license', maxCount: 1 },
     { name: 'selfie', maxCount: 1 },

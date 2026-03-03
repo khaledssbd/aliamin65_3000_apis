@@ -50,12 +50,14 @@ const acceptJob = async (userId: Types.ObjectId, orderId: string) => {
       _id: orderId,
       status: ORDER_STATUS.REQUESTED,
       driver: { $exists: false },
-      pendingDriver: { $exists: false },
     },
     {
       $set: {
-        pendingDriver: userId,
+        driver: userId,
+        status: ORDER_STATUS.DRIVER_ASSIGNED,
+        'timeline.driverAssignedAt': new Date(),
       },
+      $unset: { pendingDriver: 1 },
     },
     { new: true },
   );

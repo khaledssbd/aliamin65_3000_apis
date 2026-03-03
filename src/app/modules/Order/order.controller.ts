@@ -2,8 +2,8 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { OrderService } from './order.service';
 import { getIO } from '../../socket';
-import AddressModel from '../Address/address.model';
 import DriverModel from '../Driver/driver.model';
+import UserModel from '../User/user.model';
 
 const create = asyncHandler(async (req, res) => {
   const result = await OrderService.create(req.user._id, req.body);
@@ -13,29 +13,37 @@ const create = asyncHandler(async (req, res) => {
     orderId: result._id,
   });
 
-  const pickupAddress = await AddressModel.findById(result.pickupAddress);
-  const coords = pickupAddress?.location?.coordinates;
-  if (coords && coords.length === 2) {
-    const nearbyDrivers = await DriverModel.find({
-      isAvailable: true,
-      currentLocation: {
-        $near: {
-          $geometry: { type: 'Point', coordinates: coords },
-          $maxDistance: 5000,
-        },
-      },
-    }).select('user');
+  const customer = await UserModel.findById(req.user._id).select('address');
+  const customerAddress = String(customer?.address ?? '').trim();
 
-    nearbyDrivers.forEach((d) => {
-      ordersNs?.to(`driver:${String(d.user)}`).emit('driver:job:new', {
-        orderId: result._id,
-      });
+  const availableDrivers = await DriverModel.find({ isAvailable: true })
+    .populate('user', 'address')
+    .select('user');
+
+  const matched = customerAddress
+    ? availableDrivers.filter((d) => {
+        const populated = d.user as unknown;
+        const addr =
+          populated &&
+          typeof populated === 'object' &&
+          'address' in populated &&
+          typeof (populated as { address?: unknown }).address === 'string'
+            ? String((populated as { address?: string }).address).trim()
+            : '';
+        return addr && addr === customerAddress;
+      })
+    : [];
+
+  const targets = matched.length ? matched : availableDrivers;
+  targets.forEach((d) => {
+    ordersNs?.to(`driver:${String(d.user)}`).emit('driver:job:new', {
+      orderId: result._id,
     });
-  }
+  });
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
-    message: 'Order created',
+    message: 'Order created successfully!',
     data: result,
   });
 });
@@ -45,7 +53,7 @@ const listMine = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Orders retrieved',
+    message: 'Orders retrieved successfully!',
     data: result,
   });
 });
@@ -58,7 +66,7 @@ const getById = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Order details',
+    message: 'Order details retrieved successfully!',
     data: result,
   });
 });
@@ -75,7 +83,7 @@ const assignDriver = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Driver assigned',
+    message: 'Driver assigned successfully!',
     data: result,
   });
 });
@@ -92,7 +100,7 @@ const updateStatus = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Status updated',
+    message: 'Status updated successfully!',
     data: result,
   });
 });
@@ -111,7 +119,7 @@ const setPickupBagCount = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Pickup bag count set',
+    message: 'Pickup bag count set successfully!',
     data: result,
   });
 });
@@ -130,7 +138,7 @@ const setDeliveryBagCount = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Delivery bag count set',
+    message: 'Delivery bag count set successfully!',
     data: result,
   });
 });
@@ -147,7 +155,7 @@ const setReadyTime = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Ready time set',
+    message: 'Ready time set successfully!',
     data: result,
   });
 });
