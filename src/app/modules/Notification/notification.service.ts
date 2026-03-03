@@ -1,11 +1,16 @@
 import NotificationModel from './notification.model';
 import { Types } from 'mongoose';
 
-const listMine = async (userId: Types.ObjectId) => {
+// 1. listMyNotificationsFromDB
+const listMyNotificationsFromDB = async (userId: Types.ObjectId) => {
   return NotificationModel.find({ user: userId }).sort({ createdAt: -1 });
 };
 
-const markRead = async (userId: Types.ObjectId, id: string) => {
+// 2. markMyNotificationAsReadInDB
+const markMyNotificationAsReadInDB = async (
+  userId: Types.ObjectId,
+  id: string,
+) => {
   return NotificationModel.findOneAndUpdate(
     { _id: id, user: userId },
     { $set: { readAt: new Date() } },
@@ -13,7 +18,8 @@ const markRead = async (userId: Types.ObjectId, id: string) => {
   );
 };
 
-const markAllRead = async (userId: Types.ObjectId) => {
+// 3. markAllMyNotificationsAsReadInDB
+const markAllMyNotificationsAsReadInDB = async (userId: Types.ObjectId) => {
   await NotificationModel.updateMany(
     { user: userId, readAt: { $exists: false } },
     { $set: { readAt: new Date() } },
@@ -21,13 +27,14 @@ const markAllRead = async (userId: Types.ObjectId) => {
   return true;
 };
 
-const remove = async (userId: Types.ObjectId, id: string) => {
+// 4. deleteMyNotificationInDB
+const deleteMyNotificationInDB = async (userId: Types.ObjectId, id: string) => {
   return NotificationModel.findOneAndDelete({ _id: id, user: userId });
 };
 
 export const NotificationService = {
-  listMine,
-  markRead,
-  markAllRead,
-  remove,
+  listMyNotificationsFromDB,
+  markMyNotificationAsReadInDB,
+  markAllMyNotificationsAsReadInDB,
+  deleteMyNotificationInDB,
 };

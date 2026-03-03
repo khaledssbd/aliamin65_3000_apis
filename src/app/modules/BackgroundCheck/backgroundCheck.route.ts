@@ -5,21 +5,21 @@ import { BackgroundCheckController } from './backgroundCheck.controller';
 
 const router = Router();
 
-// checkDriverBackgroundStatus
+// 1. checkDriverBackgroundStatus
 router.post(
   '/sync-status/:id',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
   BackgroundCheckController.checkDriverBackgroundStatus,
 );
 
-// getDriverBackgroundDataByHisDriverId
+// 2. getDriverBackgroundDataByHisDriverId
 router.get(
   '/driver/:driverId',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN, ROLE.DRIVER),
   BackgroundCheckController.getDriverBackgroundDataByHisDriverId,
 );
 
-// getDriverBackgroundDataByHisUserId
+// 3. getDriverBackgroundDataByHisUserId
 router.get(
   '/:id',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),

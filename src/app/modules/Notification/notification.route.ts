@@ -5,28 +5,32 @@ import { NotificationController } from './notification.controller';
 
 const router = Router();
 
+// 1. listMyNotifications
 router.get(
   '/',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
-  NotificationController.listMine,
+  NotificationController.listMyNotifications,
 );
 
+// 2. markMyNotificationAsRead
 router.patch(
   '/:id/read',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
-  NotificationController.markRead,
+  NotificationController.markMyNotificationAsRead,
 );
 
+// 3. markAllMyNotificationsAsRead
 router.patch(
   '/read-all',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
-  NotificationController.markAllRead,
+  NotificationController.markAllMyNotificationsAsRead,
 );
 
+// 4. deleteMyNotification
 router.delete(
   '/:id',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
-  NotificationController.remove,
+  NotificationController.deleteMyNotification,
 );
 
 export const NotificationRoutes = router;

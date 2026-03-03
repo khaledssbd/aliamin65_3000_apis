@@ -6,14 +6,14 @@ import { AddressValidation } from './address.validation';
 
 const router = Router();
 
-// listMineAddress
+// 1. listMineAddress
 router.get(
   '/',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
   AddressController.listMineAddress,
 );
 
-// createAddress
+// 2. createAddress
 router.post(
   '/',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
@@ -21,7 +21,7 @@ router.post(
   AddressController.createAddress,
 );
 
-// updateAddress
+// 3. updateAddress
 router.patch(
   '/:id',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
@@ -29,14 +29,14 @@ router.patch(
   AddressController.updateAddress,
 );
 
-// removeAddress
+// 4. removeAddress
 router.delete(
   '/:id',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
   AddressController.removeAddress,
 );
 
-// setDefaultAddress
+// 5. setDefaultAddress
 router.patch(
   '/:id/default',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),

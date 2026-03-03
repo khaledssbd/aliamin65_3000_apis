@@ -5,16 +5,18 @@ import { ChatController } from './chat.controller';
 
 const router = Router();
 
+// 1. listMessagesByOrderId
 router.get(
   '/order/:orderId',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
-  ChatController.listByOrder,
+  ChatController.listMessagesByOrderId,
 );
 
+// 2. listMyChatThreads
 router.get(
   '/threads',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
-  ChatController.threadsMine,
+  ChatController.listMyChatThreads,
 );
 
 export const ChatRoutes = router;

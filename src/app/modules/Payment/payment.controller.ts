@@ -2,13 +2,14 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { PaymentService } from './payment.service';
 
-// 1. createIntent
-const createIntent = asyncHandler(async (req, res) => {
-  const { clientSecret } = await PaymentService.createIntentInDB(
-    req.user._id,
-    req.body.orderId,
-    req.body.amount,
-  );
+// 1. createPaymentIntentForMyOrder
+const createPaymentIntentForMyOrder = asyncHandler(async (req, res) => {
+  const { clientSecret } =
+    await PaymentService.createPaymentIntentForMyOrderInDB(
+      req.user._id,
+      req.body.orderId,
+      req.body.amount,
+    );
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -17,9 +18,12 @@ const createIntent = asyncHandler(async (req, res) => {
   });
 });
 
-// 2. confirm
-const confirm = asyncHandler(async (req, res) => {
-  const doc = await PaymentService.confirmInDB(req.user._id, req.body.orderId);
+// 2. capturePaymentForMyOrder
+const capturePaymentForMyOrder = asyncHandler(async (req, res) => {
+  const doc = await PaymentService.capturePaymentForMyOrderInDB(
+    req.user._id,
+    req.body.orderId,
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -28,9 +32,11 @@ const confirm = asyncHandler(async (req, res) => {
   });
 });
 
-// 3. byOrder
-const byOrder = asyncHandler(async (req, res) => {
-  const doc = await PaymentService.byOrderInDB(String(req.params.orderId));
+// 3. getPaymentByOrderId
+const getPaymentByOrderId = asyncHandler(async (req, res) => {
+  const doc = await PaymentService.getPaymentByOrderIdFromDB(
+    String(req.params.orderId),
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -40,7 +46,7 @@ const byOrder = asyncHandler(async (req, res) => {
 });
 
 export const PaymentController = {
-  createIntent,
-  confirm,
-  byOrder,
+  createPaymentIntentForMyOrder,
+  capturePaymentForMyOrder,
+  getPaymentByOrderId,
 };

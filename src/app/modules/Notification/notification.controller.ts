@@ -2,8 +2,11 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { NotificationService } from './notification.service';
 
-const listMine = asyncHandler(async (req, res) => {
-  const docs = await NotificationService.listMine(req.user._id);
+// 1. listMyNotifications
+const listMyNotifications = asyncHandler(async (req, res) => {
+  const docs = await NotificationService.listMyNotificationsFromDB(
+    req.user._id,
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -12,8 +15,9 @@ const listMine = asyncHandler(async (req, res) => {
   });
 });
 
-const markRead = asyncHandler(async (req, res) => {
-  const doc = await NotificationService.markRead(
+// 2. markMyNotificationAsRead
+const markMyNotificationAsRead = asyncHandler(async (req, res) => {
+  const doc = await NotificationService.markMyNotificationAsReadInDB(
     req.user._id,
     String(req.params.id),
   );
@@ -21,8 +25,9 @@ const markRead = asyncHandler(async (req, res) => {
   sendResponse(res, { statusCode: httpStatus.OK, message: 'Read', data: doc });
 });
 
-const markAllRead = asyncHandler(async (req, res) => {
-  await NotificationService.markAllRead(req.user._id);
+// 3. markAllMyNotificationsAsRead
+const markAllMyNotificationsAsRead = asyncHandler(async (req, res) => {
+  await NotificationService.markAllMyNotificationsAsReadInDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -31,8 +36,9 @@ const markAllRead = asyncHandler(async (req, res) => {
   });
 });
 
-const remove = asyncHandler(async (req, res) => {
-  const doc = await NotificationService.remove(
+// 4. deleteMyNotification
+const deleteMyNotification = asyncHandler(async (req, res) => {
+  const doc = await NotificationService.deleteMyNotificationInDB(
     req.user._id,
     String(req.params.id),
   );
@@ -45,8 +51,8 @@ const remove = asyncHandler(async (req, res) => {
 });
 
 export const NotificationController = {
-  listMine,
-  markRead,
-  markAllRead,
-  remove,
+  listMyNotifications,
+  markMyNotificationAsRead,
+  markAllMyNotificationsAsRead,
+  deleteMyNotification,
 };

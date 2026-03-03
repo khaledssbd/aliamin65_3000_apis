@@ -5,24 +5,32 @@ import { DisputeController } from './dispute.controller';
 
 const router = Router();
 
-router.post('/', auth(ROLE.CUSTOMER, ROLE.DRIVER), DisputeController.create);
+// 1. createDisputeForOrder
+router.post(
+  '/',
+  auth(ROLE.CUSTOMER, ROLE.DRIVER),
+  DisputeController.createDisputeForOrder,
+);
 
+// 2. listDisputesByOrderId
 router.get(
   '/order/:orderId',
   auth(ROLE.CUSTOMER, ROLE.DRIVER, ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  DisputeController.byOrder,
+  DisputeController.listDisputesByOrderId,
 );
 
+// 3. updateDisputeStatus
 router.patch(
   '/:id/status',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  DisputeController.updateStatus,
+  DisputeController.updateDisputeStatus,
 );
 
+// 4. setDisputeAdminNotes
 router.patch(
   '/:id/notes',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  DisputeController.setNotes,
+  DisputeController.setDisputeAdminNotes,
 );
 
 export const DisputeRoutes = router;

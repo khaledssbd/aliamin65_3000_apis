@@ -2,8 +2,9 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { EarningService } from './earning.service';
 
-const driverMe = asyncHandler(async (req, res) => {
-  const docs = await EarningService.driverMe(req.user._id);
+// 1. listMyEarnings
+const listMyEarnings = asyncHandler(async (req, res) => {
+  const docs = await EarningService.listMyEarningsFromDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -12,8 +13,9 @@ const driverMe = asyncHandler(async (req, res) => {
   });
 });
 
-const driverByOrder = asyncHandler(async (req, res) => {
-  const doc = await EarningService.driverByOrder(
+// 2. getMyEarningByOrderId
+const getMyEarningByOrderId = asyncHandler(async (req, res) => {
+  const doc = await EarningService.getMyEarningByOrderIdFromDB(
     req.user._id,
     String(req.params.orderId),
   );
@@ -25,8 +27,11 @@ const driverByOrder = asyncHandler(async (req, res) => {
   });
 });
 
-const driverSummaryToday = asyncHandler(async (req, res) => {
-  const summary = await EarningService.driverSummaryToday(req.user._id);
+// 3. getMyEarningsSummaryForToday
+const getMyEarningsSummaryForToday = asyncHandler(async (req, res) => {
+  const summary = await EarningService.getMyEarningsSummaryForTodayFromDB(
+    req.user._id,
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -36,7 +41,7 @@ const driverSummaryToday = asyncHandler(async (req, res) => {
 });
 
 export const EarningController = {
-  driverMe,
-  driverByOrder,
-  driverSummaryToday,
+  listMyEarnings,
+  getMyEarningByOrderId,
+  getMyEarningsSummaryForToday,
 };

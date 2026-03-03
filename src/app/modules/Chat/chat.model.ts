@@ -8,7 +8,8 @@ const chatMessageSchema = new Schema<IChatMessage>(
     to: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     contentType: {
       type: String,
-      enum: ['TEXT', 'IMAGE', 'AUDIO'],
+      enum: ['TEXT', 'IMAGE'],
+      // enum: ['TEXT', 'IMAGE', 'AUDIO'],
       default: 'TEXT',
     },
     content: { type: String, required: true },

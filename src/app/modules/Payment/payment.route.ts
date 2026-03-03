@@ -5,18 +5,25 @@ import { PaymentController } from './payment.controller';
 
 const router = Router();
 
-router.post('/intent', auth(ROLE.CUSTOMER), PaymentController.createIntent);
+// 1. createPaymentIntentForMyOrder
+router.post(
+  '/intent',
+  auth(ROLE.CUSTOMER),
+  PaymentController.createPaymentIntentForMyOrder,
+);
 
+// 2. capturePaymentForMyOrder
 router.post(
   '/confirm',
   auth(ROLE.CUSTOMER, ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  PaymentController.confirm,
+  PaymentController.capturePaymentForMyOrder,
 );
 
+// 3. getPaymentByOrderId
 router.get(
   '/order/:orderId',
   auth(ROLE.CUSTOMER, ROLE.DRIVER, ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  PaymentController.byOrder,
+  PaymentController.getPaymentByOrderId,
 );
 
 export const PaymentRoutes = router;

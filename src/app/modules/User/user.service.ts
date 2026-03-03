@@ -172,7 +172,7 @@ const createDriverAccountInDB = async (
         'Failed to create driver account',
       );
     } else {
-      // Driver created successfully
+      // Driver created successfully, now update his role
       existingUser.role = 'DRIVER';
       await existingUser.save();
     }

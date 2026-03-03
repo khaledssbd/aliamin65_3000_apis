@@ -6,22 +6,26 @@ import { CardValidation } from './card.validation';
 
 const router = Router();
 
-router.get('/', auth(ROLE.CUSTOMER), CardController.listMine);
+// 1. listMySavedCards
+router.get('/', auth(ROLE.CUSTOMER), CardController.listMySavedCards);
 
+// 2. attachNewCardToMyAccount
 router.post(
   '/attach',
   auth(ROLE.CUSTOMER),
   validateRequest(CardValidation.attachSchema),
-  CardController.attach,
+  CardController.attachNewCardToMyAccount,
 );
 
+// 3. setMyDefaultCard
 router.patch(
   '/:id/default',
   auth(ROLE.CUSTOMER),
   validateRequest(CardValidation.idParamSchema),
-  CardController.setDefault,
+  CardController.setMyDefaultCard,
 );
 
-router.delete('/:id', auth(ROLE.CUSTOMER), CardController.detach);
+// 4. detachMyCard
+router.delete('/:id', auth(ROLE.CUSTOMER), CardController.detachMyCard);
 
 export const CardRoutes = router;

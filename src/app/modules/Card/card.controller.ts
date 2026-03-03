@@ -2,9 +2,9 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { CardService } from './card.service';
 
-// 1. listMine
-const listMine = asyncHandler(async (req, res) => {
-  const docs = await CardService.listMineInDB(req.user._id);
+// 1. listMySavedCards
+const listMySavedCards = asyncHandler(async (req, res) => {
+  const docs = await CardService.listMySavedCardsInDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -13,9 +13,12 @@ const listMine = asyncHandler(async (req, res) => {
   });
 });
 
-// 2. attach
-const attach = asyncHandler(async (req, res) => {
-  const doc = await CardService.attachInDB(req.user._id, req.body);
+// 2. attachNewCardToMyAccount
+const attachNewCardToMyAccount = asyncHandler(async (req, res) => {
+  const doc = await CardService.attachNewCardToMyAccountInDB(
+    req.user._id,
+    req.body,
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -24,9 +27,9 @@ const attach = asyncHandler(async (req, res) => {
   });
 });
 
-// 3. setDefault
-const setDefault = asyncHandler(async (req, res) => {
-  const doc = await CardService.setDefaultInDB(
+// 3. setMyDefaultCard
+const setMyDefaultCard = asyncHandler(async (req, res) => {
+  const doc = await CardService.setMyDefaultCardInDB(
     req.user._id,
     String(req.params.id),
   );
@@ -38,9 +41,12 @@ const setDefault = asyncHandler(async (req, res) => {
   });
 });
 
-// 4. detach
-const detach = asyncHandler(async (req, res) => {
-  const doc = await CardService.detachInDB(req.user._id, String(req.params.id));
+// 4. detachMyCard
+const detachMyCard = asyncHandler(async (req, res) => {
+  const doc = await CardService.detachMyCardInDB(
+    req.user._id,
+    String(req.params.id),
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -50,8 +56,8 @@ const detach = asyncHandler(async (req, res) => {
 });
 
 export const CardController = {
-  listMine,
-  attach,
-  setDefault,
-  detach,
+  listMySavedCards,
+  attachNewCardToMyAccount,
+  setMyDefaultCard,
+  detachMyCard,
 };

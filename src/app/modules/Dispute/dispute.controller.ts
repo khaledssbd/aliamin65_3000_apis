@@ -2,8 +2,9 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { DisputeService } from './dispute.service';
 
-const create = asyncHandler(async (req, res) => {
-  const doc = await DisputeService.create({
+// 1. createDisputeForOrder
+const createDisputeForOrder = asyncHandler(async (req, res) => {
+  const doc = await DisputeService.createDisputeForOrderInDB({
     orderId: req.body.orderId,
     raisedBy: String(req.user._id),
     type: req.body.type,
@@ -18,8 +19,11 @@ const create = asyncHandler(async (req, res) => {
   });
 });
 
-const byOrder = asyncHandler(async (req, res) => {
-  const docs = await DisputeService.byOrder(String(req.params.orderId));
+// 2. listDisputesByOrderId
+const listDisputesByOrderId = asyncHandler(async (req, res) => {
+  const docs = await DisputeService.listDisputesByOrderIdFromDB(
+    String(req.params.orderId),
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -28,8 +32,9 @@ const byOrder = asyncHandler(async (req, res) => {
   });
 });
 
-const updateStatus = asyncHandler(async (req, res) => {
-  const doc = await DisputeService.updateStatus(
+// 3. updateDisputeStatus
+const updateDisputeStatus = asyncHandler(async (req, res) => {
+  const doc = await DisputeService.updateDisputeStatusInDB(
     String(req.params.id),
     req.body.status,
   );
@@ -41,8 +46,9 @@ const updateStatus = asyncHandler(async (req, res) => {
   });
 });
 
-const setNotes = asyncHandler(async (req, res) => {
-  const doc = await DisputeService.setNotes(
+// 4. setDisputeAdminNotes
+const setDisputeAdminNotes = asyncHandler(async (req, res) => {
+  const doc = await DisputeService.setDisputeAdminNotesInDB(
     String(req.params.id),
     req.body.adminNotes,
   );
@@ -55,8 +61,8 @@ const setNotes = asyncHandler(async (req, res) => {
 });
 
 export const DisputeController = {
-  create,
-  byOrder,
-  updateStatus,
-  setNotes,
+  createDisputeForOrder,
+  listDisputesByOrderId,
+  updateDisputeStatus,
+  setDisputeAdminNotes,
 };

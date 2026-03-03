@@ -1,8 +1,8 @@
 import PaymentModel from './payment.model';
 import { Types } from 'mongoose';
 
-// 1. createIntentInDB
-const createIntentInDB = async (
+// 1. createPaymentIntentForMyOrderInDB
+const createPaymentIntentForMyOrderInDB = async (
   userId: Types.ObjectId,
   orderId: string,
   amount?: number,
@@ -17,8 +17,11 @@ const createIntentInDB = async (
   return { doc, clientSecret: `pi_${doc._id}_secret` };
 };
 
-// 2. confirmInDB
-const confirmInDB = async (userId: Types.ObjectId, orderId: string) => {
+// 2. capturePaymentForMyOrderInDB
+const capturePaymentForMyOrderInDB = async (
+  userId: Types.ObjectId,
+  orderId: string,
+) => {
   return PaymentModel.findOneAndUpdate(
     { order: orderId, customer: userId },
     { $set: { status: 'succeeded', capturedAt: new Date() } },
@@ -26,13 +29,13 @@ const confirmInDB = async (userId: Types.ObjectId, orderId: string) => {
   );
 };
 
-// 3. byOrderInDB
-const byOrderInDB = async (orderId: string) => {
+// 3. getPaymentByOrderIdFromDB
+const getPaymentByOrderIdFromDB = async (orderId: string) => {
   return PaymentModel.findOne({ order: orderId });
 };
 
 export const PaymentService = {
-  createIntentInDB,
-  confirmInDB,
-  byOrderInDB,
+  createPaymentIntentForMyOrderInDB,
+  capturePaymentForMyOrderInDB,
+  getPaymentByOrderIdFromDB,
 };

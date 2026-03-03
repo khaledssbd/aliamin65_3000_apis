@@ -2,8 +2,11 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { ChatService } from './chat.service';
 
-const listByOrder = asyncHandler(async (req, res) => {
-  const docs = await ChatService.listByOrder(String(req.params.orderId));
+// 1. listMessagesByOrderId
+const listMessagesByOrderId = asyncHandler(async (req, res) => {
+  const docs = await ChatService.listMessagesByOrderIdFromDB(
+    String(req.params.orderId),
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -12,8 +15,9 @@ const listByOrder = asyncHandler(async (req, res) => {
   });
 });
 
-const threadsMine = asyncHandler(async (req, res) => {
-  const docs = await ChatService.threadsMine(req.user._id);
+// 2. listMyChatThreads
+const listMyChatThreads = asyncHandler(async (req, res) => {
+  const docs = await ChatService.listMyChatThreadsFromDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -23,6 +27,6 @@ const threadsMine = asyncHandler(async (req, res) => {
 });
 
 export const ChatController = {
-  listByOrder,
-  threadsMine,
+  listMessagesByOrderId,
+  listMyChatThreads,
 };

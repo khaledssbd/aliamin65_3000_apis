@@ -1,15 +1,21 @@
 import EarningModel from './earning.model';
 import { Types } from 'mongoose';
 
-const driverMe = async (driverId: Types.ObjectId) => {
+// 1. listMyEarningsFromDB
+const listMyEarningsFromDB = async (driverId: Types.ObjectId) => {
   return EarningModel.find({ driver: driverId }).sort({ createdAt: -1 });
 };
 
-const driverByOrder = async (driverId: Types.ObjectId, orderId: string) => {
+// 2. getMyEarningByOrderIdFromDB
+const getMyEarningByOrderIdFromDB = async (
+  driverId: Types.ObjectId,
+  orderId: string,
+) => {
   return EarningModel.findOne({ driver: driverId, order: orderId });
 };
 
-const driverSummaryToday = async (driverId: Types.ObjectId) => {
+// 3. getMyEarningsSummaryForTodayFromDB
+const getMyEarningsSummaryForTodayFromDB = async (driverId: Types.ObjectId) => {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
   const agg = await EarningModel.aggregate([
@@ -33,7 +39,7 @@ const driverSummaryToday = async (driverId: Types.ObjectId) => {
 };
 
 export const EarningService = {
-  driverMe,
-  driverByOrder,
-  driverSummaryToday,
+  listMyEarningsFromDB,
+  getMyEarningByOrderIdFromDB,
+  getMyEarningsSummaryForTodayFromDB,
 };
