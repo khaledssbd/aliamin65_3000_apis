@@ -3,15 +3,14 @@
 Base path: `/api/v1/admin`
 
 ## Overview
+
 Administrative controls for users, drivers, orders, routes, pricing, revenue, and safety.
 
 ## Key Endpoints
+
 - Users & Drivers
-  - PATCH `/drivers/:id/status` – Approve/Reject/Suspend.
-  - PATCH `/drivers/:id/tier` – Set tier & capacity.
-  - GET `/drivers/pending` – Pending approvals.
+  - GET `/user/admin-get-all` – List users.
 - Orders & Routes
-  - GET `/orders` – All orders with filters.
   - PATCH `/orders/:id/assign-driver` – Manual assignment.
   - POST `/dispatch` – Create route batch.
 - Pricing
@@ -28,5 +27,5 @@ Administrative controls for users, drivers, orders, routes, pricing, revenue, an
   - GET `/admin-logs` – Audit trail.
 
 ## Notes
-- All routes require `ADMIN` or `SUPER_ADMIN` role.
 
+- All routes require `ADMIN` or `SUPER_ADMIN` role.

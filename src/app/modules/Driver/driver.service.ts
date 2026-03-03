@@ -33,6 +33,7 @@ const me = async (userId: Types.ObjectId) => {
 };
 
 const jobsAvailable = async (userId: Types.ObjectId) => {
+  void userId;
   // Basic filter: unassigned and requested
   // Future: limit by zone/geo
   return OrderModel.find({
@@ -44,19 +45,16 @@ const jobsAvailable = async (userId: Types.ObjectId) => {
 };
 
 const acceptJob = async (userId: Types.ObjectId, orderId: string) => {
-  // Lock order if not already taken
-  const driver = await DriverModel.findOne({ user: userId });
   const doc = await OrderModel.findOneAndUpdate(
     {
       _id: orderId,
       status: ORDER_STATUS.REQUESTED,
       driver: { $exists: false },
+      pendingDriver: { $exists: false },
     },
     {
       $set: {
-        driver: driver?._id ?? userId,
-        status: ORDER_STATUS.DRIVER_ASSIGNED,
-        'timeline.driverAssignedAt': new Date(),
+        pendingDriver: userId,
       },
     },
     { new: true },
@@ -65,6 +63,8 @@ const acceptJob = async (userId: Types.ObjectId, orderId: string) => {
 };
 
 const declineJob = async (_userId: Types.ObjectId, _orderId: string) => {
+  void _userId;
+  void _orderId;
   // No change to order in MVP
   return { declined: true };
 };

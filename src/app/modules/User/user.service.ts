@@ -20,6 +20,7 @@ import {
 } from './user.constant';
 import { UserValidation } from './user.validation';
 import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
+import DriverModel from '../Driver/driver.model';
 // import BookModel from '../Book/book.model';
 // import { OrderModel } from '../Order/order.model';
 import {
@@ -83,6 +84,130 @@ const createUserInDB = async (payload: IUser) => {
     return {
       userEmail: newUser.email,
     };
+  }
+};
+
+const createDriverAccountInDB = async (
+  user: IUser,
+  payload: Record<string, unknown>,
+  files: any,
+) => {
+  const existingUser = await UserModel.findById(user._id);
+
+  if (!existingUser) {
+    throw new AppError(httpStatus.NOT_FOUND, 'User not found!');
+  }
+
+  const fileMap = (files ?? {}) as Record<string, Express.Multer.File[]>;
+  const licenseFile = fileMap?.license?.[0];
+  const selfieFile = fileMap?.selfie?.[0];
+  const insuranceDocumentFile = fileMap?.insuranceDocument?.[0];
+
+  if (!licenseFile || !selfieFile || !insuranceDocumentFile) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'license, selfie, and insuranceDocument images are required!',
+    );
+  }
+
+  const uploaded: {
+    licenseUrl?: string;
+    selfieUrl?: string;
+    insuranceDocumentUrl?: string;
+  } = {};
+
+  try {
+    const licenseUploaded = await sendImageToCloudinary(licenseFile);
+    uploaded.licenseUrl = licenseUploaded.secure_url;
+
+    const selfieUploaded = await sendImageToCloudinary(selfieFile);
+    uploaded.selfieUrl = selfieUploaded.secure_url;
+
+    const insuranceUploaded = await sendImageToCloudinary(
+      insuranceDocumentFile,
+    );
+    uploaded.insuranceDocumentUrl = insuranceUploaded.secure_url;
+
+    const insuranceExpiration = payload?.insuranceExpiration
+      ? new Date(String(payload.insuranceExpiration))
+      : undefined;
+
+    const vehicleYear = payload?.vehicleYear
+      ? Number(payload.vehicleYear)
+      : undefined;
+
+    const driver = await DriverModel.findOneAndUpdate(
+      { user: user._id },
+      {
+        $set: {
+          // user: user._id,
+          licenseImageUrl: uploaded.licenseUrl,
+          selfieImageUrl: uploaded.selfieUrl,
+          insurance: {
+            provider: payload?.insuranceProvider,
+            policyNumber: payload?.insurancePolicyNumber,
+            expiration: insuranceExpiration,
+            documentImageUrl: uploaded.insuranceDocumentUrl,
+          },
+          vehicle: {
+            make: payload?.vehicleMake,
+            model: payload?.vehicleModel,
+            year: vehicleYear,
+            plate: payload?.vehiclePlate,
+          },
+        },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
+
+    if (!driver) {
+      await Promise.all(
+        [uploaded.licenseUrl, uploaded.selfieUrl, uploaded.insuranceDocumentUrl]
+          .filter(Boolean)
+          .map((url) => deleteImageFromCloudinary(url as string)),
+      );
+
+      throw new AppError(
+        httpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to create driver account',
+      );
+    } else {
+      // Driver created successfully
+      existingUser.role = 'DRIVER';
+      await existingUser.save();
+    }
+
+    return {
+      user: {
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
+
+      licenseImageUrl: uploaded.licenseUrl,
+      selfieImageUrl: uploaded.selfieUrl,
+      insurance: {
+        provider: payload?.insuranceProvider,
+        policyNumber: payload?.insurancePolicyNumber,
+        expiration: insuranceExpiration,
+        documentImageUrl: uploaded.insuranceDocumentUrl,
+      },
+      vehicle: {
+        make: payload?.vehicleMake,
+        model: payload?.vehicleModel,
+        year: vehicleYear,
+        plate: payload?.vehiclePlate,
+      },
+    };
+  } catch (e) {
+    await Promise.all(
+      [uploaded.licenseUrl, uploaded.selfieUrl, uploaded.insuranceDocumentUrl]
+        .filter(Boolean)
+        .map((url) => deleteImageFromCloudinary(url as string)),
+    );
+
+    throw e;
   }
 };
 
@@ -1249,6 +1374,7 @@ const adminGetAllUsersFromDB = async (query: Record<string, unknown>) => {
 
 export const UserService = {
   createUserInDB,
+  createDriverAccountInDB,
   sendSignupOtpAgain,
   verifySignupOtpInDB,
   signinInDB,

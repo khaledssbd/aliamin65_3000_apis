@@ -2,10 +2,36 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { OrderService } from './order.service';
 import { getIO } from '../../socket';
+import AddressModel from '../Address/address.model';
+import DriverModel from '../Driver/driver.model';
 
 const create = asyncHandler(async (req, res) => {
   const result = await OrderService.create(req.user._id, req.body);
-  getIO()?.emit('order:created', { orderId: result._id });
+
+  const ordersNs = getIO()?.of('/orders');
+  ordersNs?.to(`customer:${String(req.user._id)}`).emit('order:created', {
+    orderId: result._id,
+  });
+
+  const pickupAddress = await AddressModel.findById(result.pickupAddress);
+  const coords = pickupAddress?.location?.coordinates;
+  if (coords && coords.length === 2) {
+    const nearbyDrivers = await DriverModel.find({
+      isAvailable: true,
+      currentLocation: {
+        $near: {
+          $geometry: { type: 'Point', coordinates: coords },
+          $maxDistance: 5000,
+        },
+      },
+    }).select('user');
+
+    nearbyDrivers.forEach((d) => {
+      ordersNs?.to(`driver:${String(d.user)}`).emit('driver:job:new', {
+        orderId: result._id,
+      });
+    });
+  }
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,

@@ -16,6 +16,20 @@ const createUser = asyncHandler(async (req, res) => {
   });
 });
 
+const createDriverAccount = asyncHandler(async (req, res) => {
+  const result = await UserService.createDriverAccountInDB(
+    req.user,
+    req.body,
+    req.files,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Driver account created successfully!',
+    data: result,
+  });
+});
+
 // 2. sendSignupOtpAgain
 const sendSignupOtpAgain = asyncHandler(async (req, res) => {
   const userEmail = req.body.userEmail;
@@ -221,6 +235,7 @@ const adminGetAllUsers = asyncHandler(async (req, res) => {
 
 export const UserController = {
   createUser,
+  createDriverAccount,
   sendSignupOtpAgain,
   verifySignupOtp,
   signin,

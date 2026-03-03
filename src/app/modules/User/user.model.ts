@@ -13,11 +13,10 @@ const userSchema = new Schema<IUser, IUserModel>(
       trim: true,
       required: [true, 'Name is required!'],
     },
-    // address: {
-    //   type: String,
-    //   trim: true,
-    //   required: [true, 'Address is required!'],
-    // },
+    address: {
+      type: String,
+      trim: true,
+    },
     phone: {
       type: String,
       trim: true,

@@ -3,10 +3,13 @@
 Base path: `/api/v1/user`
 
 ## Overview
+
 Account lifecycle: signup with OTP, signin, profile, password management, deactivation and admin listing.
 
 ## REST Endpoints
+
 - POST `/signup` – Create user with email + password.
+- POST `/driver/signup` – Create DRIVER user + upload onboarding images (multipart/form-data).
 - POST `/send-signup-otp-again` – Resend OTP.
 - POST `/verify-signup-otp` – Verify OTP.
 - POST `/signin` – Login and receive tokens.
@@ -24,6 +27,17 @@ Account lifecycle: signup with OTP, signin, profile, password management, deacti
 - GET `/admin-get-all` – Admin only, list users.
 
 ## Notes
+
 - Roles: CUSTOMER, DRIVER, ADMIN, SUPER_ADMIN.
 - Profile photo stored via Cloud service; server expects `user` key for upload.
 
+## Driver Signup Payload
+
+- Multipart fields
+  - `license` (file)
+  - `selfie` (file)
+  - `insuranceDocument` (file)
+- Body
+  - `name`, `phone`, `email`, `password`
+  - `insuranceProvider?`, `insurancePolicyNumber?`, `insuranceExpiration?`
+  - `vehicleMake?`, `vehicleModel?`, `vehicleYear?`, `vehiclePlate?`

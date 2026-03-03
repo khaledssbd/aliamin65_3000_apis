@@ -50,6 +50,7 @@ const getById = async (id: string, userId?: Types.ObjectId) => {
   if (userId) filter.$or = [{ customer: userId }, { driver: userId }];
   return OrderModel.findOne(filter)
     .populate('driver')
+    .populate('pendingDriver')
     .populate('pickupAddress')
     .populate('deliveryAddress');
 };

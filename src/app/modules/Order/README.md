@@ -3,9 +3,11 @@
 Base path: `/api/v1/orders`
 
 ## Overview
+
 Per-bag laundry request lifecycle. Status flow: `REQUESTED → DRIVER_ASSIGNED → PICKED_UP → WASHING_DRYING → OUT_FOR_DELIVERY → DELIVERED → COMPLETED`. Supports special instructions, bag counts, scheduled vs ASAP, and full driver workflow.
 
 ## REST Endpoints
+
 - POST `/` – Create order. Body: `{ pickupAddressId, deliveryAddressId, serviceType, pickupType, scheduledPickupAt?, bags, specialInstructions? }` → totals computed from active pricing.
 - GET `/` – List customer's orders.
 - GET `/:id` – Get order details.
@@ -22,19 +24,25 @@ Per-bag laundry request lifecycle. Status flow: `REQUESTED → DRIVER_ASSIGNED �
 - GET `/:id/timeline` – Order timeline.
 
 ## Socket Events
+
+Events are emitted on the `/orders` namespace.
+
 - Server → Client
-  - `order:created` `{ orderId }`
-  - `order:assigned` `{ orderId, driverId }`
-  - `order:status` `{ orderId, status }`
-  - `order:tracking:location` `{ orderId, lat, lng }`
-  - `order:bagcount` `{ orderId, pickup|delivery, bagCount }`
-  - `order:stage` `{ orderId, stage }`
-  - `order:readytime` `{ orderId, isoTime }`
+  - `order:created` `{ orderId }` (to `customer:{userId}`)
+  - `driver:job:new` `{ orderId }` (to nearby `driver:{userId}`)
+  - `driver:job:locked` `{ orderId }`
+  - `order:driver:accepted` `{ orderId, driverUserId }` (to customer)
+  - `order:confirmed` `{ orderId, driverUserId }` (to customer) / `{ orderId, customerUserId }` (to driver)
+  - `order:hidden` `{ orderId }` (to other drivers after confirm)
+  - `order:tracking:location` `{ orderId, lat, lng }` (to `order:{orderId}` room)
+
 - Client → Server
-  - `order:tracking:location:push` `{ orderId, lat, lng }` (driver)
-  - `order:stage:push` `{ orderId, stage }` (driver)
-  - `order:readytime:push` `{ orderId, isoTime }` (driver)
+  - `orders:join` `{ userId, role, orderId? }` (joins `customer:{id}` / `driver:{id}` / `order:{orderId}`)
+  - `order:driver:accept` `{ orderId, driverUserId }`
+  - `order:customer:confirm` `{ orderId, customerUserId }`
+  - `order:tracking:location:push` `{ orderId, driverUserId, lat, lng }` (driver)
 
 ## Data Model
+
 - [order.interface.ts](file:///d:/ST-Tasks/aliamin65/aliamin65_apis/src/app/modules/Order/order.interface.ts)
 - [order.model.ts](file:///d:/ST-Tasks/aliamin65/aliamin65_apis/src/app/modules/Order/order.model.ts)

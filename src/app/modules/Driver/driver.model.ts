@@ -9,6 +9,18 @@ const driverSchema = new Schema<IDriver>(
       required: true,
       unique: true,
     },
+    currentLocation: {
+      type: {
+        type: String,
+        enum: ['Point'],
+      },
+      coordinates: {
+        type: [Number],
+      },
+      updatedAt: {
+        type: Date,
+      },
+    },
     licenseImageUrl: { type: String },
     selfieImageUrl: { type: String },
     isAvailable: { type: Boolean, default: false },
@@ -39,6 +51,8 @@ const driverSchema = new Schema<IDriver>(
   },
   { timestamps: true, versionKey: false },
 );
+
+driverSchema.index({ currentLocation: '2dsphere' });
 
 const DriverModel = model<IDriver>('Driver', driverSchema);
 export default DriverModel;

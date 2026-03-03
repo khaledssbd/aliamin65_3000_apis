@@ -15,6 +15,18 @@ router
     UserController.createUser,
   );
 
+// registerDriverSchema
+router.route('/create-driver-account').post(
+  auth(ROLE.DRIVER),
+  multerUpload.fields([
+    { name: 'license', maxCount: 1 },
+    { name: 'selfie', maxCount: 1 },
+    { name: 'insuranceDocument', maxCount: 1 },
+  ]),
+  validateRequest(UserValidation.createDriverAccountSchema),
+  UserController.createDriverAccount,
+);
+
 // 2. sendSignupOtpAgain
 router
   .route('/send-signup-otp-again')

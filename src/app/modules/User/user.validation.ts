@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { ROLE } from './user.constant';
 
 // Reusable validators
 export const zodEnumFromObject = <T extends Record<string, string>>(obj: T) =>
@@ -35,7 +34,44 @@ const createUserSchema = z.object({
       .min(6, { message: 'Password must be at least 6 characters long' })
       .max(20, { message: 'Password cannot exceed 20 characters' }),
 
-    role: zodEnumFromObject(ROLE),
+    // role: zodEnumFromObject(ROLE),
+  }),
+});
+
+const createDriverAccountSchema = z.object({
+  body: z.object({
+    // name: z.string({
+    //   error: 'Name is required',
+    // }),
+    // phone: z.string({
+    //   error: 'Phone is required',
+    // }),
+    // email: z
+    //   .string({
+    //     error: 'Email is required!',
+    //   })
+    //   .email({ message: 'Invalid email format!' })
+    //   .transform((email) => email.toLowerCase())
+    //   .refine((email) => email !== '', { message: 'Email is required!' })
+    //   .refine((value) => typeof value === 'string', {
+    //     message: 'Email must be string!',
+    //   }),
+    // password: z
+    //   .string({
+    //     error: 'Password is required',
+    //   })
+    //   .min(6, { message: 'Password must be at least 6 characters long' })
+    //   .max(20, { message: 'Password cannot exceed 20 characters' }),
+    insuranceProvider: z.string().optional(),
+    insurancePolicyNumber: z.string().optional(),
+    insuranceExpiration: z.string().optional(),
+    vehicleMake: z.string().optional(),
+    vehicleModel: z.string().optional(),
+    vehicleYear: z.string().optional(),
+    vehiclePlate: z.string().optional(),
+
+    // role: zodEnumFromObject({ DRIVER: 'DRIVER' }),
+    role: z.enum(['DRIVER']),
   }),
 });
 
@@ -226,6 +262,7 @@ const updateUserDataSchema = z.object({
 
 export const UserValidation = {
   createUserSchema,
+  createDriverAccountSchema,
   sendSignupOtpAgainSchema,
   verifySignupOtpSchema,
   signinSchema,

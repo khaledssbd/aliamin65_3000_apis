@@ -2,6 +2,7 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { DriverService } from './driver.service';
 import { getIO } from '../../socket';
+import OrderModel from '../Order/order.model';
 
 const onboarding = asyncHandler(async (req, res) => {
   const result = await DriverService.upsertMine(req.user._id, req.body);
@@ -78,7 +79,21 @@ const acceptJob = asyncHandler(async (req, res) => {
     req.user._id,
     String(req.params.orderId),
   );
-  getIO()?.emit('driver:job:locked', { orderId: req.params.orderId });
+
+  const ordersNs = getIO()?.of('/orders');
+  if (result) {
+    const order = await OrderModel.findById(String(req.params.orderId));
+    if (order) {
+      ordersNs
+        ?.to(`customer:${String(order.customer)}`)
+        .emit('order:driver:accepted', {
+          orderId: req.params.orderId,
+          driverUserId: String(req.user._id),
+        });
+    }
+  }
+
+  ordersNs?.emit('driver:job:locked', { orderId: req.params.orderId });
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

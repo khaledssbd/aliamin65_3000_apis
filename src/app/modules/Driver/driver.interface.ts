@@ -5,6 +5,11 @@ export type TBackgroundStatus = 'PENDING' | 'APPROVED' | 'FAILED';
 
 export interface IDriver extends Document {
   user: Types.ObjectId;
+  currentLocation?: {
+    type: 'Point';
+    coordinates: [number, number];
+    updatedAt?: Date;
+  };
   licenseImageUrl?: string;
   selfieImageUrl?: string;
   isAvailable?: boolean;

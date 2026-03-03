@@ -16,6 +16,7 @@ export type TPickupType = 'ASAP' | 'SCHEDULED';
 export interface IOrder extends Document {
   customer: Types.ObjectId;
   driver?: Types.ObjectId;
+  pendingDriver?: Types.ObjectId;
   pickupAddress: Types.ObjectId;
   deliveryAddress: Types.ObjectId;
   serviceType: TServiceType;
