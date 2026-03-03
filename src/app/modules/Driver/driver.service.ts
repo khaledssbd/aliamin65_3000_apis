@@ -3,12 +3,16 @@ import { Types } from 'mongoose';
 import OrderModel from '../Order/order.model';
 import { ORDER_STATUS } from '../../constants';
 
-const upsertMine = async (userId: Types.ObjectId, payload: any) => {
+const upsertMine = async (
+  userId: Types.ObjectId,
+  payload: Record<string, unknown>,
+) => {
   const doc = await DriverModel.findOneAndUpdate({ user: userId }, payload, {
     upsert: true,
     new: true,
     setDefaultsOnInsert: true,
   });
+
   return doc;
 };
 

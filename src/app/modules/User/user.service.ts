@@ -251,6 +251,7 @@ const signinInDB = async (payload: { email: string; password: string }) => {
   return {
     accessToken,
     refreshToken,
+    user: accessTokenPayload,
   };
 };
 

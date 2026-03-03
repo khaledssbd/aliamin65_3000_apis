@@ -6,9 +6,9 @@ import { BackgroundCheckController } from './backgroundCheck.controller';
 const router = Router();
 
 router.post(
-  '/start',
+  '/sync-status/:id',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  BackgroundCheckController.start,
+  BackgroundCheckController.checkDriverBackgroundStatus,
 );
 
 router.get(

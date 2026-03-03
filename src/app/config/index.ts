@@ -60,4 +60,11 @@ export default {
     fail_url: process.env.FAIL_URL,
     cancel_url: process.env.CANCEL_URL,
   },
+
+  status: {
+    checkr_api_key: process.env.CHECKR_API_KEY,
+    karmacheck_api_key: process.env.KARMACHECK_API_KEY,
+    sterling_api_key: process.env.STERLING_API_KEY,
+    veriff_api_key: process.env.VERIFF_API_KEY,
+  },
 };
