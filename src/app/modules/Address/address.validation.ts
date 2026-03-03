@@ -1,20 +1,20 @@
 import { z } from 'zod';
 
-// 1. createSchema
-const createSchema = z.object({
+// 1. createAddressValidationSchema
+const createAddressValidationSchema = z.object({
   body: z.object({
     address: z.string({ error: 'Address is required' }).min(1),
   }),
 });
 
-// 2. updateSchema
-const updateSchema = z.object({
+// 2. updateAddressValidationSchema
+const updateAddressValidationSchema = z.object({
   body: z.object({
     address: z.string({ error: 'Address is required' }).min(1),
   }),
 });
 
 export const AddressValidation = {
-  createSchema,
-  updateSchema,
+  createAddressValidationSchema,
+  updateAddressValidationSchema,
 };

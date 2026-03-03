@@ -6,13 +6,15 @@ import { RatingValidation } from './rating.validation';
 
 const router = Router();
 
+// 1. createRating
 router.post(
   '/',
   auth(ROLE.CUSTOMER),
-  validateRequest(RatingValidation.create),
-  RatingController.create,
+  validateRequest(RatingValidation.createRatingValidationSchema),
+  RatingController.createRating,
 );
 
-router.get('/driver/:driverId', RatingController.byDriver);
+// 2. getDriverRatings
+router.get('/driver/:driverId', RatingController.getDriverRatings);
 
 export const RatingRoutes = router;

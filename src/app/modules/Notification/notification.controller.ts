@@ -2,11 +2,9 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { NotificationService } from './notification.service';
 
-// 1. listMyNotifications
-const listMyNotifications = asyncHandler(async (req, res) => {
-  const docs = await NotificationService.listMyNotificationsFromDB(
-    req.user._id,
-  );
+// 1. getMyNotifications
+const getMyNotifications = asyncHandler(async (req, res) => {
+  const docs = await NotificationService.getMyNotificationsFromDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -17,7 +15,7 @@ const listMyNotifications = asyncHandler(async (req, res) => {
 
 // 2. markMyNotificationAsRead
 const markMyNotificationAsRead = asyncHandler(async (req, res) => {
-  const doc = await NotificationService.markMyNotificationAsReadInDB(
+  const doc = await NotificationService.markMyNotificationAsReadIntoDB(
     req.user._id,
     String(req.params.id),
   );
@@ -27,7 +25,7 @@ const markMyNotificationAsRead = asyncHandler(async (req, res) => {
 
 // 3. markAllMyNotificationsAsRead
 const markAllMyNotificationsAsRead = asyncHandler(async (req, res) => {
-  await NotificationService.markAllMyNotificationsAsReadInDB(req.user._id);
+  await NotificationService.markAllMyNotificationsAsReadIntoDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -38,7 +36,7 @@ const markAllMyNotificationsAsRead = asyncHandler(async (req, res) => {
 
 // 4. deleteMyNotification
 const deleteMyNotification = asyncHandler(async (req, res) => {
-  const doc = await NotificationService.deleteMyNotificationInDB(
+  const doc = await NotificationService.deleteMyNotificationFromDB(
     req.user._id,
     String(req.params.id),
   );
@@ -51,7 +49,7 @@ const deleteMyNotification = asyncHandler(async (req, res) => {
 });
 
 export const NotificationController = {
-  listMyNotifications,
+  getMyNotifications,
   markMyNotificationAsRead,
   markAllMyNotificationsAsRead,
   deleteMyNotification,

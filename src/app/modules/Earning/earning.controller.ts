@@ -2,46 +2,46 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { EarningService } from './earning.service';
 
-// 1. listMyEarnings
-const listMyEarnings = asyncHandler(async (req, res) => {
-  const docs = await EarningService.listMyEarningsFromDB(req.user._id);
+// 1. getEarnings
+const getEarnings = asyncHandler(async (req, res) => {
+  const docs = await EarningService.getEarningsFromDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Earnings',
+    message: 'Earnings retrieved',
     data: docs,
   });
 });
 
-// 2. getMyEarningByOrderId
-const getMyEarningByOrderId = asyncHandler(async (req, res) => {
-  const doc = await EarningService.getMyEarningByOrderIdFromDB(
+// 2. getEarning
+const getEarning = asyncHandler(async (req, res) => {
+  const doc = await EarningService.getEarningFromDB(
     req.user._id,
     String(req.params.orderId),
   );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Earning',
+    message: 'Earning retrieved',
     data: doc,
   });
 });
 
-// 3. getMyEarningsSummaryForToday
-const getMyEarningsSummaryForToday = asyncHandler(async (req, res) => {
-  const summary = await EarningService.getMyEarningsSummaryForTodayFromDB(
+// 3. getTodayEarningsSummary
+const getTodayEarningsSummary = asyncHandler(async (req, res) => {
+  const summary = await EarningService.getTodayEarningsSummaryFromDB(
     req.user._id,
   );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Today summary',
+    message: 'Today earnings summary retrieved',
     data: summary,
   });
 });
 
 export const EarningController = {
-  listMyEarnings,
-  getMyEarningByOrderId,
-  getMyEarningsSummaryForToday,
+  getEarnings,
+  getEarning,
+  getTodayEarningsSummary,
 };

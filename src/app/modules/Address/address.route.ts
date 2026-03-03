@@ -6,39 +6,39 @@ import { AddressValidation } from './address.validation';
 
 const router = Router();
 
-// 1. listMineAddress
+// 1. getMyAddress
 router.get(
   '/',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
-  AddressController.listMineAddress,
+  AddressController.getMyAddress,
 );
 
 // 2. createAddress
 router.post(
   '/',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
-  validateRequest(AddressValidation.createSchema),
+  validateRequest(AddressValidation.createAddressValidationSchema),
   AddressController.createAddress,
 );
 
 // 3. updateAddress
 router.patch(
-  '/:id',
+  '/',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
-  validateRequest(AddressValidation.updateSchema),
+  validateRequest(AddressValidation.updateAddressValidationSchema),
   AddressController.updateAddress,
 );
 
-// 4. removeAddress
+// 4. deleteAddress
 router.delete(
-  '/:id',
+  '/',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
-  AddressController.removeAddress,
+  AddressController.deleteAddress,
 );
 
 // 5. setDefaultAddress
 router.patch(
-  '/:id/default',
+  '/default',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
   AddressController.setDefaultAddress,
 );

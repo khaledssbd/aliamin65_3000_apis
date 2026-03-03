@@ -3,8 +3,8 @@ import { Types } from 'mongoose';
 import OrderModel from '../Order/order.model';
 import { ORDER_STATUS } from '../../constants';
 
-// 1. upsertMineInDB
-const upsertMineInDB = async (
+// 1. upsertDriverProfileIntoDB
+const upsertDriverProfileIntoDB = async (
   userId: Types.ObjectId,
   payload: Record<string, unknown>,
 ) => {
@@ -17,8 +17,8 @@ const upsertMineInDB = async (
   return doc;
 };
 
-// 2. setAvailabilityInDB
-const setAvailabilityInDB = async (
+// 2. setDriverAvailabilityIntoDB
+const setDriverAvailabilityIntoDB = async (
   userId: Types.ObjectId,
   isAvailable: boolean,
 ) => {
@@ -30,16 +30,14 @@ const setAvailabilityInDB = async (
   return doc;
 };
 
-// 3. meInDB
-const meInDB = async (userId: Types.ObjectId) => {
+// 3. getDriverProfileFromDB
+const getDriverProfileFromDB = async (userId: Types.ObjectId) => {
   return DriverModel.findOne({ user: userId });
 };
 
-// 4. jobsAvailableInDB
-const jobsAvailableInDB = async (userId: Types.ObjectId) => {
+// 4. getAvailableJobsForDriverFromDB
+const getAvailableJobsForDriverFromDB = async (userId: Types.ObjectId) => {
   void userId;
-  // Basic filter: unassigned and requested
-  // Future: limit by zone/geo
   return OrderModel.find({
     status: ORDER_STATUS.REQUESTED,
     driver: { $exists: false },
@@ -48,8 +46,11 @@ const jobsAvailableInDB = async (userId: Types.ObjectId) => {
     .limit(50);
 };
 
-// 5. acceptJobInDB
-const acceptJobInDB = async (userId: Types.ObjectId, orderId: string) => {
+// 5. acceptJobByDriverIntoDB
+const acceptJobByDriverIntoDB = async (userId: Types.ObjectId, orderId: string) => {
+  const driver = await DriverModel.findOne({ user: userId });
+  if (!driver) return null;
+
   const doc = await OrderModel.findOneAndUpdate(
     {
       _id: orderId,
@@ -58,7 +59,7 @@ const acceptJobInDB = async (userId: Types.ObjectId, orderId: string) => {
     },
     {
       $set: {
-        driver: userId,
+        driver: driver._id,
         status: ORDER_STATUS.DRIVER_ASSIGNED,
         'timeline.driverAssignedAt': new Date(),
       },
@@ -69,23 +70,24 @@ const acceptJobInDB = async (userId: Types.ObjectId, orderId: string) => {
   return doc;
 };
 
-// 6. declineJobInDB
-const declineJobInDB = async (_userId: Types.ObjectId, _orderId: string) => {
-  void _userId;
-  void _orderId;
-  // No change to order in MVP
-  return { declined: true };
+// 6. declineJobByDriverIntoDB
+const declineJobByDriverIntoDB = async (userId: Types.ObjectId, orderId: string) => {
+  // In a real scenario, we might track which drivers declined which jobs to avoid re-offering
+  // For now, we'll just return success to indicate the driver's intent was handled
+  return { userId, orderId, declined: true, declinedAt: new Date() };
 };
 
-// 7. cancelJobInDB
-const cancelJobInDB = async (
+// 7. cancelJobByDriverIntoDB
+const cancelJobByDriverIntoDB = async (
   userId: Types.ObjectId,
   orderId: string,
   reason?: string,
 ) => {
   const driver = await DriverModel.findOne({ user: userId });
+  if (!driver) return null;
+
   const doc = await OrderModel.findOneAndUpdate(
-    { _id: orderId, driver: driver?._id ?? userId },
+    { _id: orderId, driver: driver._id },
     {
       $set: { driver: null, status: ORDER_STATUS.REQUESTED },
       $push: { 'timeline.canceledAt': new Date() },
@@ -96,11 +98,11 @@ const cancelJobInDB = async (
 };
 
 export const DriverService = {
-  upsertMineInDB,
-  setAvailabilityInDB,
-  meInDB,
-  jobsAvailableInDB,
-  acceptJobInDB,
-  declineJobInDB,
-  cancelJobInDB,
+  upsertDriverProfileIntoDB,
+  setDriverAvailabilityIntoDB,
+  getDriverProfileFromDB,
+  getAvailableJobsForDriverFromDB,
+  acceptJobByDriverIntoDB,
+  declineJobByDriverIntoDB,
+  cancelJobByDriverIntoDB,
 };

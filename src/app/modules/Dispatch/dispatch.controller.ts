@@ -2,90 +2,90 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { DispatchService } from './dispatch.service';
 
-// 1. createDispatchBatch
-const createDispatchBatch = asyncHandler(async (req, res) => {
-  const result = await DispatchService.createDispatchBatchInDB(req.body);
+// 1. createDispatch
+const createDispatch = asyncHandler(async (req, res) => {
+  const result = await DispatchService.createDispatchIntoDB(req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
-    message: 'Batch created',
+    message: 'Dispatch created',
     data: result,
   });
 });
 
-// 2. reassignDispatchBatchDriver
-const reassignDispatchBatchDriver = asyncHandler(async (req, res) => {
-  const result = await DispatchService.reassignDispatchBatchDriverInDB(
+// 2. reassignDispatch
+const reassignDispatch = asyncHandler(async (req, res) => {
+  const result = await DispatchService.reassignDispatchIntoDB(
     String(req.params.id),
     req.body.driverId,
   );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Reassigned',
+    message: 'Dispatch reassigned',
     data: result,
   });
 });
 
-// 3. updateDispatchBatchSequence
-const updateDispatchBatchSequence = asyncHandler(async (req, res) => {
-  const result = await DispatchService.updateDispatchBatchSequenceInDB(
+// 3. updateDispatchSequence
+const updateDispatchSequence = asyncHandler(async (req, res) => {
+  const result = await DispatchService.updateDispatchSequenceIntoDB(
     String(req.params.id),
     req.body.sequence,
   );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Sequence updated',
+    message: 'Dispatch sequence updated',
     data: result,
   });
 });
 
-// 4. updateDispatchBatchStatus
-const updateDispatchBatchStatus = asyncHandler(async (req, res) => {
-  const result = await DispatchService.updateDispatchBatchStatusInDB(
+// 4. updateDispatchStatus
+const updateDispatchStatus = asyncHandler(async (req, res) => {
+  const result = await DispatchService.updateDispatchStatusIntoDB(
     String(req.params.id),
     req.body.status,
   );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Status updated',
+    message: 'Dispatch status updated',
     data: result,
   });
 });
 
-// 5. listMyAssignedDispatchBatches
-const listMyAssignedDispatchBatches = asyncHandler(async (req, res) => {
-  const result = await DispatchService.listMyAssignedDispatchBatchesInDB(
+// 5. getDriverDispatches
+const getDriverDispatches = asyncHandler(async (req, res) => {
+  const result = await DispatchService.getDriverDispatchesFromDB(
     req.user._id,
   );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'My routes',
+    message: 'Driver dispatches retrieved',
     data: result,
   });
 });
 
-// 6. getDispatchBatchById
-const getDispatchBatchById = asyncHandler(async (req, res) => {
-  const result = await DispatchService.getDispatchBatchByIdFromDB(
+// 6. getDispatch
+const getDispatch = asyncHandler(async (req, res) => {
+  const result = await DispatchService.getDispatchFromDB(
     String(req.params.id),
   );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Batch detail',
+    message: 'Dispatch retrieved',
     data: result,
   });
 });
 
 export const DispatchController = {
-  createDispatchBatch,
-  reassignDispatchBatchDriver,
-  updateDispatchBatchSequence,
-  updateDispatchBatchStatus,
-  listMyAssignedDispatchBatches,
-  getDispatchBatchById,
+  createDispatch,
+  reassignDispatch,
+  updateDispatchSequence,
+  updateDispatchStatus,
+  getDriverDispatches,
+  getDispatch,
 };

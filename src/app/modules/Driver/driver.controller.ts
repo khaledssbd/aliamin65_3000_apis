@@ -5,9 +5,9 @@ import { getIO } from '../../socket';
 import OrderModel from '../Order/order.model';
 import DriverModel from './driver.model';
 
-// 1. onboarding
-const onboarding = asyncHandler(async (req, res) => {
-  const result = await DriverService.upsertMineInDB(req.user._id, req.body);
+// 1. onboardDriver
+const onboardDriver = asyncHandler(async (req, res) => {
+  const result = await DriverService.upsertDriverProfileIntoDB(req.user._id, req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -16,9 +16,9 @@ const onboarding = asyncHandler(async (req, res) => {
   });
 });
 
-// 2. insurance
-const insurance = asyncHandler(async (req, res) => {
-  const result = await DriverService.upsertMineInDB(req.user._id, {
+// 2. updateDriverInsurance
+const updateDriverInsurance = asyncHandler(async (req, res) => {
+  const result = await DriverService.upsertDriverProfileIntoDB(req.user._id, {
     insurance: req.body,
   });
 
@@ -29,9 +29,9 @@ const insurance = asyncHandler(async (req, res) => {
   });
 });
 
-// 3. vehicle
-const vehicle = asyncHandler(async (req, res) => {
-  const result = await DriverService.upsertMineInDB(req.user._id, {
+// 3. updateDriverVehicle
+const updateDriverVehicle = asyncHandler(async (req, res) => {
+  const result = await DriverService.upsertDriverProfileIntoDB(req.user._id, {
     vehicle: req.body,
   });
 
@@ -42,9 +42,9 @@ const vehicle = asyncHandler(async (req, res) => {
   });
 });
 
-// 4. me
-const me = asyncHandler(async (req, res) => {
-  const result = await DriverService.meInDB(req.user._id);
+// 4. getMyDriverProfile
+const getMyDriverProfile = asyncHandler(async (req, res) => {
+  const result = await DriverService.getDriverProfileFromDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -53,9 +53,9 @@ const me = asyncHandler(async (req, res) => {
   });
 });
 
-// 5. availability
-const availability = asyncHandler(async (req, res) => {
-  const result = await DriverService.setAvailabilityInDB(
+// 5. updateDriverAvailability
+const updateDriverAvailability = asyncHandler(async (req, res) => {
+  const result = await DriverService.setDriverAvailabilityIntoDB(
     req.user._id,
     req.body.isAvailable,
   );
@@ -70,9 +70,9 @@ const availability = asyncHandler(async (req, res) => {
   });
 });
 
-// 6. jobsAvailable
-const jobsAvailable = asyncHandler(async (req, res) => {
-  const result = await DriverService.jobsAvailableInDB(req.user._id);
+// 6. getAvailableJobsForDriver
+const getAvailableJobsForDriver = asyncHandler(async (req, res) => {
+  const result = await DriverService.getAvailableJobsForDriverFromDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -81,9 +81,9 @@ const jobsAvailable = asyncHandler(async (req, res) => {
   });
 });
 
-// 7. acceptJob
-const acceptJob = asyncHandler(async (req, res) => {
-  const result = await DriverService.acceptJobInDB(
+// 7. acceptJobByDriver
+const acceptJobByDriver = asyncHandler(async (req, res) => {
+  const result = await DriverService.acceptJobByDriverIntoDB(
     req.user._id,
     String(req.params.orderId),
   );
@@ -123,9 +123,9 @@ const acceptJob = asyncHandler(async (req, res) => {
   });
 });
 
-// 8. declineJob
-const declineJob = asyncHandler(async (req, res) => {
-  const result = await DriverService.declineJobInDB(
+// 8. declineJobByDriver
+const declineJobByDriver = asyncHandler(async (req, res) => {
+  const result = await DriverService.declineJobByDriverIntoDB(
     req.user._id,
     String(req.params.orderId),
   );
@@ -137,9 +137,9 @@ const declineJob = asyncHandler(async (req, res) => {
   });
 });
 
-// 9. cancelJob
-const cancelJob = asyncHandler(async (req, res) => {
-  const result = await DriverService.cancelJobInDB(
+// 9. cancelJobByDriver
+const cancelJobByDriver = asyncHandler(async (req, res) => {
+  const result = await DriverService.cancelJobByDriverIntoDB(
     req.user._id,
     String(req.params.orderId),
     req.body?.reason,
@@ -153,13 +153,13 @@ const cancelJob = asyncHandler(async (req, res) => {
 });
 
 export const DriverController = {
-  onboarding,
-  insurance,
-  vehicle,
-  me,
-  availability,
-  jobsAvailable,
-  acceptJob,
-  declineJob,
-  cancelJob,
+  onboardDriver,
+  updateDriverInsurance,
+  updateDriverVehicle,
+  getMyDriverProfile,
+  updateDriverAvailability,
+  getAvailableJobsForDriver,
+  acceptJobByDriver,
+  declineJobByDriver,
+  cancelJobByDriver,
 };

@@ -2,16 +2,16 @@ import CardModel from './card.model';
 import { Types } from 'mongoose';
 import type { TCardAttachPayload } from './card.validation';
 
-// 1. listMySavedCardsInDB
-const listMySavedCardsInDB = async (userId: Types.ObjectId) => {
+// 1. getSavedCardsFromDB
+const getSavedCardsFromDB = async (userId: Types.ObjectId) => {
   return CardModel.find({ user: userId }).sort({
     isDefault: -1,
     createdAt: -1,
   });
 };
 
-// 2. attachNewCardToMyAccountInDB
-const attachNewCardToMyAccountInDB = async (
+// 2. createCardIntoDB
+const createCardIntoDB = async (
   userId: Types.ObjectId,
   payload: TCardAttachPayload,
 ) => {
@@ -34,8 +34,8 @@ const attachNewCardToMyAccountInDB = async (
   return doc;
 };
 
-// 3. setMyDefaultCardInDB
-const setMyDefaultCardInDB = async (userId: Types.ObjectId, id: string) => {
+// 3. setDefaultCardIntoDB
+const setDefaultCardIntoDB = async (userId: Types.ObjectId, id: string) => {
   const doc = await CardModel.findOneAndUpdate(
     { _id: id, user: userId },
     { $set: { isDefault: true } },
@@ -48,14 +48,14 @@ const setMyDefaultCardInDB = async (userId: Types.ObjectId, id: string) => {
   return doc;
 };
 
-// 4. detachMyCardInDB
-const detachMyCardInDB = async (userId: Types.ObjectId, id: string) => {
+// 4. deleteCardFromDB
+const deleteCardFromDB = async (userId: Types.ObjectId, id: string) => {
   return CardModel.findOneAndDelete({ _id: id, user: userId });
 };
 
 export const CardService = {
-  listMySavedCardsInDB,
-  attachNewCardToMyAccountInDB,
-  setMyDefaultCardInDB,
-  detachMyCardInDB,
+  getSavedCardsFromDB,
+  createCardIntoDB,
+  setDefaultCardIntoDB,
+  deleteCardFromDB,
 };

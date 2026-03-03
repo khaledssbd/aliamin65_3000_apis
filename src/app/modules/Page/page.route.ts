@@ -5,18 +5,23 @@ import { PageController } from './page.controller';
 
 const router = Router();
 
-router.get('/slug/:slug', PageController.getBySlug);
+// 1. getPageBySlug
+router.get('/slug/:slug', PageController.getPageBySlug);
 
-router.get('/', auth(ROLE.ADMIN, ROLE.SUPER_ADMIN), PageController.list);
+// 2. getAllPages
+router.get('/', auth(ROLE.ADMIN, ROLE.SUPER_ADMIN), PageController.getAllPages);
 
-router.post('/', auth(ROLE.ADMIN, ROLE.SUPER_ADMIN), PageController.create);
+// 3. createPage
+router.post('/', auth(ROLE.ADMIN, ROLE.SUPER_ADMIN), PageController.createPage);
 
-router.patch('/:id', auth(ROLE.ADMIN, ROLE.SUPER_ADMIN), PageController.update);
+// 4. updatePage
+router.patch('/:id', auth(ROLE.ADMIN, ROLE.SUPER_ADMIN), PageController.updatePage);
 
+// 5. togglePagePublishStatus
 router.patch(
   '/:id/toggle',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  PageController.toggle,
+  PageController.togglePagePublishStatus,
 );
 
 export const PageRoutes = router;

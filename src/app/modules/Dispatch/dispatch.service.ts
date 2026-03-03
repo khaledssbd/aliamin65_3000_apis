@@ -1,8 +1,8 @@
 import DispatchModel from './dispatch.model';
 import { Types } from 'mongoose';
 
-// 1. createDispatchBatchInDB
-const createDispatchBatchInDB = async (payload: {
+// 1. createDispatchIntoDB
+const createDispatchIntoDB = async (payload: {
   driverId: string;
   orders: string[];
   zoneId?: string;
@@ -25,8 +25,8 @@ const createDispatchBatchInDB = async (payload: {
   return doc;
 };
 
-// 2. reassignDispatchBatchDriverInDB
-const reassignDispatchBatchDriverInDB = async (
+// 2. reassignDispatchIntoDB
+const reassignDispatchIntoDB = async (
   id: string,
   driverId: string,
 ) => {
@@ -37,8 +37,8 @@ const reassignDispatchBatchDriverInDB = async (
   );
 };
 
-// 3. updateDispatchBatchSequenceInDB
-const updateDispatchBatchSequenceInDB = async (
+// 3. updateDispatchSequenceIntoDB
+const updateDispatchSequenceIntoDB = async (
   id: string,
   sequence: string[],
 ) => {
@@ -49,8 +49,8 @@ const updateDispatchBatchSequenceInDB = async (
   );
 };
 
-// 4. updateDispatchBatchStatusInDB
-const updateDispatchBatchStatusInDB = async (id: string, status: string) => {
+// 4. updateDispatchStatusIntoDB
+const updateDispatchStatusIntoDB = async (id: string, status: string) => {
   return DispatchModel.findByIdAndUpdate(
     id,
     { $set: { status } },
@@ -58,8 +58,8 @@ const updateDispatchBatchStatusInDB = async (id: string, status: string) => {
   );
 };
 
-// 5. listMyAssignedDispatchBatchesInDB
-const listMyAssignedDispatchBatchesInDB = async (
+// 5. getDriverDispatchesFromDB
+const getDriverDispatchesFromDB = async (
   driverUserId: Types.ObjectId,
 ) => {
   return DispatchModel.find({ driver: driverUserId })
@@ -67,16 +67,16 @@ const listMyAssignedDispatchBatchesInDB = async (
     .limit(5);
 };
 
-// 6. getDispatchBatchByIdFromDB
-const getDispatchBatchByIdFromDB = async (id: string) => {
+// 6. getDispatchFromDB
+const getDispatchFromDB = async (id: string) => {
   return DispatchModel.findById(id).populate('orders');
 };
 
 export const DispatchService = {
-  createDispatchBatchInDB,
-  reassignDispatchBatchDriverInDB,
-  updateDispatchBatchSequenceInDB,
-  updateDispatchBatchStatusInDB,
-  listMyAssignedDispatchBatchesInDB,
-  getDispatchBatchByIdFromDB,
+  createDispatchIntoDB,
+  reassignDispatchIntoDB,
+  updateDispatchSequenceIntoDB,
+  updateDispatchStatusIntoDB,
+  getDriverDispatchesFromDB,
+  getDispatchFromDB,
 };

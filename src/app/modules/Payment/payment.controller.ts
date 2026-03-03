@@ -5,7 +5,7 @@ import { PaymentService } from './payment.service';
 // 1. createPaymentIntentForMyOrder
 const createPaymentIntentForMyOrder = asyncHandler(async (req, res) => {
   const { clientSecret } =
-    await PaymentService.createPaymentIntentForMyOrderInDB(
+    await PaymentService.createPaymentIntentForMyOrderIntoDB(
       req.user._id,
       req.body.orderId,
       req.body.amount,
@@ -20,7 +20,7 @@ const createPaymentIntentForMyOrder = asyncHandler(async (req, res) => {
 
 // 2. capturePaymentForMyOrder
 const capturePaymentForMyOrder = asyncHandler(async (req, res) => {
-  const doc = await PaymentService.capturePaymentForMyOrderInDB(
+  const doc = await PaymentService.capturePaymentForMyOrderIntoDB(
     req.user._id,
     req.body.orderId,
   );

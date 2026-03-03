@@ -5,9 +5,9 @@ import { getIO } from '../../socket';
 import DriverModel from '../Driver/driver.model';
 import UserModel from '../User/user.model';
 
-// 1. create
-const create = asyncHandler(async (req, res) => {
-  const result = await OrderService.createInDB(req.user._id, req.body);
+// 1. createOrder
+const createOrder = asyncHandler(async (req, res) => {
+  const result = await OrderService.createOrderIntoDB(req.user._id, req.body);
 
   const ordersNs = getIO()?.of('/orders');
   ordersNs?.to(`customer:${String(req.user._id)}`).emit('order:created', {
@@ -49,9 +49,9 @@ const create = asyncHandler(async (req, res) => {
   });
 });
 
-// 2. listMine
-const listMine = asyncHandler(async (req, res) => {
-  const result = await OrderService.listMineInDB(req.user._id);
+// 2. listMyOrders
+const listMyOrders = asyncHandler(async (req, res) => {
+  const result = await OrderService.listMyOrdersFromDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -60,9 +60,9 @@ const listMine = asyncHandler(async (req, res) => {
   });
 });
 
-// 3. getById
-const getById = asyncHandler(async (req, res) => {
-  const result = await OrderService.getByIdInDB(
+// 3. getOrderById
+const getOrderById = asyncHandler(async (req, res) => {
+  const result = await OrderService.getOrderByIdFromDB(
     String(req.params.id),
     req.user._id,
   );
@@ -74,9 +74,9 @@ const getById = asyncHandler(async (req, res) => {
   });
 });
 
-// 4. assignDriver
-const assignDriver = asyncHandler(async (req, res) => {
-  const result = await OrderService.assignDriverInDB(
+// 4. assignDriverToOrder
+const assignDriverToOrder = asyncHandler(async (req, res) => {
+  const result = await OrderService.assignDriverToOrderIntoDB(
     String(req.params.id),
     req.body.driverId,
   );
@@ -92,9 +92,9 @@ const assignDriver = asyncHandler(async (req, res) => {
   });
 });
 
-// 5. updateStatus
-const updateStatus = asyncHandler(async (req, res) => {
-  const result = await OrderService.updateStatusInDB(
+// 5. updateOrderStatus
+const updateOrderStatus = asyncHandler(async (req, res) => {
+  const result = await OrderService.updateOrderStatusIntoDB(
     String(req.params.id),
     req.body.status,
   );
@@ -112,7 +112,7 @@ const updateStatus = asyncHandler(async (req, res) => {
 
 // 6. setPickupBagCount
 const setPickupBagCount = asyncHandler(async (req, res) => {
-  const result = await OrderService.setBagCountInDB(
+  const result = await OrderService.setOrderBagCountIntoDB(
     String(req.params.id),
     'pickup',
     req.body.bagCount,
@@ -132,7 +132,7 @@ const setPickupBagCount = asyncHandler(async (req, res) => {
 
 // 7. setDeliveryBagCount
 const setDeliveryBagCount = asyncHandler(async (req, res) => {
-  const result = await OrderService.setBagCountInDB(
+  const result = await OrderService.setOrderBagCountIntoDB(
     String(req.params.id),
     'delivery',
     req.body.bagCount,
@@ -150,9 +150,9 @@ const setDeliveryBagCount = asyncHandler(async (req, res) => {
   });
 });
 
-// 8. setReadyTime
-const setReadyTime = asyncHandler(async (req, res) => {
-  const result = await OrderService.setReadyTimeInDB(
+// 8. setOrderReadyTime
+const setOrderReadyTime = asyncHandler(async (req, res) => {
+  const result = await OrderService.setOrderReadyTimeIntoDB(
     String(req.params.id),
     req.body.isoTime,
   );
@@ -169,12 +169,12 @@ const setReadyTime = asyncHandler(async (req, res) => {
 });
 
 export const OrderController = {
-  create,
-  listMine,
-  getById,
-  assignDriver,
-  updateStatus,
+  createOrder,
+  listMyOrders,
+  getOrderById,
+  assignDriverToOrder,
+  updateOrderStatus,
   setPickupBagCount,
   setDeliveryBagCount,
-  setReadyTime,
+  setOrderReadyTime,
 };

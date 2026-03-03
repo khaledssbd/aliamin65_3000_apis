@@ -6,19 +6,22 @@ import { PricingValidation } from './pricing.validation';
 
 const router = Router();
 
-router.get('/active', PricingController.getActive);
+// 1. getActivePricing
+router.get('/active', PricingController.getActivePricing);
 
+// 2. createPricing
 router.post(
   '/',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  validateRequest(PricingValidation.create),
-  PricingController.create,
+  validateRequest(PricingValidation.createPricingSchema),
+  PricingController.createPricing,
 );
 
+// 3. activatePricing
 router.patch(
   '/:id/activate',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  PricingController.activate,
+  PricingController.activatePricing,
 );
 
 export const PricingRoutes = router;

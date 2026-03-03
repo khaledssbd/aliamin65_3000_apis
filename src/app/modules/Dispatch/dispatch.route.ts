@@ -5,46 +5,46 @@ import { DispatchController } from './dispatch.controller';
 
 const router = Router();
 
-// 1. createDispatchBatch
+// 1. createDispatch
 router.post(
   '/',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  DispatchController.createDispatchBatch,
+  DispatchController.createDispatch,
 );
 
-// 2. reassignDispatchBatchDriver
+// 2. reassignDispatch
 router.patch(
   '/:id/assign',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  DispatchController.reassignDispatchBatchDriver,
+  DispatchController.reassignDispatch,
 );
 
-// 3. updateDispatchBatchSequence
+// 3. updateDispatchSequence
 router.patch(
   '/:id/sequence',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  DispatchController.updateDispatchBatchSequence,
+  DispatchController.updateDispatchSequence,
 );
 
-// 4. updateDispatchBatchStatus
+// 4. updateDispatchStatus
 router.patch(
   '/:id/status',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  DispatchController.updateDispatchBatchStatus,
+  DispatchController.updateDispatchStatus,
 );
 
-// 5. listMyAssignedDispatchBatches
+// 5. getDriverDispatches
 router.get(
   '/driver/me',
   auth(ROLE.DRIVER),
-  DispatchController.listMyAssignedDispatchBatches,
+  DispatchController.getDriverDispatches,
 );
 
-// 6. getDispatchBatchById
+// 6. getDispatch
 router.get(
   '/:id',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN, ROLE.DRIVER),
-  DispatchController.getDispatchBatchById,
+  DispatchController.getDispatch,
 );
 
 export const DispatchRoutes = router;

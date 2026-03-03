@@ -6,54 +6,62 @@ import { OrderValidation } from './order.validation';
 
 const router = Router();
 
+// 1. createOrder
 router.post(
   '/',
   auth(ROLE.CUSTOMER),
-  validateRequest(OrderValidation.create),
-  OrderController.create,
+  validateRequest(OrderValidation.createOrderSchema),
+  OrderController.createOrder,
 );
 
-router.get('/', auth(ROLE.CUSTOMER), OrderController.listMine);
+// 2. listMyOrders
+router.get('/', auth(ROLE.CUSTOMER), OrderController.listMyOrders);
 
+// 3. getOrderById
 router.get(
   '/:id',
   auth(ROLE.CUSTOMER, ROLE.DRIVER, ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  OrderController.getById,
+  OrderController.getOrderById,
 );
 
+// 4. assignDriverToOrder
 router.patch(
   '/:id/assign-driver',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  validateRequest(OrderValidation.assignDriver),
-  OrderController.assignDriver,
+  validateRequest(OrderValidation.assignDriverToOrderSchema),
+  OrderController.assignDriverToOrder,
 );
 
+// 5. updateOrderStatus
 router.patch(
   '/:id/status',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  validateRequest(OrderValidation.status),
-  OrderController.updateStatus,
+  validateRequest(OrderValidation.updateOrderStatusSchema),
+  OrderController.updateOrderStatus,
 );
 
+// 6. setPickupBagCount
 router.patch(
   '/:id/bag-count/pickup',
   auth(ROLE.DRIVER),
-  validateRequest(OrderValidation.bagCount),
+  validateRequest(OrderValidation.setBagCountSchema),
   OrderController.setPickupBagCount,
 );
 
+// 7. setDeliveryBagCount
 router.patch(
   '/:id/bag-count/delivery',
   auth(ROLE.DRIVER),
-  validateRequest(OrderValidation.bagCount),
+  validateRequest(OrderValidation.setBagCountSchema),
   OrderController.setDeliveryBagCount,
 );
 
+// 8. setOrderReadyTime
 router.post(
   '/:id/ready-time',
   auth(ROLE.DRIVER),
-  validateRequest(OrderValidation.readyTime),
-  OrderController.setReadyTime,
+  validateRequest(OrderValidation.setOrderReadyTimeSchema),
+  OrderController.setOrderReadyTime,
 );
 
 export const OrderRoutes = router;

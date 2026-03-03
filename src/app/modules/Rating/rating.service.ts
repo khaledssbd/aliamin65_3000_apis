@@ -2,12 +2,14 @@ import { Types } from 'mongoose';
 import RatingModel from './rating.model';
 import { IRating } from './rating.interface';
 
-const createRating = async (payload: Partial<IRating>) => {
+// 1. createRatingIntoDB
+const createRatingIntoDB = async (payload: Partial<IRating>) => {
   const result = await RatingModel.create(payload);
   return result;
 };
 
-const getDriverRatings = async (driverId: string) => {
+// 2. getDriverRatingsFromDB
+const getDriverRatingsFromDB = async (driverId: string) => {
   const pipeline = [
     { $match: { driver: new Types.ObjectId(driverId) } },
     {
@@ -31,6 +33,6 @@ const getDriverRatings = async (driverId: string) => {
 };
 
 export const RatingService = {
-  createRating,
-  getDriverRatings,
+  createRatingIntoDB,
+  getDriverRatingsFromDB,
 };

@@ -1,13 +1,13 @@
 import ChatMessageModel from './chat.model';
 import { Types } from 'mongoose';
 
-// 1. listMessagesByOrderIdFromDB
-const listMessagesByOrderIdFromDB = async (orderId: string) => {
+// 1. getChatMessagesFromDB
+const getChatMessagesFromDB = async (orderId: string) => {
   return ChatMessageModel.find({ order: orderId }).sort({ createdAt: 1 });
 };
 
-// 2. listMyChatThreadsFromDB
-const listMyChatThreadsFromDB = async (userId: Types.ObjectId) => {
+// 2. getChatThreadsFromDB
+const getChatThreadsFromDB = async (userId: Types.ObjectId) => {
   return ChatMessageModel.aggregate([
     { $match: { $or: [{ from: userId }, { to: userId }] } },
     { $group: { _id: '$order', lastAt: { $max: '$createdAt' } } },
@@ -16,6 +16,6 @@ const listMyChatThreadsFromDB = async (userId: Types.ObjectId) => {
 };
 
 export const ChatService = {
-  listMessagesByOrderIdFromDB,
-  listMyChatThreadsFromDB,
+  getChatMessagesFromDB,
+  getChatThreadsFromDB,
 };

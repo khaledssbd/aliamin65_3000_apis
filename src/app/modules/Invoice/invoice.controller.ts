@@ -2,30 +2,37 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { InvoiceService } from './invoice.service';
 
-const getByOrder = asyncHandler(async (req, res) => {
-  const doc = await InvoiceService.getByOrder(String(req.params.orderId));
+// 1. getInvoiceByOrder
+const getInvoiceByOrder = asyncHandler(async (req, res) => {
+  const doc = await InvoiceService.getInvoiceByOrderFromDB(
+    String(req.params.orderId),
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Invoice',
+    message: 'Invoice retrieved',
     data: doc,
   });
 });
 
-const getByNumber = asyncHandler(async (req, res) => {
-  const doc = await InvoiceService.getByNumber(
+// 2. getInvoiceByNumber
+const getInvoiceByNumber = asyncHandler(async (req, res) => {
+  const doc = await InvoiceService.getInvoiceByNumberFromDB(
     String(req.params.invoiceNumber),
   );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Invoice',
+    message: 'Invoice retrieved',
     data: doc,
   });
 });
 
-const generate = asyncHandler(async (req, res) => {
-  const doc = await InvoiceService.generate(String(req.params.orderId));
+// 3. createInvoice
+const createInvoice = asyncHandler(async (req, res) => {
+  const doc = await InvoiceService.createInvoiceIntoDB(
+    String(req.params.orderId),
+  );
   if (!doc)
     return sendResponse(res, {
       statusCode: httpStatus.NOT_FOUND,
@@ -35,13 +42,13 @@ const generate = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Invoice generated',
+    message: 'Invoice created',
     data: doc,
   });
 });
 
 export const InvoiceController = {
-  getByOrder,
-  getByNumber,
-  generate,
+  getInvoiceByOrder,
+  getInvoiceByNumber,
+  createInvoice,
 };

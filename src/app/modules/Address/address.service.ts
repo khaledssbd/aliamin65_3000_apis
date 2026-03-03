@@ -1,14 +1,14 @@
 import { Types } from 'mongoose';
 import UserModel from '../User/user.model';
 
-// 1. listMineAddressInDB
-const listMineAddressInDB = async (userId: Types.ObjectId) => {
+// 1. getMyAddressFromDB
+const getMyAddressFromDB = async (userId: Types.ObjectId) => {
   const user = await UserModel.findById(userId).select('address');
   return { address: user?.address ?? '' };
 };
 
-// 2. createAddressInDB
-const createAddressInDB = async (
+// 2. createAddressIntoDB
+const createAddressIntoDB = async (
   userId: Types.ObjectId,
   payload: { address: string },
 ) => {
@@ -20,13 +20,11 @@ const createAddressInDB = async (
   return { address: updated?.address ?? '' };
 };
 
-// 3. updateAddressInDB
-const updateAddressInDB = async (
+// 3. updateAddressIntoDB
+const updateAddressIntoDB = async (
   userId: Types.ObjectId,
-  _id: string,
   payload: { address: string },
 ) => {
-  void _id;
   const updated = await UserModel.findByIdAndUpdate(
     userId,
     { $set: { address: payload.address } },
@@ -35,12 +33,8 @@ const updateAddressInDB = async (
   return { address: updated?.address ?? '' };
 };
 
-// 4. removeInAddressDB
-const removeAddressInDB = async (
-  userId: Types.ObjectId,
-  _id: string,
-) => {
-  void _id;
+// 4. deleteAddressFromDB
+const deleteAddressFromDB = async (userId: Types.ObjectId) => {
   const updated = await UserModel.findByIdAndUpdate(
     userId,
     { $set: { address: '' } },
@@ -49,17 +43,16 @@ const removeAddressInDB = async (
   return { address: updated?.address ?? '' };
 };
 
-// 5. setDefaultAddressInDB
-const setDefaultAddressInDB = async (userId: Types.ObjectId, _id: string) => {
-  void _id;
+// 5. setDefaultAddressIntoDB
+const setDefaultAddressIntoDB = async (userId: Types.ObjectId) => {
   const user = await UserModel.findById(userId).select('address');
   return { address: user?.address ?? '' };
 };
 
 export const AddressService = {
-  listMineAddressInDB,
-  createAddressInDB,
-  updateAddressInDB,
-  removeAddressInDB,
-  setDefaultAddressInDB,
+  getMyAddressFromDB,
+  createAddressIntoDB,
+  updateAddressIntoDB,
+  deleteAddressFromDB,
+  setDefaultAddressIntoDB,
 };

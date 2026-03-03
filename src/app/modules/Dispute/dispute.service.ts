@@ -1,7 +1,7 @@
 import DisputeModel from './dispute.model';
 
-// 1. createDisputeForOrderInDB
-const createDisputeForOrderInDB = async (payload: {
+// 1. createDisputeIntoDB
+const createDisputeIntoDB = async (payload: {
   orderId: string;
   raisedBy: string;
   type?: string;
@@ -19,13 +19,13 @@ const createDisputeForOrderInDB = async (payload: {
   return doc;
 };
 
-// 2. listDisputesByOrderIdFromDB
-const listDisputesByOrderIdFromDB = async (orderId: string) => {
+// 2. getDisputesFromDB
+const getDisputesFromDB = async (orderId: string) => {
   return DisputeModel.find({ order: orderId }).sort({ createdAt: -1 });
 };
 
-// 3. updateDisputeStatusInDB
-const updateDisputeStatusInDB = async (id: string, status: string) => {
+// 3. updateDisputeStatusIntoDB
+const updateDisputeStatusIntoDB = async (id: string, status: string) => {
   return DisputeModel.findByIdAndUpdate(
     id,
     { $set: { status } },
@@ -33,8 +33,8 @@ const updateDisputeStatusInDB = async (id: string, status: string) => {
   );
 };
 
-// 4. setDisputeAdminNotesInDB
-const setDisputeAdminNotesInDB = async (id: string, adminNotes: string) => {
+// 4. setDisputeAdminNotesIntoDB
+const setDisputeAdminNotesIntoDB = async (id: string, adminNotes: string) => {
   return DisputeModel.findByIdAndUpdate(
     id,
     { $set: { adminNotes } },
@@ -43,8 +43,8 @@ const setDisputeAdminNotesInDB = async (id: string, adminNotes: string) => {
 };
 
 export const DisputeService = {
-  createDisputeForOrderInDB,
-  listDisputesByOrderIdFromDB,
-  updateDisputeStatusInDB,
-  setDisputeAdminNotesInDB,
+  createDisputeIntoDB,
+  getDisputesFromDB,
+  updateDisputeStatusIntoDB,
+  setDisputeAdminNotesIntoDB,
 };

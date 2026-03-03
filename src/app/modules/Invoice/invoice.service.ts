@@ -1,15 +1,18 @@
 import InvoiceModel from './invoice.model';
 import OrderModel from '../Order/order.model';
 
-const getByOrder = async (orderId: string) => {
+// 1. getInvoiceByOrderFromDB
+const getInvoiceByOrderFromDB = async (orderId: string) => {
   return InvoiceModel.findOne({ order: orderId });
 };
 
-const getByNumber = async (invoiceNumber: string) => {
+// 2. getInvoiceByNumberFromDB
+const getInvoiceByNumberFromDB = async (invoiceNumber: string) => {
   return InvoiceModel.findOne({ invoiceNumber });
 };
 
-const generate = async (orderId: string) => {
+// 3. createInvoiceIntoDB
+const createInvoiceIntoDB = async (orderId: string) => {
   const order = await OrderModel.findById(orderId);
   if (!order) return null;
   const invoiceNumber = `INV-${order._id}`;
@@ -39,7 +42,7 @@ const generate = async (orderId: string) => {
 };
 
 export const InvoiceService = {
-  getByOrder,
-  getByNumber,
-  generate,
+  getInvoiceByOrderFromDB,
+  getInvoiceByNumberFromDB,
+  createInvoiceIntoDB,
 };

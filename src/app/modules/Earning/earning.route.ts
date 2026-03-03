@@ -5,21 +5,21 @@ import { EarningController } from './earning.controller';
 
 const router = Router();
 
-// 1. listMyEarnings
-router.get('/driver/me', auth(ROLE.DRIVER), EarningController.listMyEarnings);
+// 1. getEarnings
+router.get('/driver/me', auth(ROLE.DRIVER), EarningController.getEarnings);
 
-// 2. getMyEarningByOrderId
+// 2. getEarning
 router.get(
   '/driver/me/:orderId',
   auth(ROLE.DRIVER),
-  EarningController.getMyEarningByOrderId,
+  EarningController.getEarning,
 );
 
-// 3. getMyEarningsSummaryForToday
+// 3. getTodayEarningsSummary
 router.get(
   '/driver/summary/today',
   auth(ROLE.DRIVER),
-  EarningController.getMyEarningsSummaryForToday,
+  EarningController.getTodayEarningsSummary,
 );
 
 export const EarningRoutes = router;

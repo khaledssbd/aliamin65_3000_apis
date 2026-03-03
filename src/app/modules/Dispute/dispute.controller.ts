@@ -2,9 +2,9 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { DisputeService } from './dispute.service';
 
-// 1. createDisputeForOrder
-const createDisputeForOrder = asyncHandler(async (req, res) => {
-  const doc = await DisputeService.createDisputeForOrderInDB({
+// 1. createDispute
+const createDispute = asyncHandler(async (req, res) => {
+  const doc = await DisputeService.createDisputeIntoDB({
     orderId: req.body.orderId,
     raisedBy: String(req.user._id),
     type: req.body.type,
@@ -19,50 +19,50 @@ const createDisputeForOrder = asyncHandler(async (req, res) => {
   });
 });
 
-// 2. listDisputesByOrderId
-const listDisputesByOrderId = asyncHandler(async (req, res) => {
-  const docs = await DisputeService.listDisputesByOrderIdFromDB(
+// 2. getDisputes
+const getDisputes = asyncHandler(async (req, res) => {
+  const docs = await DisputeService.getDisputesFromDB(
     String(req.params.orderId),
   );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Disputes',
+    message: 'Disputes retrieved',
     data: docs,
   });
 });
 
 // 3. updateDisputeStatus
 const updateDisputeStatus = asyncHandler(async (req, res) => {
-  const doc = await DisputeService.updateDisputeStatusInDB(
+  const doc = await DisputeService.updateDisputeStatusIntoDB(
     String(req.params.id),
     req.body.status,
   );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Status updated',
+    message: 'Dispute status updated',
     data: doc,
   });
 });
 
 // 4. setDisputeAdminNotes
 const setDisputeAdminNotes = asyncHandler(async (req, res) => {
-  const doc = await DisputeService.setDisputeAdminNotesInDB(
+  const doc = await DisputeService.setDisputeAdminNotesIntoDB(
     String(req.params.id),
     req.body.adminNotes,
   );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Notes updated',
+    message: 'Admin notes updated',
     data: doc,
   });
 });
 
 export const DisputeController = {
-  createDisputeForOrder,
-  listDisputesByOrderId,
+  createDispute,
+  getDisputes,
   updateDisputeStatus,
   setDisputeAdminNotes,
 };

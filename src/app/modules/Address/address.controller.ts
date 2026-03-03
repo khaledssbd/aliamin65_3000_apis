@@ -2,9 +2,9 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { AddressService } from './address.service';
 
-// 1. listMineAddress
-const listMineAddress = asyncHandler(async (req, res) => {
-  const result = await AddressService.listMineAddressInDB(req.user._id);
+// 1. getMyAddress
+const getMyAddress = asyncHandler(async (req, res) => {
+  const result = await AddressService.getMyAddressFromDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -15,7 +15,7 @@ const listMineAddress = asyncHandler(async (req, res) => {
 
 // 2. createAddress
 const createAddress = asyncHandler(async (req, res) => {
-  const result = await AddressService.createAddressInDB(req.user._id, req.body);
+  const result = await AddressService.createAddressIntoDB(req.user._id, req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -26,9 +26,8 @@ const createAddress = asyncHandler(async (req, res) => {
 
 // 3. updateAddress
 const updateAddress = asyncHandler(async (req, res) => {
-  const result = await AddressService.updateAddressInDB(
+  const result = await AddressService.updateAddressIntoDB(
     req.user._id,
-    String(req.params.id),
     req.body,
   );
 
@@ -39,12 +38,9 @@ const updateAddress = asyncHandler(async (req, res) => {
   });
 });
 
-// 4. removeAddress
-const removeAddress = asyncHandler(async (req, res) => {
-  const result = await AddressService.removeAddressInDB(
-    req.user._id,
-    String(req.params.id),
-  );
+// 4. deleteAddress
+const deleteAddress = asyncHandler(async (req, res) => {
+  const result = await AddressService.deleteAddressFromDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -55,10 +51,7 @@ const removeAddress = asyncHandler(async (req, res) => {
 
 // 5. setDefaultAddress
 const setDefaultAddress = asyncHandler(async (req, res) => {
-  const result = await AddressService.setDefaultAddressInDB(
-    req.user._id,
-    String(req.params.id),
-  );
+  const result = await AddressService.setDefaultAddressIntoDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -68,9 +61,9 @@ const setDefaultAddress = asyncHandler(async (req, res) => {
 });
 
 export const AddressController = {
-  listMineAddress,
+  getMyAddress,
   createAddress,
   updateAddress,
-  removeAddress,
+  deleteAddress,
   setDefaultAddress,
 };

@@ -1,23 +1,28 @@
 import { IPage } from './page.interface';
 import PageModel from './page.model';
 
-const getBySlug = async (slug: string) => {
+// 1. getPageBySlugFromDB
+const getPageBySlugFromDB = async (slug: string) => {
   return PageModel.findOne({ slug, published: true });
 };
 
-const list = async () => {
+// 2. getAllPagesFromDB
+const getAllPagesFromDB = async () => {
   return PageModel.find({}).sort({ createdAt: -1 });
 };
 
-const create = async (payload: IPage) => {
+// 3. createPageIntoDB
+const createPageIntoDB = async (payload: IPage) => {
   return PageModel.create(payload);
 };
 
-const update = async (id: string, payload: IPage) => {
+// 4. updatePageIntoDB
+const updatePageIntoDB = async (id: string, payload: IPage) => {
   return PageModel.findByIdAndUpdate(id, payload, { new: true });
 };
 
-const toggle = async (id: string) => {
+// 5. togglePagePublishStatusIntoDB
+const togglePagePublishStatusIntoDB = async (id: string) => {
   const page = await PageModel.findById(id);
   if (!page) return null;
   page.published = !page.published;
@@ -26,9 +31,9 @@ const toggle = async (id: string) => {
 };
 
 export const PageService = {
-  getBySlug,
-  list,
-  create,
-  update,
-  toggle,
+  getPageBySlugFromDB,
+  getAllPagesFromDB,
+  createPageIntoDB,
+  updatePageIntoDB,
+  togglePagePublishStatusIntoDB,
 };

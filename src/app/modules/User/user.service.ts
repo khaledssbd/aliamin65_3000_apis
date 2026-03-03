@@ -28,8 +28,8 @@ import {
   sendImageToCloudinary,
 } from '../../lib/upload';
 
-// 1. createUserInDB
-const createUserInDB = async (payload: IUser) => {
+// 1. createUserIntoDB
+const createUserIntoDB = async (payload: IUser) => {
   const existingUser = await UserModel.isUserExistsByEmailWithPassword(
     payload.email,
   );
@@ -87,7 +87,8 @@ const createUserInDB = async (payload: IUser) => {
   }
 };
 
-const createDriverAccountInDB = async (
+// 2. createDriverAccountIntoDB
+const createDriverAccountIntoDB = async (
   user: IUser,
   payload: Record<string, unknown>,
   files: any,
@@ -211,8 +212,8 @@ const createDriverAccountInDB = async (
   }
 };
 
-// 2. sendSignupOtpAgain
-const sendSignupOtpAgain = async (userEmail: string) => {
+// 3. sendSignupOtpAgainIntoDB
+const sendSignupOtpAgainIntoDB = async (userEmail: string) => {
   const now = new Date();
   const user = await UserModel.isUserExistsByEmailWithPassword(userEmail);
 
@@ -256,8 +257,8 @@ const sendSignupOtpAgain = async (userEmail: string) => {
   }
 };
 
-// 3. verifySignupOtpInDB
-const verifySignupOtpInDB = async (userEmail: string, otp: string) => {
+// 4. verifySignupOtpIntoDB
+const verifySignupOtpIntoDB = async (userEmail: string, otp: string) => {
   const now = new Date();
   const user = await UserModel.isUserExistsByEmailWithPassword(userEmail);
 
@@ -315,8 +316,8 @@ const verifySignupOtpInDB = async (userEmail: string, otp: string) => {
   };
 };
 
-// 4. signinInDB
-const signinInDB = async (payload: { email: string; password: string }) => {
+// 5. signinIntoDB
+const signinIntoDB = async (payload: { email: string; password: string }) => {
   // const user = await UserModel.findOne({ email: payload.email }).select('+password');
   const user = await UserModel.isUserExistsByEmailWithPassword(payload.email);
 
@@ -380,8 +381,8 @@ const signinInDB = async (payload: { email: string; password: string }) => {
   };
 };
 
-// 5. updateProfilePhotoInDB
-const updateProfilePhotoInDB = async (
+// 6. updateProfilePhotoIntoDB
+const updateProfilePhotoIntoDB = async (
   user: IUser,
   imageFile: Express.Multer.File | undefined,
 ) => {
@@ -433,8 +434,8 @@ const updateProfilePhotoInDB = async (
   };
 };
 
-// 6. changePasswordInDB
-const changePasswordInDB = async (
+// 7. changePasswordIntoDB
+const changePasswordIntoDB = async (
   payload: z.infer<typeof UserValidation.changePasswordSchema.shape.body>,
   userData: IUser,
 ) => {
@@ -488,8 +489,8 @@ const changePasswordInDB = async (
   };
 };
 
-// 7. forgotPassword 1.(send OTP)
-const forgotPassword = async (email: string) => {
+// 8. forgotPasswordIntoDB
+const forgotPasswordIntoDB = async (email: string) => {
   const user = await UserModel.findOne({ email, isActive: true });
 
   if (!user) {
@@ -531,8 +532,8 @@ const forgotPassword = async (email: string) => {
   return { token };
 };
 
-// 8. sendForgotPasswordOtpAgain 2.(send OTP again)
-const sendForgotPasswordOtpAgain = async (forgotPassToken: string) => {
+// 9. sendForgotPasswordOtpAgainIntoDB
+const sendForgotPasswordOtpAgainIntoDB = async (forgotPassToken: string) => {
   let decoded: any;
   try {
     decoded = jwt.verify(forgotPassToken, config.jwt.otp_secret!, {
@@ -583,8 +584,8 @@ const sendForgotPasswordOtpAgain = async (forgotPassToken: string) => {
   return null;
 };
 
-// 9. verifyOtpForForgotPassword 3. (verify OTP)
-const verifyOtpForForgotPassword = async (payload: {
+// 10. verifyOtpForForgotPasswordIntoDB
+const verifyOtpForForgotPasswordIntoDB = async (payload: {
   token: string;
   otp: string;
 }) => {
@@ -641,9 +642,11 @@ const verifyOtpForForgotPassword = async (payload: {
   return { resetPasswordToken };
 };
 
-// 10. resetPasswordInDB 4. (set new password)
-const resetPasswordInDB = async (
-  payload: z.infer<typeof UserValidation.resetPasswordSchema.shape.body>,
+// 11. resetPasswordIntoDB
+const resetPasswordIntoDB = async (
+  payload: z.infer<
+    typeof UserValidation.resetPasswordSchema.shape.body
+  >,
 ) => {
   const { resetPasswordToken, newPassword } = payload;
 
@@ -678,7 +681,7 @@ const resetPasswordInDB = async (
   return null;
 };
 
-// 11. fetchProfileFromDB
+// 12. getMeFromDB
 const fetchProfileFromDB = async (user: IUser) => {
   const result = await UserModel.findById(user._id).select(
     '-password -passwordChangedAt -otp -otpExpiry -isActive -isDeleted -deactivationReason -createdAt -updatedAt',
@@ -687,8 +690,8 @@ const fetchProfileFromDB = async (user: IUser) => {
   return result;
 };
 
-// 12. deactivateUserAccountFromDB
-const deactivateUserAccountFromDB = async (
+// 13. deactivateAccountIntoDB
+const deactivateAccountIntoDB = async (
   user: IUser,
   payload: TDeactiveAccountPayload,
 ) => {
@@ -723,8 +726,8 @@ const deactivateUserAccountFromDB = async (
   return result;
 };
 
-// 13. deleteSpecificUserAccount
-const deleteSpecificUserAccount = async (user: IUser) => {
+// 14. deleteSpecificUserAccountIntoDB
+const deleteSpecificUserAccountIntoDB = async (user: IUser) => {
   const result = await UserModel.findByIdAndUpdate(
     user._id,
     {
@@ -738,8 +741,8 @@ const deleteSpecificUserAccount = async (user: IUser) => {
   return result;
 };
 
-// 14. getNewAccessTokenFromServer
-const getNewAccessTokenFromServer = async (refreshToken: string) => {
+// 15. getNewAccessTokenFromDB
+const getNewAccessTokenFromDB = async (refreshToken: string) => {
   // checking if the given token is valid
   const decoded = verifyToken(
     refreshToken,
@@ -790,8 +793,8 @@ const getNewAccessTokenFromServer = async (refreshToken: string) => {
   };
 };
 
-// 15. updateUserDataInDB
-const updateUserDataInDB = async (
+// 16. updateUserDataIntoDB
+const updateUserDataIntoDB = async (
   payload: TUpdateUserPayload,
   userData: IUser,
 ) => {
@@ -827,7 +830,7 @@ const updateUserDataInDB = async (
   };
 };
 
-// 16. adminGetAllUsersFromDB (using MongoDB aggregation)
+// 17. adminGetAllUsersFromDB (using MongoDB aggregation)
 // const adminGetAllUsersFromDB = async (query: Record<string, unknown>) => {
 //   const {
 //     searchTerm,
@@ -921,7 +924,7 @@ const updateUserDataInDB = async (
 //   return { data: facetResult.data, meta };
 // };
 
-// 16. adminGetAllUsersFromDB (using MongoDB aggregation)
+// 18. adminGetAllUsersFromDB (using MongoDB aggregation)
 const adminGetAllUsersFromDB = async (query: Record<string, unknown>) => {
   const {
     searchTerm,
@@ -1030,7 +1033,7 @@ const adminGetAllUsersFromDB = async (query: Record<string, unknown>) => {
   return { data: facetResult.data, meta };
 };
 
-// 17. adminGetAllMetaDataFromDB (dashboard meta aggregation)
+// 19. adminGetAllMetaDataFromDB (dashboard meta aggregation)
 // const adminGetAllMetaDataFromDB = async () => {
 //   const [
 //     totalBooks,
@@ -1269,7 +1272,7 @@ const adminGetAllUsersFromDB = async (query: Record<string, unknown>) => {
 //   };
 // };
 
-// 18. getAllUserFromDB
+// 20. getAllUserFromDB
 // const getAllUserFromDB = async (query: Record<string, unknown>) => {
 //   const {
 //     searchTerm,
@@ -1373,22 +1376,22 @@ const adminGetAllUsersFromDB = async (query: Record<string, unknown>) => {
 // };
 
 export const UserService = {
-  createUserInDB,
-  createDriverAccountInDB,
-  sendSignupOtpAgain,
-  verifySignupOtpInDB,
-  signinInDB,
-  updateProfilePhotoInDB,
-  changePasswordInDB,
-  forgotPassword,
-  sendForgotPasswordOtpAgain,
-  verifyOtpForForgotPassword,
-  resetPasswordInDB,
+  createUserIntoDB,
+  createDriverAccountIntoDB,
+  sendSignupOtpAgainIntoDB,
+  verifySignupOtpIntoDB,
+  signinIntoDB,
+  updateProfilePhotoIntoDB,
+  changePasswordIntoDB,
+  forgotPasswordIntoDB,
+  sendForgotPasswordOtpAgainIntoDB,
+  verifyOtpForForgotPasswordIntoDB,
+  resetPasswordIntoDB,
   fetchProfileFromDB,
-  deactivateUserAccountFromDB,
-  deleteSpecificUserAccount,
-  getNewAccessTokenFromServer,
-  updateUserDataInDB,
+  deactivateAccountIntoDB,
+  deleteSpecificUserAccountIntoDB,
+  getNewAccessTokenFromDB,
+  updateUserDataIntoDB,
   adminGetAllUsersFromDB,
   // adminGetAllMetaDataFromDB,
   // getAllUserFromDB,

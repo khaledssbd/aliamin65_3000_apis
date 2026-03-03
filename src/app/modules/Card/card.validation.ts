@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-// 1. attachSchema
-const attachSchema = z.object({
+// 1. attachCardValidationSchema
+const attachCardValidationSchema = z.object({
   body: z.object({
     paymentMethodId: z.string(),
     stripeCustomerId: z.string().optional(),
@@ -13,16 +13,16 @@ const attachSchema = z.object({
   }),
 });
 
-// 2. idParamSchema
-const idParamSchema = z.object({
+// 2. cardIdParamValidationSchema
+const cardIdParamValidationSchema = z.object({
   params: z.object({
     id: z.string(),
   }),
 });
 
 export const CardValidation = {
-   attachSchema,
-  idParamSchema,
+  attachCardValidationSchema,
+  cardIdParamValidationSchema,
 };
 
-export type TCardAttachPayload = z.infer<typeof attachSchema>['body'];
+export type TCardAttachPayload = z.infer<typeof attachCardValidationSchema>['body'];

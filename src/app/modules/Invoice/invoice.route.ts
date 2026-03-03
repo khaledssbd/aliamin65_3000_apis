@@ -5,22 +5,25 @@ import { InvoiceController } from './invoice.controller';
 
 const router = Router();
 
+// 1. getInvoiceByOrder
 router.get(
   '/order/:orderId',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
-  InvoiceController.getByOrder,
+  InvoiceController.getInvoiceByOrder,
 );
 
+// 2. getInvoiceByNumber
 router.get(
   '/:invoiceNumber',
   auth(ROLE.CUSTOMER, ROLE.DRIVER, ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  InvoiceController.getByNumber,
+  InvoiceController.getInvoiceByNumber,
 );
 
+// 3. createInvoice
 router.post(
   '/generate/:orderId',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  InvoiceController.generate,
+  InvoiceController.createInvoice,
 );
 
 export const InvoiceRoutes = router;

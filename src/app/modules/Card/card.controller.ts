@@ -2,62 +2,62 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { CardService } from './card.service';
 
-// 1. listMySavedCards
-const listMySavedCards = asyncHandler(async (req, res) => {
-  const docs = await CardService.listMySavedCardsInDB(req.user._id);
+// 1. getSavedCards
+const getSavedCards = asyncHandler(async (req, res) => {
+  const docs = await CardService.getSavedCardsFromDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Cards',
+    message: 'Cards retrieved',
     data: docs,
   });
 });
 
-// 2. attachNewCardToMyAccount
-const attachNewCardToMyAccount = asyncHandler(async (req, res) => {
-  const doc = await CardService.attachNewCardToMyAccountInDB(
+// 2. createCard
+const createCard = asyncHandler(async (req, res) => {
+  const doc = await CardService.createCardIntoDB(
     req.user._id,
     req.body,
   );
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
-    message: 'Card attached',
+    message: 'Card created',
     data: doc,
   });
 });
 
-// 3. setMyDefaultCard
-const setMyDefaultCard = asyncHandler(async (req, res) => {
-  const doc = await CardService.setMyDefaultCardInDB(
+// 3. setDefaultCard
+const setDefaultCard = asyncHandler(async (req, res) => {
+  const doc = await CardService.setDefaultCardIntoDB(
     req.user._id,
     String(req.params.id),
   );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Default set',
+    message: 'Default card updated',
     data: doc,
   });
 });
 
-// 4. detachMyCard
-const detachMyCard = asyncHandler(async (req, res) => {
-  const doc = await CardService.detachMyCardInDB(
+// 4. deleteCard
+const deleteCard = asyncHandler(async (req, res) => {
+  const doc = await CardService.deleteCardFromDB(
     req.user._id,
     String(req.params.id),
   );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Card detached',
+    message: 'Card deleted',
     data: doc,
   });
 });
 
 export const CardController = {
-  listMySavedCards,
-  attachNewCardToMyAccount,
-  setMyDefaultCard,
-  detachMyCard,
+  getSavedCards,
+  createCard,
+  setDefaultCard,
+  deleteCard,
 };

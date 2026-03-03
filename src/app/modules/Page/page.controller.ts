@@ -2,14 +2,16 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { PageService } from './page.service';
 
-const getBySlug = asyncHandler(async (req, res) => {
-  const doc = await PageService.getBySlug(String(req.params.slug));
+// 1. getPageBySlug
+const getPageBySlug = asyncHandler(async (req, res) => {
+  const doc = await PageService.getPageBySlugFromDB(String(req.params.slug));
 
   sendResponse(res, { statusCode: httpStatus.OK, message: 'Page', data: doc });
 });
 
-const list = asyncHandler(async (_req, res) => {
-  const docs = await PageService.list();
+// 2. getAllPages
+const getAllPages = asyncHandler(async (_req, res) => {
+  const docs = await PageService.getAllPagesFromDB();
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -18,8 +20,9 @@ const list = asyncHandler(async (_req, res) => {
   });
 });
 
-const create = asyncHandler(async (req, res) => {
-  const doc = await PageService.create(req.body);
+// 3. createPage
+const createPage = asyncHandler(async (req, res) => {
+  const doc = await PageService.createPageIntoDB(req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -28,8 +31,9 @@ const create = asyncHandler(async (req, res) => {
   });
 });
 
-const update = asyncHandler(async (req, res) => {
-  const doc = await PageService.update(String(req.params.id), req.body);
+// 4. updatePage
+const updatePage = asyncHandler(async (req, res) => {
+  const doc = await PageService.updatePageIntoDB(String(req.params.id), req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -38,8 +42,9 @@ const update = asyncHandler(async (req, res) => {
   });
 });
 
-const toggle = asyncHandler(async (req, res) => {
-  const page = await PageService.toggle(String(req.params.id));
+// 5. togglePagePublishStatus
+const togglePagePublishStatus = asyncHandler(async (req, res) => {
+  const page = await PageService.togglePagePublishStatusIntoDB(String(req.params.id));
   if (!page)
     return sendResponse(res, {
       statusCode: httpStatus.NOT_FOUND,
@@ -55,9 +60,9 @@ const toggle = asyncHandler(async (req, res) => {
 });
 
 export const PageController = {
-  getBySlug,
-  list,
-  create,
-  update,
-  toggle,
+  getPageBySlug,
+  getAllPages,
+  createPage,
+  updatePage,
+  togglePagePublishStatus,
 };

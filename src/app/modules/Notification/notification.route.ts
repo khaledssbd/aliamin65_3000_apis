@@ -5,11 +5,11 @@ import { NotificationController } from './notification.controller';
 
 const router = Router();
 
-// 1. listMyNotifications
+// 1. getMyNotifications
 router.get(
   '/',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
-  NotificationController.listMyNotifications,
+  NotificationController.getMyNotifications,
 );
 
 // 2. markMyNotificationAsRead

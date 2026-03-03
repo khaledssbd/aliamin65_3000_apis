@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const RatingValidation = {
-  create: z.object({
+  createRatingValidationSchema: z.object({
     body: z.object({
       orderId: z.string(),
       driverId: z.string(),

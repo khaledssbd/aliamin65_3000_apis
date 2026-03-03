@@ -7,7 +7,7 @@ import { OTP_EXPIRY_MINUTES } from './user.constant';
 
 // 1. createUser
 const createUser = asyncHandler(async (req, res) => {
-  const result = await UserService.createUserInDB(req.body);
+  const result = await UserService.createUserIntoDB(req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -17,7 +17,7 @@ const createUser = asyncHandler(async (req, res) => {
 });
 
 const createDriverAccount = asyncHandler(async (req, res) => {
-  const result = await UserService.createDriverAccountInDB(
+  const result = await UserService.createDriverAccountIntoDB(
     req.user,
     req.body,
     req.files,
@@ -33,7 +33,7 @@ const createDriverAccount = asyncHandler(async (req, res) => {
 // 2. sendSignupOtpAgain
 const sendSignupOtpAgain = asyncHandler(async (req, res) => {
   const userEmail = req.body.userEmail;
-  const result = await UserService.sendSignupOtpAgain(userEmail);
+  const result = await UserService.sendSignupOtpAgainIntoDB(userEmail);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -46,7 +46,7 @@ const sendSignupOtpAgain = asyncHandler(async (req, res) => {
 const verifySignupOtp = asyncHandler(async (req, res) => {
   const userEmail = req.body.userEmail;
   const otp = req.body.otp;
-  const result = await UserService.verifySignupOtpInDB(userEmail, otp);
+  const result = await UserService.verifySignupOtpIntoDB(userEmail, otp);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -57,7 +57,7 @@ const verifySignupOtp = asyncHandler(async (req, res) => {
 
 // 4. signin
 const signin = asyncHandler(async (req, res) => {
-  const result = await UserService.signinInDB(req.body);
+  const result = await UserService.signinIntoDB(req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -68,7 +68,7 @@ const signin = asyncHandler(async (req, res) => {
 
 // 5. updateProfilePhoto
 const updateProfilePhoto = asyncHandler(async (req, res) => {
-  const result = await UserService.updateProfilePhotoInDB(req.user, req.file);
+  const result = await UserService.updateProfilePhotoIntoDB(req.user, req.file);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -79,7 +79,7 @@ const updateProfilePhoto = asyncHandler(async (req, res) => {
 
 // 6. changePassword
 const changePassword = asyncHandler(async (req, res) => {
-  const result = await UserService.changePasswordInDB(req.body, req.user);
+  const result = await UserService.changePasswordIntoDB(req.body, req.user);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -91,7 +91,7 @@ const changePassword = asyncHandler(async (req, res) => {
 // 7. forgotPassword
 const forgotPassword = asyncHandler(async (req, res) => {
   const email = req.body.email;
-  const result = await UserService.forgotPassword(email);
+  const result = await UserService.forgotPasswordIntoDB(email);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -104,7 +104,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
 // 8. sendForgotPasswordOtpAgain
 const sendForgotPasswordOtpAgain = asyncHandler(async (req, res) => {
   const token = req.body.token;
-  const result = await UserService.sendForgotPasswordOtpAgain(token);
+  const result = await UserService.sendForgotPasswordOtpAgainIntoDB(token);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -115,7 +115,7 @@ const sendForgotPasswordOtpAgain = asyncHandler(async (req, res) => {
 
 // 9. verifyOtpForForgotPassword
 const verifyOtpForForgotPassword = asyncHandler(async (req, res) => {
-  const result = await UserService.verifyOtpForForgotPassword(req.body);
+  const result = await UserService.verifyOtpForForgotPasswordIntoDB(req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -126,7 +126,7 @@ const verifyOtpForForgotPassword = asyncHandler(async (req, res) => {
 
 // 10. resetPassword
 const resetPassword = asyncHandler(async (req, res) => {
-  const result = await UserService.resetPasswordInDB(req.body);
+  const result = await UserService.resetPasswordIntoDB(req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -148,10 +148,7 @@ const fetchProfile = asyncHandler(async (req, res) => {
 
 // 12. deactivateUserAccount
 const deactivateUserAccount = asyncHandler(async (req, res) => {
-  const result = await UserService.deactivateUserAccountFromDB(
-    req.user,
-    req.body,
-  );
+  const result = await UserService.deactivateAccountIntoDB(req.user, req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -162,7 +159,7 @@ const deactivateUserAccount = asyncHandler(async (req, res) => {
 
 // 13. deleteSpecificAccount
 const deleteSpecificUserAccount = asyncHandler(async (req, res) => {
-  const result = await UserService.deleteSpecificUserAccount(req.user);
+  const result = await UserService.deleteSpecificUserAccountIntoDB(req.user);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -178,7 +175,7 @@ const getNewAccessToken = asyncHandler(async (req, res) => {
   if (!refreshToken) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Refresh token is required!');
   }
-  const result = await UserService.getNewAccessTokenFromServer(refreshToken);
+  const result = await UserService.getNewAccessTokenFromDB(refreshToken);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -189,7 +186,7 @@ const getNewAccessToken = asyncHandler(async (req, res) => {
 
 // 15. updateUserData
 const updateUserData = asyncHandler(async (req, res) => {
-  const result = await UserService.updateUserDataInDB(req.body, req.user);
+  const result = await UserService.updateUserDataIntoDB(req.body, req.user);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
