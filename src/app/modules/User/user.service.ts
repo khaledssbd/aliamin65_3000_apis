@@ -93,12 +93,6 @@ const createDriverAccountIntoDB = async (
   payload: Record<string, unknown>,
   files: any,
 ) => {
-  const existingUser = await UserModel.findById(user._id);
-
-  if (!existingUser) {
-    throw new AppError(httpStatus.NOT_FOUND, 'User not found!');
-  }
-
   const fileMap = (files ?? {}) as Record<string, Express.Multer.File[]>;
   const licenseFile = fileMap?.license?.[0];
   const selfieFile = fileMap?.selfie?.[0];
@@ -174,11 +168,32 @@ const createDriverAccountIntoDB = async (
       );
     } else {
       // Driver created successfully, now update his role
-      existingUser.role = 'DRIVER';
-      await existingUser.save();
+      user.role = 'DRIVER';
+      await user.save();
     }
 
+    // Prepare user data for token generation
+    const accessTokenPayload = {
+      _id: user?._id.toString(),
+      name: user?.name,
+      // address: user?.address,
+      phone: user?.phone,
+      email: user?.email,
+      image: user?.image || defaultUserImage,
+      role: user?.role,
+    };
+
+    const refreshTokenPayload = {
+      email: user?.email,
+    };
+
+    // tokens
+    const accessToken = createAccessToken(accessTokenPayload);
+    const refreshToken = createRefreshToken(refreshTokenPayload);
+
     return {
+      accessToken,
+      refreshToken,
       user: {
         _id: user._id,
         email: user.email,
@@ -644,9 +659,7 @@ const verifyOtpForForgotPasswordIntoDB = async (payload: {
 
 // 11. resetPasswordIntoDB
 const resetPasswordIntoDB = async (
-  payload: z.infer<
-    typeof UserValidation.resetPasswordSchema.shape.body
-  >,
+  payload: z.infer<typeof UserValidation.resetPasswordSchema.shape.body>,
 ) => {
   const { resetPasswordToken, newPassword } = payload;
 
