@@ -8,7 +8,7 @@ const createDispatch = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
-    message: 'Dispatch created',
+    message: 'Dispatch created successfully!',
     data: result,
   });
 });
@@ -22,7 +22,7 @@ const reassignDispatch = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Dispatch reassigned',
+    message: 'Dispatch reassigned successfully!',
     data: result,
   });
 });
@@ -36,7 +36,7 @@ const updateDispatchSequence = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Dispatch sequence updated',
+    message: 'Dispatch sequence updated successfully!',
     data: result,
   });
 });
@@ -50,7 +50,7 @@ const updateDispatchStatus = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Dispatch status updated',
+    message: 'Dispatch status updated successfully!',
     data: result,
   });
 });
@@ -63,7 +63,7 @@ const getDriverDispatches = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Driver dispatches retrieved',
+    message: 'Driver dispatches fetched successfully!',
     data: result,
   });
 });
@@ -76,7 +76,7 @@ const getDispatch = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Dispatch retrieved',
+    message: 'Dispatch fetched successfully!',
     data: result,
   });
 });

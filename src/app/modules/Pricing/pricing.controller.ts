@@ -8,7 +8,7 @@ const getActivePricing = asyncHandler(async (_req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Active pricing',
+    message: 'Active pricing fetched successfully!',
     data: result,
   });
 });
@@ -19,7 +19,7 @@ const createPricing = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
-    message: 'Pricing created',
+    message: 'Pricing details created successfully!',
     data: result,
   });
 });
@@ -30,7 +30,7 @@ const activatePricing = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Pricing activated',
+    message: 'Pricing plan activated successfully!',
     data: result,
   });
 });

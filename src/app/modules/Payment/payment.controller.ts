@@ -13,7 +13,7 @@ const createPaymentIntentForMyOrder = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
-    message: 'Payment intent created',
+    message: 'Payment intent created successfully!',
     data: { clientSecret },
   });
 });
@@ -27,7 +27,7 @@ const capturePaymentForMyOrder = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Payment captured',
+    message: 'Payment captured successfully!',
     data: doc,
   });
 });
@@ -40,7 +40,7 @@ const getPaymentByOrderId = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Payment',
+    message: 'Payment details fetched successfully!',
     data: doc,
   });
 });

@@ -11,7 +11,7 @@ const onboardDriver = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Onboarding saved',
+    message: 'Onboarding details saved successfully!',
     data: result,
   });
 });
@@ -24,7 +24,7 @@ const updateDriverInsurance = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Insurance updated',
+    message: 'Insurance details updated successfully!',
     data: result,
   });
 });
@@ -37,7 +37,7 @@ const updateDriverVehicle = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Vehicle updated',
+    message: 'Vehicle details updated successfully!',
     data: result,
   });
 });
@@ -48,7 +48,7 @@ const getMyDriverProfile = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Profile',
+    message: 'Driver profile fetched successfully!',
     data: result,
   });
 });
@@ -65,7 +65,7 @@ const updateDriverAvailability = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Availability updated',
+    message: 'Availability status updated successfully!',
     data: result,
   });
 });
@@ -76,7 +76,7 @@ const getAvailableJobsForDriver = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Jobs available',
+    message: 'Available jobs fetched successfully!',
     data: result,
   });
 });
@@ -118,7 +118,7 @@ const acceptJobByDriver = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Job accepted',
+    message: 'Job accepted successfully!',
     data: result,
   });
 });
@@ -132,7 +132,7 @@ const declineJobByDriver = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Job declined',
+    message: 'Job declined successfully!',
     data: result,
   });
 });
@@ -147,7 +147,7 @@ const cancelJobByDriver = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Job canceled',
+    message: 'Job canceled successfully!',
     data: result,
   });
 });

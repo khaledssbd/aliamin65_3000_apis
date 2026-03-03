@@ -42,8 +42,8 @@ const createOrderIntoDB = async (
   return doc;
 };
 
-// 2. listMyOrdersFromDB
-const listMyOrdersFromDB = async (customerId: Types.ObjectId) => {
+// 2. getMyOrdersFromDB
+const getMyOrdersFromDB = async (customerId: Types.ObjectId) => {
   return OrderModel.find({ customer: customerId }).sort({ createdAt: -1 });
 };
 
@@ -84,8 +84,8 @@ const updateOrderStatusIntoDB = async (id: string, status: string) => {
   return OrderModel.findByIdAndUpdate(id, { $set: patch }, { new: true });
 };
 
-// 6. setOrderBagCountIntoDB
-const setOrderBagCountIntoDB = async (
+// 6. updateBagCountIntoDB
+const updateBagCountIntoDB = async (
   id: string,
   kind: 'pickup' | 'delivery',
   count: number,
@@ -98,21 +98,12 @@ const setOrderBagCountIntoDB = async (
   );
 };
 
-// 7. setOrderReadyTimeIntoDB
-const setOrderReadyTimeIntoDB = async (id: string, isoTime: string) => {
-  return OrderModel.findByIdAndUpdate(
-    id,
-    { $set: { 'timeline.washingDryingAt': new Date(isoTime) } },
-    { new: true },
-  );
-};
-
 export const OrderService = {
+  computeTotal,
   createOrderIntoDB,
-  listMyOrdersFromDB,
+  getMyOrdersFromDB,
   getOrderByIdFromDB,
   assignDriverToOrderIntoDB,
   updateOrderStatusIntoDB,
-  setOrderBagCountIntoDB,
-  setOrderReadyTimeIntoDB,
+  updateBagCountIntoDB,
 };

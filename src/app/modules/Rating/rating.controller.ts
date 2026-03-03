@@ -14,7 +14,7 @@ const createRating = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
-    message: 'Rating submitted successfully',
+    message: 'Rating submitted successfully!',
     data: doc,
   });
 });
@@ -27,7 +27,7 @@ const getDriverRatings = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Driver ratings retrieved successfully',
+    message: 'Driver ratings fetched successfully!',
     data: result,
   });
 });

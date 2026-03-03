@@ -8,7 +8,7 @@ const getMyNotifications = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Notifications',
+    message: 'Notifications fetched successfully!',
     data: docs,
   });
 });
@@ -20,7 +20,11 @@ const markMyNotificationAsRead = asyncHandler(async (req, res) => {
     String(req.params.id),
   );
 
-  sendResponse(res, { statusCode: httpStatus.OK, message: 'Read', data: doc });
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Notification marked as read successfully!',
+    data: doc,
+  });
 });
 
 // 3. markAllMyNotificationsAsRead
@@ -29,7 +33,7 @@ const markAllMyNotificationsAsRead = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'All read',
+    message: 'All notifications marked as read successfully!',
     data: true,
   });
 });
@@ -43,7 +47,7 @@ const deleteMyNotification = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Deleted',
+    message: 'Notification deleted successfully!',
     data: doc,
   });
 });

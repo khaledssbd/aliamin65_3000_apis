@@ -14,8 +14,8 @@ router.post(
   OrderController.createOrder,
 );
 
-// 2. listMyOrders
-router.get('/', auth(ROLE.CUSTOMER), OrderController.listMyOrders);
+// 2. getMyOrders
+router.get('/', auth(ROLE.CUSTOMER), OrderController.getMyOrders);
 
 // 3. getOrderById
 router.get(
@@ -45,7 +45,7 @@ router.patch(
   '/:id/bag-count/pickup',
   auth(ROLE.DRIVER),
   validateRequest(OrderValidation.setBagCountSchema),
-  OrderController.setPickupBagCount,
+  OrderController.updateBagCount,
 );
 
 // 7. setDeliveryBagCount
@@ -53,7 +53,7 @@ router.patch(
   '/:id/bag-count/delivery',
   auth(ROLE.DRIVER),
   validateRequest(OrderValidation.setBagCountSchema),
-  OrderController.setDeliveryBagCount,
+  OrderController.updateBagCount,
 );
 
 // 8. setOrderReadyTime
@@ -61,7 +61,7 @@ router.post(
   '/:id/ready-time',
   auth(ROLE.DRIVER),
   validateRequest(OrderValidation.setOrderReadyTimeSchema),
-  OrderController.setOrderReadyTime,
+  OrderController.updateOrderStatus,
 );
 
 export const OrderRoutes = router;

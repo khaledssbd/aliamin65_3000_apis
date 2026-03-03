@@ -10,7 +10,7 @@ const getInvoiceByOrder = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Invoice retrieved',
+    message: 'Invoice fetched successfully!',
     data: doc,
   });
 });
@@ -23,7 +23,7 @@ const getInvoiceByNumber = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Invoice retrieved',
+    message: 'Invoice fetched successfully!',
     data: doc,
   });
 });
@@ -36,13 +36,13 @@ const createInvoice = asyncHandler(async (req, res) => {
   if (!doc)
     return sendResponse(res, {
       statusCode: httpStatus.NOT_FOUND,
-      message: 'Order not found',
+      message: 'Order not found!',
       data: null,
     });
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Invoice created',
+    message: 'Invoice created successfully!',
     data: doc,
   });
 });

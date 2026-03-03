@@ -14,7 +14,7 @@ const createDispute = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
-    message: 'Dispute created',
+    message: 'Dispute created successfully!',
     data: doc,
   });
 });
@@ -27,7 +27,7 @@ const getDisputes = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Disputes retrieved',
+    message: 'Disputes fetched successfully!',
     data: docs,
   });
 });
@@ -41,7 +41,7 @@ const updateDisputeStatus = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Dispute status updated',
+    message: 'Dispute status updated successfully!',
     data: doc,
   });
 });
@@ -55,7 +55,7 @@ const setDisputeAdminNotes = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Admin notes updated',
+    message: 'Admin notes updated successfully!',
     data: doc,
   });
 });

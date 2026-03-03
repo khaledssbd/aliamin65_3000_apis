@@ -49,13 +49,13 @@ const createOrder = asyncHandler(async (req, res) => {
   });
 });
 
-// 2. listMyOrders
-const listMyOrders = asyncHandler(async (req, res) => {
-  const result = await OrderService.listMyOrdersFromDB(req.user._id);
+// 2. getMyOrders
+const getMyOrders = asyncHandler(async (req, res) => {
+  const result = await OrderService.getMyOrdersFromDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Orders retrieved successfully!',
+    message: 'Orders fetched successfully!',
     data: result,
   });
 });
@@ -69,7 +69,7 @@ const getOrderById = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Order details retrieved successfully!',
+    message: 'Order fetched successfully!',
     data: result,
   });
 });
@@ -98,83 +98,34 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     String(req.params.id),
     req.body.status,
   );
-  getIO()?.emit('order:status', {
-    orderId: result?._id,
-    status: req.body.status,
-  });
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Status updated successfully!',
+    message: 'Order status updated successfully!',
     data: result,
   });
 });
 
-// 6. setPickupBagCount
-const setPickupBagCount = asyncHandler(async (req, res) => {
-  const result = await OrderService.setOrderBagCountIntoDB(
+// 6. updateBagCount
+const updateBagCount = asyncHandler(async (req, res) => {
+  const result = await OrderService.updateBagCountIntoDB(
     String(req.params.id),
-    'pickup',
-    req.body.bagCount,
+    req.body.kind,
+    Number(req.body.count),
   );
-  getIO()?.emit('order:bagcount', {
-    orderId: result?._id,
-    type: 'pickup',
-    bagCount: req.body.bagCount,
-  });
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Pickup bag count set successfully!',
-    data: result,
-  });
-});
-
-// 7. setDeliveryBagCount
-const setDeliveryBagCount = asyncHandler(async (req, res) => {
-  const result = await OrderService.setOrderBagCountIntoDB(
-    String(req.params.id),
-    'delivery',
-    req.body.bagCount,
-  );
-  getIO()?.emit('order:bagcount', {
-    orderId: result?._id,
-    type: 'delivery',
-    bagCount: req.body.bagCount,
-  });
-
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    message: 'Delivery bag count set successfully!',
-    data: result,
-  });
-});
-
-// 8. setOrderReadyTime
-const setOrderReadyTime = asyncHandler(async (req, res) => {
-  const result = await OrderService.setOrderReadyTimeIntoDB(
-    String(req.params.id),
-    req.body.isoTime,
-  );
-  getIO()?.emit('order:readytime', {
-    orderId: result?._id,
-    isoTime: req.body.isoTime,
-  });
-
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    message: 'Ready time set successfully!',
+    message: 'Bag count updated successfully!',
     data: result,
   });
 });
 
 export const OrderController = {
   createOrder,
-  listMyOrders,
+  getMyOrders,
   getOrderById,
   assignDriverToOrder,
   updateOrderStatus,
-  setPickupBagCount,
-  setDeliveryBagCount,
-  setOrderReadyTime,
+  updateBagCount,
 };

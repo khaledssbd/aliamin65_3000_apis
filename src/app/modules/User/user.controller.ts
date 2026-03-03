@@ -141,7 +141,7 @@ const fetchProfile = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Profile data retrieved successfully!',
+    message: 'Profile data fetched successfully!',
     data: result,
   });
 });
@@ -201,7 +201,7 @@ const adminGetAllUsers = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Users retrieved successfully!',
+    message: 'Users fetched successfully!',
     data: result.data,
     meta: result.meta,
   });
