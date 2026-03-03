@@ -2,8 +2,9 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { CardService } from './card.service';
 
+// 1. listMine
 const listMine = asyncHandler(async (req, res) => {
-  const docs = await CardService.listMine(req.user._id);
+  const docs = await CardService.listMineInDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -12,8 +13,9 @@ const listMine = asyncHandler(async (req, res) => {
   });
 });
 
+// 2. attach
 const attach = asyncHandler(async (req, res) => {
-  const doc = await CardService.attach(req.user._id, req.body);
+  const doc = await CardService.attachInDB(req.user._id, req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -22,8 +24,12 @@ const attach = asyncHandler(async (req, res) => {
   });
 });
 
+// 3. setDefault
 const setDefault = asyncHandler(async (req, res) => {
-  const doc = await CardService.setDefault(req.user._id, String(req.params.id));
+  const doc = await CardService.setDefaultInDB(
+    req.user._id,
+    String(req.params.id),
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -32,8 +38,9 @@ const setDefault = asyncHandler(async (req, res) => {
   });
 });
 
+// 4. detach
 const detach = asyncHandler(async (req, res) => {
-  const doc = await CardService.detach(req.user._id, String(req.params.id));
+  const doc = await CardService.detachInDB(req.user._id, String(req.params.id));
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

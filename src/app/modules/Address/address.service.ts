@@ -1,66 +1,65 @@
-import AddressModel from './address.model';
-import { IAddress } from './address.interface';
 import { Types } from 'mongoose';
+import UserModel from '../User/user.model';
 
-const listMine = async (userId: Types.ObjectId) => {
-  return AddressModel.find({ user: userId }).sort({
-    isDefault: -1,
-    createdAt: -1,
-  });
+// 1. listMineAddressInDB
+const listMineAddressInDB = async (userId: Types.ObjectId) => {
+  const user = await UserModel.findById(userId).select('address');
+  return { address: user?.address ?? '' };
 };
 
-const create = async (userId: Types.ObjectId, payload: Partial<IAddress>) => {
-  const doc = await AddressModel.create({ ...payload, user: userId });
-  if (payload.isDefault) {
-    await AddressModel.updateMany(
-      { user: userId, _id: { $ne: doc._id } },
-      { $set: { isDefault: false } },
-    );
-  }
-  return doc;
-};
-
-const update = async (
+// 2. createAddressInDB
+const createAddressInDB = async (
   userId: Types.ObjectId,
-  id: string,
-  payload: Partial<IAddress>,
+  payload: { address: string },
 ) => {
-  const doc = await AddressModel.findOneAndUpdate(
-    { _id: id, user: userId },
-    payload,
+  const updated = await UserModel.findByIdAndUpdate(
+    userId,
+    { $set: { address: payload.address } },
     { new: true },
-  );
-  if (payload.isDefault && doc) {
-    await AddressModel.updateMany(
-      { user: userId, _id: { $ne: doc._id } },
-      { $set: { isDefault: false } },
-    );
-  }
-  return doc;
+  ).select('address');
+  return { address: updated?.address ?? '' };
 };
 
-const remove = async (userId: Types.ObjectId, id: string) => {
-  const doc = await AddressModel.findOneAndDelete({ _id: id, user: userId });
-  return doc;
+// 3. updateAddressInDB
+const updateAddressInDB = async (
+  userId: Types.ObjectId,
+  _id: string,
+  payload: { address: string },
+) => {
+  void _id;
+  const updated = await UserModel.findByIdAndUpdate(
+    userId,
+    { $set: { address: payload.address } },
+    { new: true },
+  ).select('address');
+  return { address: updated?.address ?? '' };
 };
 
-const setDefault = async (userId: Types.ObjectId, id: string) => {
-  const doc = await AddressModel.findOneAndUpdate(
-    { _id: id, user: userId },
-    { $set: { isDefault: true } },
+// 4. removeInAddressDB
+const removeAddressInDB = async (
+  userId: Types.ObjectId,
+  _id: string,
+) => {
+  void _id;
+  const updated = await UserModel.findByIdAndUpdate(
+    userId,
+    { $set: { address: '' } },
     { new: true },
-  );
-  await AddressModel.updateMany(
-    { user: userId, _id: { $ne: id } },
-    { $set: { isDefault: false } },
-  );
-  return doc;
+  ).select('address');
+  return { address: updated?.address ?? '' };
+};
+
+// 5. setDefaultAddressInDB
+const setDefaultAddressInDB = async (userId: Types.ObjectId, _id: string) => {
+  void _id;
+  const user = await UserModel.findById(userId).select('address');
+  return { address: user?.address ?? '' };
 };
 
 export const AddressService = {
-  listMine,
-  create,
-  update,
-  remove,
-  setDefault,
+  listMineAddressInDB,
+  createAddressInDB,
+  updateAddressInDB,
+  removeAddressInDB,
+  setDefaultAddressInDB,
 };

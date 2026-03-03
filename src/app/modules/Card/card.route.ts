@@ -11,14 +11,14 @@ router.get('/', auth(ROLE.CUSTOMER), CardController.listMine);
 router.post(
   '/attach',
   auth(ROLE.CUSTOMER),
-  validateRequest(CardValidation.attach),
+  validateRequest(CardValidation.attachSchema),
   CardController.attach,
 );
 
 router.patch(
   '/:id/default',
   auth(ROLE.CUSTOMER),
-  validateRequest(CardValidation.idParam),
+  validateRequest(CardValidation.idParamSchema),
   CardController.setDefault,
 );
 

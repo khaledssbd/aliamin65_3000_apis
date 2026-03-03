@@ -5,8 +5,9 @@ import { getIO } from '../../socket';
 import OrderModel from '../Order/order.model';
 import DriverModel from './driver.model';
 
+// 1. onboarding
 const onboarding = asyncHandler(async (req, res) => {
-  const result = await DriverService.upsertMine(req.user._id, req.body);
+  const result = await DriverService.upsertMineInDB(req.user._id, req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -15,8 +16,9 @@ const onboarding = asyncHandler(async (req, res) => {
   });
 });
 
+// 2. insurance
 const insurance = asyncHandler(async (req, res) => {
-  const result = await DriverService.upsertMine(req.user._id, {
+  const result = await DriverService.upsertMineInDB(req.user._id, {
     insurance: req.body,
   });
 
@@ -27,8 +29,9 @@ const insurance = asyncHandler(async (req, res) => {
   });
 });
 
+// 3. vehicle
 const vehicle = asyncHandler(async (req, res) => {
-  const result = await DriverService.upsertMine(req.user._id, {
+  const result = await DriverService.upsertMineInDB(req.user._id, {
     vehicle: req.body,
   });
 
@@ -39,8 +42,9 @@ const vehicle = asyncHandler(async (req, res) => {
   });
 });
 
+// 4. me
 const me = asyncHandler(async (req, res) => {
-  const result = await DriverService.me(req.user._id);
+  const result = await DriverService.meInDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -49,8 +53,9 @@ const me = asyncHandler(async (req, res) => {
   });
 });
 
+// 5. availability
 const availability = asyncHandler(async (req, res) => {
-  const result = await DriverService.setAvailability(
+  const result = await DriverService.setAvailabilityInDB(
     req.user._id,
     req.body.isAvailable,
   );
@@ -65,8 +70,9 @@ const availability = asyncHandler(async (req, res) => {
   });
 });
 
+// 6. jobsAvailable
 const jobsAvailable = asyncHandler(async (req, res) => {
-  const result = await DriverService.jobsAvailable(req.user._id);
+  const result = await DriverService.jobsAvailableInDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -75,8 +81,9 @@ const jobsAvailable = asyncHandler(async (req, res) => {
   });
 });
 
+// 7. acceptJob
 const acceptJob = asyncHandler(async (req, res) => {
-  const result = await DriverService.acceptJob(
+  const result = await DriverService.acceptJobInDB(
     req.user._id,
     String(req.params.orderId),
   );
@@ -116,8 +123,9 @@ const acceptJob = asyncHandler(async (req, res) => {
   });
 });
 
+// 8. declineJob
 const declineJob = asyncHandler(async (req, res) => {
-  const result = await DriverService.declineJob(
+  const result = await DriverService.declineJobInDB(
     req.user._id,
     String(req.params.orderId),
   );
@@ -129,8 +137,9 @@ const declineJob = asyncHandler(async (req, res) => {
   });
 });
 
+// 9. cancelJob
 const cancelJob = asyncHandler(async (req, res) => {
-  const result = await DriverService.cancelJob(
+  const result = await DriverService.cancelJobInDB(
     req.user._id,
     String(req.params.orderId),
     req.body?.reason,

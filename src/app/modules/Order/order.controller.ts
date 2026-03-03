@@ -5,8 +5,9 @@ import { getIO } from '../../socket';
 import DriverModel from '../Driver/driver.model';
 import UserModel from '../User/user.model';
 
+// 1. create
 const create = asyncHandler(async (req, res) => {
-  const result = await OrderService.create(req.user._id, req.body);
+  const result = await OrderService.createInDB(req.user._id, req.body);
 
   const ordersNs = getIO()?.of('/orders');
   ordersNs?.to(`customer:${String(req.user._id)}`).emit('order:created', {
@@ -48,8 +49,9 @@ const create = asyncHandler(async (req, res) => {
   });
 });
 
+// 2. listMine
 const listMine = asyncHandler(async (req, res) => {
-  const result = await OrderService.listMine(req.user._id);
+  const result = await OrderService.listMineInDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -58,8 +60,9 @@ const listMine = asyncHandler(async (req, res) => {
   });
 });
 
+// 3. getById
 const getById = asyncHandler(async (req, res) => {
-  const result = await OrderService.getById(
+  const result = await OrderService.getByIdInDB(
     String(req.params.id),
     req.user._id,
   );
@@ -71,8 +74,9 @@ const getById = asyncHandler(async (req, res) => {
   });
 });
 
+// 4. assignDriver
 const assignDriver = asyncHandler(async (req, res) => {
-  const result = await OrderService.assignDriver(
+  const result = await OrderService.assignDriverInDB(
     String(req.params.id),
     req.body.driverId,
   );
@@ -88,8 +92,9 @@ const assignDriver = asyncHandler(async (req, res) => {
   });
 });
 
+// 5. updateStatus
 const updateStatus = asyncHandler(async (req, res) => {
-  const result = await OrderService.updateStatus(
+  const result = await OrderService.updateStatusInDB(
     String(req.params.id),
     req.body.status,
   );
@@ -105,8 +110,9 @@ const updateStatus = asyncHandler(async (req, res) => {
   });
 });
 
+// 6. setPickupBagCount
 const setPickupBagCount = asyncHandler(async (req, res) => {
-  const result = await OrderService.setBagCount(
+  const result = await OrderService.setBagCountInDB(
     String(req.params.id),
     'pickup',
     req.body.bagCount,
@@ -124,8 +130,9 @@ const setPickupBagCount = asyncHandler(async (req, res) => {
   });
 });
 
+// 7. setDeliveryBagCount
 const setDeliveryBagCount = asyncHandler(async (req, res) => {
-  const result = await OrderService.setBagCount(
+  const result = await OrderService.setBagCountInDB(
     String(req.params.id),
     'delivery',
     req.body.bagCount,
@@ -143,8 +150,9 @@ const setDeliveryBagCount = asyncHandler(async (req, res) => {
   });
 });
 
+// 8. setReadyTime
 const setReadyTime = asyncHandler(async (req, res) => {
-  const result = await OrderService.setReadyTime(
+  const result = await OrderService.setReadyTimeInDB(
     String(req.params.id),
     req.body.isoTime,
   );

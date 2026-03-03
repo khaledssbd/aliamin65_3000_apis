@@ -10,16 +10,8 @@ const orderSchema = new Schema<IOrder>(
       index: true,
     },
     driver: { type: Schema.Types.ObjectId, ref: 'User' },
-    pickupAddress: {
-      type: Schema.Types.ObjectId,
-      ref: 'Address',
-      required: true,
-    },
-    deliveryAddress: {
-      type: Schema.Types.ObjectId,
-      ref: 'Address',
-      required: true,
-    },
+    pickupAddress: { type: String, required: true, trim: true },
+    deliveryAddress: { type: String, required: true, trim: true },
     serviceType: {
       type: String,
       enum: ['WASH_DRY', 'DRY_CLEAN'],

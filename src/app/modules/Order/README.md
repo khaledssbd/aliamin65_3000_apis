@@ -8,7 +8,7 @@ Per-bag laundry request lifecycle. Status flow: `REQUESTED → DRIVER_ASSIGNED �
 
 ## REST Endpoints
 
-- POST `/` – Create order. Body: `{ pickupAddressId, deliveryAddressId, serviceType, pickupType, scheduledPickupAt?, bags, specialInstructions? }` → totals computed from active pricing.
+- POST `/` – [Customer] Create order. Body: `{ pickupAddress, deliveryAddress, serviceType, pickupType, scheduledPickupAt?, bags, specialInstructions? }` → totals computed from active pricing.
 - GET `/` – List customer's orders.
 - GET `/:id` – Get order details.
 - PATCH `/:id/assign-driver` – [Admin/Dispatch] Body: `{ driverId }`.

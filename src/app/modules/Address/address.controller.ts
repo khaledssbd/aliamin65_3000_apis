@@ -2,8 +2,9 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { AddressService } from './address.service';
 
-const listMine = asyncHandler(async (req, res) => {
-  const result = await AddressService.listMine(req.user._id);
+// 1. listMineAddress
+const listMineAddress = asyncHandler(async (req, res) => {
+  const result = await AddressService.listMineAddressInDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -12,8 +13,9 @@ const listMine = asyncHandler(async (req, res) => {
   });
 });
 
-const create = asyncHandler(async (req, res) => {
-  const result = await AddressService.create(req.user._id, req.body);
+// 2. createAddress
+const createAddress = asyncHandler(async (req, res) => {
+  const result = await AddressService.createAddressInDB(req.user._id, req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -22,8 +24,9 @@ const create = asyncHandler(async (req, res) => {
   });
 });
 
-const update = asyncHandler(async (req, res) => {
-  const result = await AddressService.update(
+// 3. updateAddress
+const updateAddress = asyncHandler(async (req, res) => {
+  const result = await AddressService.updateAddressInDB(
     req.user._id,
     String(req.params.id),
     req.body,
@@ -36,8 +39,9 @@ const update = asyncHandler(async (req, res) => {
   });
 });
 
-const remove = asyncHandler(async (req, res) => {
-  const result = await AddressService.remove(
+// 4. removeAddress
+const removeAddress = asyncHandler(async (req, res) => {
+  const result = await AddressService.removeAddressInDB(
     req.user._id,
     String(req.params.id),
   );
@@ -49,8 +53,9 @@ const remove = asyncHandler(async (req, res) => {
   });
 });
 
-const setDefault = asyncHandler(async (req, res) => {
-  const result = await AddressService.setDefault(
+// 5. setDefaultAddress
+const setDefaultAddress = asyncHandler(async (req, res) => {
+  const result = await AddressService.setDefaultAddressInDB(
     req.user._id,
     String(req.params.id),
   );
@@ -63,9 +68,9 @@ const setDefault = asyncHandler(async (req, res) => {
 });
 
 export const AddressController = {
-  listMine,
-  create,
-  update,
-  remove,
-  setDefault,
+  listMineAddress,
+  createAddress,
+  updateAddress,
+  removeAddress,
+  setDefaultAddress,
 };

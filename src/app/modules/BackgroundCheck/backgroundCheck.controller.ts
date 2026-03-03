@@ -2,6 +2,7 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { BackgroundCheckService } from './backgroundCheck.service';
 
+// checkDriverBackgroundStatus
 const checkDriverBackgroundStatus = asyncHandler(async (req, res) => {
   const doc = await BackgroundCheckService.checkDriverBackgroundStatusIntoDB(
     String(req.params.id),
@@ -14,8 +15,9 @@ const checkDriverBackgroundStatus = asyncHandler(async (req, res) => {
   });
 });
 
-const byDriver = asyncHandler(async (req, res) => {
-  const doc = await BackgroundCheckService.byDriver(
+// getDriverBackgroundDataByHisDriverId
+const getDriverBackgroundDataByHisDriverId = asyncHandler(async (req, res) => {
+  const doc = await BackgroundCheckService.getDriverBackgroundDataByHisDriverIdFromDB(
     String(req.params.driverId),
   );
 
@@ -26,8 +28,12 @@ const byDriver = asyncHandler(async (req, res) => {
   });
 });
 
-const getById = asyncHandler(async (req, res) => {
-  const doc = await BackgroundCheckService.getById(String(req.params.id));
+// getDriverBackgroundDataByHisUserId
+const getDriverBackgroundDataByHisUserId = asyncHandler(async (req, res) => {
+  const doc =
+    await BackgroundCheckService.getDriverBackgroundDataByHisUserIdFromDB(
+      String(req.params.id),
+    );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -38,6 +44,6 @@ const getById = asyncHandler(async (req, res) => {
 
 export const BackgroundCheckController = {
   checkDriverBackgroundStatus,
-  byDriver,
-  getById,
+  getDriverBackgroundDataByHisDriverId,
+  getDriverBackgroundDataByHisUserId,
 };

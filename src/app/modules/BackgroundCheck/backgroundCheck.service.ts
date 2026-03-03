@@ -32,18 +32,20 @@ const checkDriverBackgroundStatusIntoDB = async (id: string) => {
   return doc;
 };
 
-const byDriver = async (driverId: string) => {
+// getDriverBackgroundDataByHisDriverIdFromDB
+const getDriverBackgroundDataByHisDriverIdFromDB = async (driverId: string) => {
   return BackgroundCheckModel.findOne({ driver: driverId }).sort({
     createdAt: -1,
   });
 };
 
-const getById = async (id: string) => {
+// getDriverBackgroundDataByHisUserIdFromDB
+const getDriverBackgroundDataByHisUserIdFromDB = async (id: string) => {
   return BackgroundCheckModel.findById(id);
 };
 
 export const BackgroundCheckService = {
   checkDriverBackgroundStatusIntoDB,
-  byDriver,
-  getById,
+  getDriverBackgroundDataByHisDriverIdFromDB,
+  getDriverBackgroundDataByHisUserIdFromDB,
 };

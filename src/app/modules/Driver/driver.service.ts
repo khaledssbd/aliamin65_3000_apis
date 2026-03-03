@@ -3,7 +3,8 @@ import { Types } from 'mongoose';
 import OrderModel from '../Order/order.model';
 import { ORDER_STATUS } from '../../constants';
 
-const upsertMine = async (
+// 1. upsertMineInDB
+const upsertMineInDB = async (
   userId: Types.ObjectId,
   payload: Record<string, unknown>,
 ) => {
@@ -16,7 +17,8 @@ const upsertMine = async (
   return doc;
 };
 
-const setAvailability = async (
+// 2. setAvailabilityInDB
+const setAvailabilityInDB = async (
   userId: Types.ObjectId,
   isAvailable: boolean,
 ) => {
@@ -28,11 +30,13 @@ const setAvailability = async (
   return doc;
 };
 
-const me = async (userId: Types.ObjectId) => {
+// 3. meInDB
+const meInDB = async (userId: Types.ObjectId) => {
   return DriverModel.findOne({ user: userId });
 };
 
-const jobsAvailable = async (userId: Types.ObjectId) => {
+// 4. jobsAvailableInDB
+const jobsAvailableInDB = async (userId: Types.ObjectId) => {
   void userId;
   // Basic filter: unassigned and requested
   // Future: limit by zone/geo
@@ -44,7 +48,8 @@ const jobsAvailable = async (userId: Types.ObjectId) => {
     .limit(50);
 };
 
-const acceptJob = async (userId: Types.ObjectId, orderId: string) => {
+// 5. acceptJobInDB
+const acceptJobInDB = async (userId: Types.ObjectId, orderId: string) => {
   const doc = await OrderModel.findOneAndUpdate(
     {
       _id: orderId,
@@ -64,14 +69,16 @@ const acceptJob = async (userId: Types.ObjectId, orderId: string) => {
   return doc;
 };
 
-const declineJob = async (_userId: Types.ObjectId, _orderId: string) => {
+// 6. declineJobInDB
+const declineJobInDB = async (_userId: Types.ObjectId, _orderId: string) => {
   void _userId;
   void _orderId;
   // No change to order in MVP
   return { declined: true };
 };
 
-const cancelJob = async (
+// 7. cancelJobInDB
+const cancelJobInDB = async (
   userId: Types.ObjectId,
   orderId: string,
   reason?: string,
@@ -89,11 +96,11 @@ const cancelJob = async (
 };
 
 export const DriverService = {
-  upsertMine,
-  setAvailability,
-  me,
-  jobsAvailable,
-  acceptJob,
-  declineJob,
-  cancelJob,
+  upsertMineInDB,
+  setAvailabilityInDB,
+  meInDB,
+  jobsAvailableInDB,
+  acceptJobInDB,
+  declineJobInDB,
+  cancelJobInDB,
 };

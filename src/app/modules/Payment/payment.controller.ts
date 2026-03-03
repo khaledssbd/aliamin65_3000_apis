@@ -2,8 +2,9 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { PaymentService } from './payment.service';
 
+// 1. createIntent
 const createIntent = asyncHandler(async (req, res) => {
-  const { clientSecret } = await PaymentService.createIntent(
+  const { clientSecret } = await PaymentService.createIntentInDB(
     req.user._id,
     req.body.orderId,
     req.body.amount,
@@ -16,8 +17,9 @@ const createIntent = asyncHandler(async (req, res) => {
   });
 });
 
+// 2. confirm
 const confirm = asyncHandler(async (req, res) => {
-  const doc = await PaymentService.confirm(req.user._id, req.body.orderId);
+  const doc = await PaymentService.confirmInDB(req.user._id, req.body.orderId);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -26,8 +28,9 @@ const confirm = asyncHandler(async (req, res) => {
   });
 });
 
+// 3. byOrder
 const byOrder = asyncHandler(async (req, res) => {
-  const doc = await PaymentService.byOrder(String(req.params.orderId));
+  const doc = await PaymentService.byOrderInDB(String(req.params.orderId));
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -37,5 +40,7 @@ const byOrder = asyncHandler(async (req, res) => {
 });
 
 export const PaymentController = {
-  createIntent, confirm, byOrder
+  createIntent,
+  confirm,
+  byOrder,
 };
