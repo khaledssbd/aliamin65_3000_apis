@@ -2,9 +2,9 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { DisputeService } from './dispute.service';
 
-// 1. createDispute
-const createDispute = asyncHandler(async (req, res) => {
-  const doc = await DisputeService.createDisputeIntoDB({
+// 1. createDisputeForOrder
+const createDisputeForOrder = asyncHandler(async (req, res) => {
+  const doc = await DisputeService.createDisputeForOrderIntoDB({
     orderId: req.body.orderId,
     raisedBy: String(req.user._id),
     type: req.body.type,
@@ -19,9 +19,9 @@ const createDispute = asyncHandler(async (req, res) => {
   });
 });
 
-// 2. getDisputes
-const getDisputes = asyncHandler(async (req, res) => {
-  const docs = await DisputeService.getDisputesFromDB(
+// 2. getDisputesByOrderId
+const getDisputesByOrderId = asyncHandler(async (req, res) => {
+  const docs = await DisputeService.getDisputesByOrderIdFromDB(
     String(req.params.orderId),
   );
 
@@ -61,8 +61,8 @@ const setDisputeAdminNotes = asyncHandler(async (req, res) => {
 });
 
 export const DisputeController = {
-  createDispute,
-  getDisputes,
+  createDisputeForOrder,
+  getDisputesByOrderId,
   updateDisputeStatus,
   setDisputeAdminNotes,
 };

@@ -108,7 +108,8 @@ const sendForgotPasswordOtpAgain = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'OTP sent again. Please check your spam or junk folder too!',
+    message:
+      'OTP sent again successfully. Please check your spam or junk folder too!',
     data: result,
   });
 });
@@ -130,7 +131,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Password has been reset successfully!',
+    message: 'Password reset successfully!',
     data: result,
   });
 });
@@ -179,7 +180,7 @@ const getNewAccessToken = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Access token given successfully!',
+    message: 'Access token fetched successfully!',
     data: result,
   });
 });
@@ -190,7 +191,7 @@ const updateUserData = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Data updated successfully!',
+    message: 'User data updated successfully!',
     data: result,
   });
 });

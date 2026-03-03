@@ -12,7 +12,7 @@
 //     action: { type: String, required: true },
 //     entityType: { type: String },
 //     entityId: { type: Schema.Types.ObjectId },
-//     metadata: { type: Object },
+//     metadata: { type: Schema.Types.Mixed },
 //   },
 //   { timestamps: true, versionKey: false },
 // );

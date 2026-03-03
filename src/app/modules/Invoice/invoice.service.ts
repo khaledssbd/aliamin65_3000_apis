@@ -1,8 +1,8 @@
 import InvoiceModel from './invoice.model';
 import OrderModel from '../Order/order.model';
 
-// 1. getInvoiceByOrderFromDB
-const getInvoiceByOrderFromDB = async (orderId: string) => {
+// 1. getInvoiceByOrderIdFromDB
+const getInvoiceByOrderIdFromDB = async (orderId: string) => {
   return InvoiceModel.findOne({ order: orderId });
 };
 
@@ -42,7 +42,7 @@ const createInvoiceIntoDB = async (orderId: string) => {
 };
 
 export const InvoiceService = {
-  getInvoiceByOrderFromDB,
+  getInvoiceByOrderIdFromDB,
   getInvoiceByNumberFromDB,
   createInvoiceIntoDB,
 };

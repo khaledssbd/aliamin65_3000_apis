@@ -10,20 +10,21 @@ const checkDriverBackgroundStatus = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Background check started',
+    message: 'Background check started successfully!',
     data: doc,
   });
 });
 
 // getDriverBackgroundDataByHisDriverId
 const getDriverBackgroundDataByHisDriverId = asyncHandler(async (req, res) => {
-  const doc = await BackgroundCheckService.getDriverBackgroundDataByHisDriverIdFromDB(
-    String(req.params.driverId),
-  );
+  const doc =
+    await BackgroundCheckService.getDriverBackgroundDataByHisDriverIdFromDB(
+      String(req.params.driverId),
+    );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Background status',
+    message: 'Background status fetched successfully!',
     data: doc,
   });
 });
@@ -37,7 +38,7 @@ const getDriverBackgroundDataByHisUserId = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Background detail',
+    message: 'Background details fetched successfully!',
     data: doc,
   });
 });

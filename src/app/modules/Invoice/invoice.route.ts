@@ -5,11 +5,11 @@ import { InvoiceController } from './invoice.controller';
 
 const router = Router();
 
-// 1. getInvoiceByOrder
+// 1. getInvoiceByOrderId
 router.get(
   '/order/:orderId',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
-  InvoiceController.getInvoiceByOrder,
+  InvoiceController.getInvoiceByOrderId,
 );
 
 // 2. getInvoiceByNumber

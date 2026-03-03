@@ -1,7 +1,7 @@
 import DisputeModel from './dispute.model';
 
-// 1. createDisputeIntoDB
-const createDisputeIntoDB = async (payload: {
+// 1. createDisputeForOrderIntoDB
+const createDisputeForOrderIntoDB = async (payload: {
   orderId: string;
   raisedBy: string;
   type?: string;
@@ -19,8 +19,8 @@ const createDisputeIntoDB = async (payload: {
   return doc;
 };
 
-// 2. getDisputesFromDB
-const getDisputesFromDB = async (orderId: string) => {
+// 2. getDisputesByOrderIdFromDB
+const getDisputesByOrderIdFromDB = async (orderId: string) => {
   return DisputeModel.find({ order: orderId }).sort({ createdAt: -1 });
 };
 
@@ -43,8 +43,8 @@ const setDisputeAdminNotesIntoDB = async (id: string, adminNotes: string) => {
 };
 
 export const DisputeService = {
-  createDisputeIntoDB,
-  getDisputesFromDB,
+  createDisputeForOrderIntoDB,
+  getDisputesByOrderIdFromDB,
   updateDisputeStatusIntoDB,
   setDisputeAdminNotesIntoDB,
 };

@@ -5,18 +5,18 @@ import { DisputeController } from './dispute.controller';
 
 const router = Router();
 
-// 1. createDispute
+// 1. createDisputeForOrder
 router.post(
   '/',
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
-  DisputeController.createDispute,
+  DisputeController.createDisputeForOrder,
 );
 
-// 2. getDisputes
+// 2. getDisputesByOrderId
 router.get(
   '/order/:orderId',
   auth(ROLE.CUSTOMER, ROLE.DRIVER, ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  DisputeController.getDisputes,
+  DisputeController.getDisputesByOrderId,
 );
 
 // 3. updateDisputeStatus
