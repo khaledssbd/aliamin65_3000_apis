@@ -16,8 +16,9 @@ const createUser = asyncHandler(async (req, res) => {
   });
 });
 
-const createDriverAccount = asyncHandler(async (req, res) => {
-  const result = await UserService.createDriverAccountIntoDB(
+// createDriverProfile
+const createDriverProfile = asyncHandler(async (req, res) => {
+  const result = await UserService.createDriverProfileIntoDB(
     req.user,
     req.body,
     req.files,
@@ -233,7 +234,7 @@ const adminGetAllUsers = asyncHandler(async (req, res) => {
 
 export const UserController = {
   createUser,
-  createDriverAccount,
+  createDriverProfile,
   sendSignupOtpAgain,
   verifySignupOtp,
   signin,

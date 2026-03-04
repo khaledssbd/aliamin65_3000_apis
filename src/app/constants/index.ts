@@ -1,6 +1,6 @@
-export const CURRENCY = {
-  USD: 'USD',
-} as const;
+// export const CURRENCY = {
+//   USD: 'USD',
+// } as const;
 
 export const ORDER_STATUS = {
   REQUESTED: 'REQUESTED',

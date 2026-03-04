@@ -16,6 +16,7 @@ const userSchema = new Schema<IUser, IUserModel>(
     address: {
       type: String,
       trim: true,
+      default: 'N/A',
     },
     currentLocation: {
       type: {

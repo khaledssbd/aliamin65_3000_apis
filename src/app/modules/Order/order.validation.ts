@@ -9,12 +9,10 @@ import {
 // 1. createOrderSchema
 const createOrderSchema = z.object({
   body: z.object({
-    pickupAddress: z.string().min(1),
-    deliveryAddress: z.string().min(1),
     serviceType: z.enum(SERVICE_TYPE_VALUES as [string, ...string[]]),
+    bags: z.number().min(1),
     pickupType: z.enum(PICKUP_TYPE_VALUES as [string, ...string[]]),
     scheduledPickupAt: z.string().datetime().optional(),
-    bags: z.number().min(1),
     specialInstructions: z.string().optional(),
   }),
 });
@@ -60,7 +58,7 @@ const updateOrderStageSchema = z.object({
 });
 
 export const OrderValidation = {
-   createOrderSchema,
+  createOrderSchema,
   assignDriverToOrderSchema,
   updateOrderStatusSchema,
   setBagCountSchema,

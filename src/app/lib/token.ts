@@ -6,7 +6,7 @@ import { AppError } from '../utils';
 type TTokenData = {
   _id: string;
   name: string;
-  // address: string;
+  address: string;
   phone: string;
   email: string;
   image: string;

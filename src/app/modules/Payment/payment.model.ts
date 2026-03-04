@@ -11,7 +11,7 @@ const paymentSchema = new Schema<IPayment>(
     },
     customer: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     amount: { type: Number, required: true },
-    currency: { type: String, default: 'USD' },
+    // currency: { type: String, default: 'USD' },
     stripePaymentIntentId: { type: String },
     stripeChargeId: { type: String },
     status: {

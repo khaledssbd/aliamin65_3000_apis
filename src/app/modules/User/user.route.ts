@@ -20,7 +20,7 @@ router
   );
 
 // registerDriverSchema
-router.route('/create-driver-account').post(
+router.route('/create-driver-profile').post(
   auth(ROLE.CUSTOMER, ROLE.DRIVER),
   multerUpload.fields([
     { name: 'license', maxCount: 1 },
@@ -28,7 +28,7 @@ router.route('/create-driver-account').post(
     { name: 'insuranceDocument', maxCount: 1 },
   ]),
   validateRequestFromFormData(UserValidation.createDriverAccountSchema),
-  UserController.createDriverAccount,
+  UserController.createDriverProfile,
 );
 
 // 2. sendSignupOtpAgain

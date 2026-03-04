@@ -5,7 +5,7 @@ export interface IInvoice extends Document {
   customer: Types.ObjectId;
   invoiceNumber: string;
   total: number;
-  currency: string;
+  // currency: string;
   lineItems?: Array<{ name: string; amount: number; quantity: number }>;
   paid: boolean;
   generatedAt?: Date;

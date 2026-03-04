@@ -1,5 +1,7 @@
 import InvoiceModel from './invoice.model';
 import OrderModel from '../Order/order.model';
+import { AppError } from '../../utils';
+import httpStatus from 'http-status';
 
 // 1. getInvoiceByOrderIdFromDB
 const getInvoiceByOrderIdFromDB = async (orderId: string) => {
@@ -14,8 +16,18 @@ const getInvoiceByNumberFromDB = async (invoiceNumber: string) => {
 // 3. createInvoiceIntoDB
 const createInvoiceIntoDB = async (orderId: string) => {
   const order = await OrderModel.findById(orderId);
-  if (!order) return null;
+
+  if (!order) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Order not found!');
+  }
+
   const invoiceNumber = `INV-${order._id}`;
+
+  const existingInvoice = await InvoiceModel.findOne({ invoiceNumber });
+  if (existingInvoice) {
+    throw new AppError(httpStatus.CONFLICT, 'Invoice already exists!');
+  }
+
   const lineItems = [
     {
       name: 'Laundry Service',
@@ -24,6 +36,7 @@ const createInvoiceIntoDB = async (orderId: string) => {
     },
   ];
   const total = order.total;
+
   const doc = await InvoiceModel.findOneAndUpdate(
     { order: order._id },
     {
@@ -38,6 +51,7 @@ const createInvoiceIntoDB = async (orderId: string) => {
     },
     { upsert: true, new: true },
   );
+
   return doc;
 };
 

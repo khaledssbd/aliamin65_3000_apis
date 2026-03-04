@@ -2,9 +2,9 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { PricingService } from './pricing.service';
 
-// 1. getActivePricing
-const getActivePricing = asyncHandler(async (_req, res) => {
-  const result = await PricingService.getActivePricingFromDB();
+// 1. getPricing
+const getPricing = asyncHandler(async (_req, res) => {
+  const result = await PricingService.getPricingFromDB();
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -13,30 +13,18 @@ const getActivePricing = asyncHandler(async (_req, res) => {
   });
 });
 
-// 2. createPricing
-const createPricing = asyncHandler(async (req, res) => {
-  const result = await PricingService.createPricingIntoDB(req.body);
-
-  sendResponse(res, {
-    statusCode: httpStatus.CREATED,
-    message: 'Pricing details created successfully!',
-    data: result,
-  });
-});
-
-// 3. activatePricing
-const activatePricing = asyncHandler(async (req, res) => {
-  const result = await PricingService.activatePricingIntoDB(req.params.id as string);
+// 2. createOrUpdatePricing
+const createOrUpdatePricing = asyncHandler(async (req, res) => {
+  const result = await PricingService.createOrUpdatePricingInDB(req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Pricing plan activated successfully!',
+    message: 'Pricing saved successfully!',
     data: result,
   });
 });
 
 export const PricingController = {
-  getActivePricing,
-  createPricing,
-  activatePricing,
+  getPricing,
+  createOrUpdatePricing,
 };

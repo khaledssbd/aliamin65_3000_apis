@@ -250,13 +250,11 @@ const getNewAccessTokenSchema = z.object({
 // 12. updateUserDataSchema
 const updateUserDataSchema = z.object({
   body: z.object({
-    name: z.string({ error: 'Name is required!' }),
+    name: z.string().optional(),
 
-    // address: z.string({ error: 'Address is required!' }),
+    address: z.string().optional(),
 
-    phone: z.string({
-      error: 'Phone is required',
-    }),
+    phone: z.string().optional(),
   }),
 });
 

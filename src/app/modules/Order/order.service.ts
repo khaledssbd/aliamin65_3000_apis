@@ -2,21 +2,26 @@ import OrderModel from './order.model';
 import PricingModel from '../Pricing/pricing.model';
 import { ORDER_STATUS } from '../../constants';
 import { Types } from 'mongoose';
+import { IUser } from '../User/user.interface';
 
 // 0. computeTotal
-const computeTotal = async (bags: number, tip = 0) => {
+// const computeTotal = async (bags: number, tip = 0) => {
+//   const active = await PricingModel.findOne({ active: true });
+//   const price = active?.pricePerBag ?? 45;
+//   const total = bags * price + tip;
+//   return { pricePerBag: price, total };
+// };
+const computeTotal = async (bags: number) => {
   const active = await PricingModel.findOne({ active: true });
-  const price = active?.perBagPrice ?? 45;
-  const total = bags * price + tip;
-  return { pricePerBag: price, total };
+  const pricePerBag = active?.pricePerBag ?? 45;
+  const total = bags * pricePerBag;
+  return { pricePerBag, total };
 };
 
 // 1. createOrderIntoDB
 const createOrderIntoDB = async (
-  customerId: Types.ObjectId,
+  customer: IUser,
   payload: {
-    pickupAddress: string;
-    deliveryAddress: string;
     serviceType: string;
     pickupType: string;
     scheduledPickupAt?: string;
@@ -26,12 +31,11 @@ const createOrderIntoDB = async (
 ) => {
   const { total, pricePerBag } = await computeTotal(payload.bags);
   const doc = await OrderModel.create({
-    customer: customerId,
-    pickupAddress: payload.pickupAddress,
-    deliveryAddress: payload.deliveryAddress,
+    customer: customer._id,
+    scheduledPickupAt: payload.scheduledPickupAt,
+    address: customer.address,
     serviceType: payload.serviceType,
     pickupType: payload.pickupType,
-    scheduledPickupAt: payload.scheduledPickupAt,
     bags: payload.bags,
     specialInstructions: payload.specialInstructions,
     status: ORDER_STATUS.REQUESTED,

@@ -10,17 +10,16 @@ const orderSchema = new Schema<IOrder>(
       index: true,
     },
     driver: { type: Schema.Types.ObjectId, ref: 'User' },
-    pickupAddress: { type: String, required: true, trim: true },
-    deliveryAddress: { type: String, required: true, trim: true },
     serviceType: {
       type: String,
       enum: ['WASH_DRY', 'DRY_CLEAN'],
       default: 'WASH_DRY',
     },
+    bags: { type: Number, required: true, min: 1 },
     pickupType: { type: String, enum: ['ASAP', 'SCHEDULED'], default: 'ASAP' },
     scheduledPickupAt: { type: Date },
-    bags: { type: Number, required: true, min: 1 },
     specialInstructions: { type: String },
+    address: { type: String, required: true, trim: true },
     status: {
       type: String,
       enum: [
@@ -37,7 +36,7 @@ const orderSchema = new Schema<IOrder>(
       index: true,
     },
     pricePerBag: { type: Number, required: true },
-    tip: { type: Number, default: 0 },
+    // tip: { type: Number, default: 0 },
     total: { type: Number, required: true },
     bagCountAtPickup: { type: Number },
     bagCountAtDelivery: { type: Number },

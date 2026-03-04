@@ -12,7 +12,7 @@ const invoiceSchema = new Schema<IInvoice>(
     customer: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     invoiceNumber: { type: String, required: true, unique: true },
     total: { type: Number, required: true },
-    currency: { type: String, default: 'USD' },
+    // currency: { type: String, default: 'USD' },
     lineItems: [
       {
         name: { type: String, required: true },

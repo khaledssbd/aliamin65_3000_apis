@@ -326,7 +326,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"perBagPrice\": 45,\n  \"currency\": \"USD\",\n  \"minBags\": 1,\n  \"active\": true\n}"
+              "raw": "{\n  \"pricePerBag\": 45,\n  \"minBags\": 1,\n  \"active\": true\n}"
             }
           }
         },
@@ -364,7 +364,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"pickupAddressId\": \"{{addressId}}\",\n  \"deliveryAddressId\": \"{{addressId2}}\",\n  \"serviceType\": \"WASH_DRY\",\n  \"pickupType\": \"ASAP\",\n  \"bags\": 3,\n  \"scheduledPickupAt\": \"2026-02-26T10:00:00.000Z\",\n  \"specialInstructions\": \"Leave at front desk\"\n}"
+              "raw": "{\n  \"serviceType\": \"WASH_DRY\",\n  \"pickupType\": \"ASAP\",\n  \"bags\": 3,\n  \"scheduledPickupAt\": \"2026-02-26T10:00:00.000Z\",\n  \"specialInstructions\": \"Leave at front desk\"\n}"
             }
           }
         },

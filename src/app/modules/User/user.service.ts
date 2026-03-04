@@ -27,6 +27,7 @@ import {
   deleteImageFromCloudinary,
   sendImageToCloudinary,
 } from '../../lib/upload';
+import { ClientSession, startSession } from 'mongoose';
 
 // 1. createUserIntoDB
 const createUserIntoDB = async (payload: IUser) => {
@@ -87,143 +88,118 @@ const createUserIntoDB = async (payload: IUser) => {
   }
 };
 
-// 2. createDriverAccountIntoDB
-const createDriverAccountIntoDB = async (
+// 2. createDriverProfileIntoDB
+const createDriverProfileIntoDB = async (
   user: IUser,
-  payload: Record<string, unknown>,
+  payload: Record<string, any>,
   files: any,
 ) => {
   const fileMap = (files ?? {}) as Record<string, Express.Multer.File[]>;
-  const licenseFile = fileMap?.license?.[0];
-  const selfieFile = fileMap?.selfie?.[0];
-  const insuranceDocumentFile = fileMap?.insuranceDocument?.[0];
+  const { license, selfie, insuranceDocument } = fileMap;
 
-  if (!licenseFile || !selfieFile || !insuranceDocumentFile) {
+  // ১. Primary validation
+  if (!license?.[0] || !selfie?.[0] || !insuranceDocument?.[0]) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
       'license, selfie, and insuranceDocument images are required!',
     );
   }
 
-  const uploaded: {
-    licenseUrl?: string;
-    selfieUrl?: string;
-    insuranceDocumentUrl?: string;
-  } = {};
+  const uploadedUrls: string[] = [];
+  const session: ClientSession = await startSession();
 
   try {
-    const licenseUploaded = await sendImageToCloudinary(licenseFile);
-    uploaded.licenseUrl = licenseUploaded.secure_url;
+    session.startTransaction();
 
-    const selfieUploaded = await sendImageToCloudinary(selfieFile);
-    uploaded.selfieUrl = selfieUploaded.secure_url;
+    // 2. Parallel image upload (Performance Boost)
+    const [licenseRes, selfieRes, insuranceRes] = await Promise.all([
+      sendImageToCloudinary(license[0]),
+      sendImageToCloudinary(selfie[0]),
+      sendImageToCloudinary(insuranceDocument[0]),
+    ]);
 
-    const insuranceUploaded = await sendImageToCloudinary(
-      insuranceDocumentFile,
-    );
-    uploaded.insuranceDocumentUrl = insuranceUploaded.secure_url;
+    const uploaded = {
+      licenseUrl: licenseRes.secure_url,
+      selfieUrl: selfieRes.secure_url,
+      insuranceDocumentUrl: insuranceRes.secure_url,
+    };
 
-    const insuranceExpiration = payload?.insuranceExpiration
-      ? new Date(String(payload.insuranceExpiration))
-      : undefined;
+    // Track for deletion
+    uploadedUrls.push(...Object.values(uploaded));
 
-    const vehicleYear = payload?.vehicleYear
-      ? Number(payload.vehicleYear)
-      : undefined;
+    // 3. Data preparation
+    const {
+      insuranceProvider,
+      insurancePolicyNumber,
+      insuranceExpiration,
+      vehicleMake,
+      vehicleModel,
+      vehicleYear,
+      vehiclePlate,
+    } = payload;
 
-    const driver = await DriverModel.findOneAndUpdate(
-      { user: user._id },
-      {
-        $set: {
-          // user: user._id,
-          licenseImageUrl: uploaded.licenseUrl,
-          selfieImageUrl: uploaded.selfieUrl,
-          insurance: {
-            provider: payload?.insuranceProvider,
-            policyNumber: payload?.insurancePolicyNumber,
-            expiration: insuranceExpiration,
-            documentImageUrl: uploaded.insuranceDocumentUrl,
-          },
-          vehicle: {
-            make: payload?.vehicleMake,
-            model: payload?.vehicleModel,
-            year: vehicleYear,
-            plate: payload?.vehiclePlate,
-          },
-        },
+    const driverData = {
+      licenseImageUrl: uploaded.licenseUrl,
+      selfieImageUrl: uploaded.selfieUrl,
+      insurance: {
+        provider: insuranceProvider,
+        policyNumber: insurancePolicyNumber,
+        expiration: insuranceExpiration
+          ? new Date(String(insuranceExpiration))
+          : undefined,
+        documentImageUrl: uploaded.insuranceDocumentUrl,
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true },
+      vehicle: {
+        make: vehicleMake,
+        model: vehicleModel,
+        year: vehicleYear ? Number(vehicleYear) : undefined,
+        plate: vehiclePlate,
+      },
+    };
+
+    // 4. Database update (Ensure atomicity)
+    await DriverModel.findOneAndUpdate(
+      { user: user._id },
+      { $set: driverData },
+      { upsert: true, new: true, setDefaultsOnInsert: true, session },
     );
 
-    if (!driver) {
-      await Promise.all(
-        [uploaded.licenseUrl, uploaded.selfieUrl, uploaded.insuranceDocumentUrl]
-          .filter(Boolean)
-          .map((url) => deleteImageFromCloudinary(url as string)),
-      );
+    // Update user role
+    user.role = 'DRIVER';
+    await user.save({ session });
 
-      throw new AppError(
-        httpStatus.INTERNAL_SERVER_ERROR,
-        'Failed to create driver account',
-      );
-    } else {
-      // Driver created successfully, now update his role
-      user.role = 'DRIVER';
-      await user.save();
-    }
+    // Commit transaction
+    await session.commitTransaction();
+    await session.endSession();
 
-    // Prepare user data for token generation
+    // Generate token (low chance of failure outside session)
     const accessTokenPayload = {
       _id: user?._id.toString(),
       name: user?.name,
-      // address: user?.address,
+      address: user?.address,
       phone: user?.phone,
       email: user?.email,
       image: user?.image || defaultUserImage,
       role: user?.role,
     };
 
-    const refreshTokenPayload = {
-      email: user?.email,
-    };
-
-    // tokens
-    const accessToken = createAccessToken(accessTokenPayload);
-    const refreshToken = createRefreshToken(refreshTokenPayload);
-
     return {
-      accessToken,
-      refreshToken,
-      user: {
-        _id: user._id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
-
-      licenseImageUrl: uploaded.licenseUrl,
-      selfieImageUrl: uploaded.selfieUrl,
-      insurance: {
-        provider: payload?.insuranceProvider,
-        policyNumber: payload?.insurancePolicyNumber,
-        expiration: insuranceExpiration,
-        documentImageUrl: uploaded.insuranceDocumentUrl,
-      },
-      vehicle: {
-        make: payload?.vehicleMake,
-        model: payload?.vehicleModel,
-        year: vehicleYear,
-        plate: payload?.vehiclePlate,
-      },
+      accessToken: createAccessToken(accessTokenPayload),
+      refreshToken: createRefreshToken({ email: user.email }),
+      user: accessTokenPayload,
     };
-  } catch (e) {
-    await Promise.all(
-      [uploaded.licenseUrl, uploaded.selfieUrl, uploaded.insuranceDocumentUrl]
-        .filter(Boolean)
-        .map((url) => deleteImageFromCloudinary(url as string)),
-    );
+  } catch (error) {
+    // Transaction rollback
+    await session.abortTransaction();
+    await session.endSession();
 
-    throw e;
+    // Delete uploaded images from cloudinary
+    if (uploadedUrls.length > 0) {
+      await Promise.all(
+        uploadedUrls.map((url) => deleteImageFromCloudinary(url)),
+      );
+    }
+    throw error;
   }
 };
 
@@ -310,7 +286,7 @@ const verifySignupOtpIntoDB = async (userEmail: string, otp: string) => {
   const accessTokenPayload = {
     _id: user?._id.toString(),
     name: user?.name,
-    // address: user?.address,
+    address: user?.address,
     phone: user?.phone,
     email: user?.email,
     image: user?.image || defaultUserImage,
@@ -328,6 +304,7 @@ const verifySignupOtpIntoDB = async (userEmail: string, otp: string) => {
   return {
     accessToken,
     refreshToken,
+    user: accessTokenPayload,
   };
 };
 
@@ -375,7 +352,7 @@ const signinIntoDB = async (payload: { email: string; password: string }) => {
   const accessTokenPayload = {
     _id: user?._id.toString(),
     name: user?.name,
-    // address: user?.address,
+    address: user?.address,
     phone: user?.phone,
     email: user?.email,
     image: user?.image || defaultUserImage,
@@ -414,7 +391,7 @@ const updateProfilePhotoIntoDB = async (
     user._id,
     { image: secure_url },
     { new: true },
-  ).select('name email image role phone');
+  ).select('name address email image role phone');
 
   // 4. Rollback Logic: If DB update fails, delete the newly uploaded image from Cloudinary
   if (!userNewData) {
@@ -435,7 +412,7 @@ const updateProfilePhotoIntoDB = async (
   const accessTokenPayload = {
     _id: userNewData._id.toString(),
     name: userNewData.name,
-    // address: userNewData.address,
+    address: userNewData.address,
     phone: userNewData.phone,
     email: userNewData.email,
     image: userNewData.image || defaultUserImage,
@@ -446,6 +423,7 @@ const updateProfilePhotoIntoDB = async (
 
   return {
     accessToken,
+    user: accessTokenPayload,
   };
 };
 
@@ -490,7 +468,7 @@ const changePasswordIntoDB = async (
   const accessTokenPayload = {
     _id: user?._id.toString(),
     name: user?.name,
-    // address: user?.address,
+    address: user?.address,
     phone: user?.phone,
     email: user?.email,
     image: user?.image || defaultUserImage,
@@ -733,7 +711,7 @@ const deactivateAccountIntoDB = async (
         deactivationReason,
       },
     },
-    { new: true, select: 'email name isActive deactivationReason' },
+    { new: true, select: 'email name address isActive deactivationReason' },
   );
 
   return result;
@@ -748,7 +726,7 @@ const deleteSpecificUserAccountIntoDB = async (user: IUser) => {
         isDeleted: true,
       },
     },
-    { new: true, select: 'email name isDeleted' },
+    { new: true, select: 'email name address isDeleted' },
   );
 
   return result;
@@ -792,7 +770,7 @@ const getNewAccessTokenFromDB = async (refreshToken: string) => {
   const accessTokenPayload = {
     _id: user?._id.toString(),
     name: user?.name,
-    // address: user?.address,
+    address: user?.address,
     phone: user?.phone,
     email: user?.email,
     image: user?.image || defaultUserImage,
@@ -829,7 +807,7 @@ const updateUserDataIntoDB = async (
   const accessTokenPayload = {
     _id: user._id.toString(),
     name: user.name,
-    // address: user.address,
+    address: user.address,
     phone: user.phone,
     email: user.email,
     image: user.image || defaultUserImage,
@@ -840,6 +818,7 @@ const updateUserDataIntoDB = async (
 
   return {
     accessToken,
+    user: accessTokenPayload,
   };
 };
 
@@ -1390,7 +1369,7 @@ const adminGetAllUsersFromDB = async (query: Record<string, unknown>) => {
 
 export const UserService = {
   createUserIntoDB,
-  createDriverAccountIntoDB,
+  createDriverProfileIntoDB,
   sendSignupOtpAgainIntoDB,
   verifySignupOtpIntoDB,
   signinIntoDB,

@@ -11,7 +11,7 @@ const createPaymentIntentForMyOrderIntoDB = async (
     order: orderId,
     customer: userId,
     amount: amount ?? 0,
-    currency: 'USD',
+    // currency: 'USD',
     status: 'requires_confirmation',
   });
   return { doc, clientSecret: `pi_${doc._id}_secret` };

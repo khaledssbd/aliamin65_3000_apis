@@ -7,7 +7,7 @@ import UserModel from '../User/user.model';
 
 // 1. createOrder
 const createOrder = asyncHandler(async (req, res) => {
-  const result = await OrderService.createOrderIntoDB(req.user._id, req.body);
+  const result = await OrderService.createOrderIntoDB(req.user, req.body);
 
   const ordersNs = getIO()?.of('/orders');
   ordersNs?.to(`customer:${String(req.user._id)}`).emit('order:created', {

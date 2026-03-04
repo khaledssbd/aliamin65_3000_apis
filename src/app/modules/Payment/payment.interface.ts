@@ -12,7 +12,7 @@ export interface IPayment extends Document {
   order: Types.ObjectId;
   customer: Types.ObjectId;
   amount: number;
-  currency: string;
+  // currency: string;
   stripePaymentIntentId?: string;
   stripeChargeId?: string;
   status: TPaymentStatus;
