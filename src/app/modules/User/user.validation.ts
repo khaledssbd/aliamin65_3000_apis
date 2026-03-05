@@ -195,7 +195,9 @@ const verifyOtpForForgotPasswordSchema = z.object({
 // 9. resetPasswordSchema
 const resetPasswordSchema = z.object({
   body: z.object({
-    resetPasswordToken: z.string({ error: 'Token is required!' }),
+    resetPasswordToken: z.string({
+      error: 'Reset password token is required!',
+    }),
 
     newPassword: z
       .string({
