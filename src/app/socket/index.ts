@@ -3,10 +3,26 @@ import { Server as HttpServer } from 'http';
 import { Server as IOServer, type Socket } from 'socket.io';
 import OrderModel from '../modules/Order/order.model';
 import UserModel from '../modules/User/user.model';
+import ChatMessageModel from '../modules/Chat/chat.model';
 import mongoose from 'mongoose';
 
 let io: IOServer | null = null;
-const onlineUsers = new Map<string, string>();
+const onlineUsers = new Map<string, Set<string>>();
+
+const addOnlineUserSocket = (userId: string, socketId: string) => {
+  const current = onlineUsers.get(userId);
+  if (current) current.add(socketId);
+  else onlineUsers.set(userId, new Set([socketId]));
+};
+
+const removeOnlineUserSocket = (userId: string, socketId: string) => {
+  const current = onlineUsers.get(userId);
+  if (!current) return;
+  current.delete(socketId);
+  if (current.size === 0) onlineUsers.delete(userId);
+};
+
+const getOnlineUserIds = () => Array.from(onlineUsers.keys());
 
 export const initSocket = (server: HttpServer) => {
   if (!io) {
@@ -50,7 +66,7 @@ export const initSocket = (server: HttpServer) => {
         return;
       }
       socket.join(`user:${userId}`);
-      onlineUsers.set(userId, socket.id);
+      addOnlineUserSocket(userId, socket.id);
       next();
     } catch (error: unknown) {
       console.error('Socket Middleware DB Error:', error);
@@ -107,7 +123,7 @@ export const initSocket = (server: HttpServer) => {
     );
 
     socket.on('disconnect', () => {
-      onlineUsers.delete(currentUserId);
+      removeOnlineUserSocket(currentUserId, socket.id);
       console.log(`User disconnected from Orders: ${currentUserId}`);
     });
   });
@@ -116,23 +132,238 @@ export const initSocket = (server: HttpServer) => {
   const chatNs = io.of('/chat');
   chatNs.use(checkAuth);
 
+  const socketActiveConversation = new Map<string, string | null>();
+
+  const emitOnlineUsers = () => {
+    chatNs.emit('chat:online:users', { userIds: getOnlineUserIds() });
+  };
+
+  const listThreadsForUserFromDB = async (userId: string) => {
+    const uid = new mongoose.Types.ObjectId(userId);
+    const threads = await ChatMessageModel.aggregate([
+      { $match: { $or: [{ from: uid }, { to: uid }] } },
+      { $sort: { createdAt: 1 } },
+      {
+        $group: {
+          _id: '$order',
+          lastMessageAt: { $last: '$createdAt' },
+          lastMessage: { $last: '$content' },
+          lastContentType: { $last: '$contentType' },
+          lastFrom: { $last: '$from' },
+          unreadCount: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $eq: ['$to', uid] },
+                    {
+                      $or: [{ $eq: ['$readAt', null] }, { $not: ['$readAt'] }],
+                    },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+        },
+      },
+      { $sort: { lastMessageAt: -1 } },
+    ]);
+
+    return threads;
+  };
+
+  const markConversationAsReadInDB = async (
+    orderId: string,
+    userId: string,
+  ) => {
+    if (!mongoose.isValidObjectId(orderId)) return;
+    const now = new Date();
+    await ChatMessageModel.updateMany(
+      {
+        order: orderId,
+        to: userId,
+        $or: [{ readAt: { $exists: false } }, { readAt: null }],
+      },
+      { $set: { readAt: now } },
+    );
+  };
+
+  const emitThreadsForUser = async (userId: string) => {
+    try {
+      const threads = await listThreadsForUserFromDB(userId);
+      chatNs.to(`user:${userId}`).emit('chat:threads', { threads });
+    } catch (error) {
+      console.error('Chat Threads Error:', error);
+    }
+  };
+
+  const isAnySocketInRoom = (room: string, socketIds: Set<string>) => {
+    const members = chatNs.adapter.rooms.get(room);
+    if (!members) return false;
+    for (const sid of socketIds) {
+      if (members.has(sid)) return true;
+    }
+    return false;
+  };
+
   chatNs.on('connection', (socket) => {
     const currentUserId = socket.handshake.query.userId as string;
     console.log(`User connected to Chat: ${currentUserId}`);
 
-    socket.on('chat:join', ({ orderId }: { orderId: string }) => {
-      if (orderId) socket.join(`order:${orderId}`);
+    socketActiveConversation.set(socket.id, null);
+    emitOnlineUsers();
+    emitThreadsForUser(currentUserId);
+
+    socket.on('chat:threads:list', async () => {
+      await emitThreadsForUser(currentUserId);
     });
 
     socket.on(
-      'chat:message',
-      (payload: { orderId: string; contentType: string; content: string }) => {
-        if (!payload?.orderId) return;
-        chatNs.to(`order:${payload.orderId}`).emit('chat:message', {
-          message: { ...payload, from: currentUserId, timestamp: new Date() },
+      'chat:conversation:join',
+      async ({ orderId }: { orderId: string }) => {
+        if (!orderId || !mongoose.isValidObjectId(orderId)) return;
+
+        const prevOrderId = socketActiveConversation.get(socket.id);
+        if (prevOrderId && prevOrderId !== orderId) {
+          socket.leave(`order:${prevOrderId}`);
+        }
+
+        socket.join(`order:${orderId}`);
+        socketActiveConversation.set(socket.id, orderId);
+
+        await markConversationAsReadInDB(orderId, currentUserId);
+        await emitThreadsForUser(currentUserId);
+        chatNs.to(`order:${orderId}`).emit('chat:conversation:presence', {
+          orderId,
+          userId: currentUserId,
+          status: 'JOINED',
         });
       },
     );
+
+    socket.on(
+      'chat:conversation:leave',
+      async ({ orderId }: { orderId: string }) => {
+        if (!orderId) return;
+        socket.leave(`order:${orderId}`);
+
+        const active = socketActiveConversation.get(socket.id);
+        if (active === orderId) socketActiveConversation.set(socket.id, null);
+
+        chatNs.to(`order:${orderId}`).emit('chat:conversation:presence', {
+          orderId,
+          userId: currentUserId,
+          status: 'LEFT',
+        });
+      },
+    );
+
+    socket.on(
+      'chat:messages:list',
+      async (data: { orderId: string; limit?: number }) => {
+        const { orderId } = data;
+        const limit = Math.min(Math.max(Number(data.limit ?? 50), 1), 200);
+        if (!orderId || !mongoose.isValidObjectId(orderId)) return;
+
+        try {
+          const messages = await ChatMessageModel.find({ order: orderId })
+            .sort({ createdAt: 1 })
+            .limit(limit);
+
+          socket.emit('chat:messages', { orderId, messages });
+
+          const active = socketActiveConversation.get(socket.id);
+          if (active === orderId) {
+            await markConversationAsReadInDB(orderId, currentUserId);
+            await emitThreadsForUser(currentUserId);
+          }
+        } catch (error) {
+          console.error('Chat Messages List Error:', error);
+        }
+      },
+    );
+
+    socket.on(
+      'chat:message:send',
+      async (payload: {
+        orderId: string;
+        to?: string;
+        contentType: 'TEXT' | 'IMAGE';
+        content: string;
+      }) => {
+        if (!payload?.orderId || !mongoose.isValidObjectId(payload.orderId))
+          return;
+
+        if (!payload?.content) return;
+
+        try {
+          let receiverId = payload.to;
+
+          if (!receiverId || !mongoose.isValidObjectId(receiverId)) {
+            const order = await OrderModel.findById(payload.orderId).select(
+              'customer driver',
+            );
+
+            if (!order) return;
+
+            const customerId = order.customer ? String(order.customer) : null;
+            
+            const driverId = order.driver ? String(order.driver) : null;
+            
+            if (!customerId || !driverId) return;
+            
+            receiverId = customerId === currentUserId ? driverId : customerId;
+          }
+
+          const created = await ChatMessageModel.create({
+            order: payload.orderId,
+            from: currentUserId,
+            to: receiverId,
+            contentType: payload.contentType,
+            content: payload.content,
+            deliveredAt: new Date(),
+          });
+
+          const receiverSockets = onlineUsers.get(receiverId);
+          const receiverInRoom =
+            !!receiverSockets &&
+            isAnySocketInRoom(`order:${payload.orderId}`, receiverSockets);
+
+          if (receiverInRoom) {
+            await markConversationAsReadInDB(payload.orderId, receiverId);
+          }
+
+          chatNs.to(`order:${payload.orderId}`).emit('chat:message', {
+            orderId: payload.orderId,
+            message: created,
+          });
+
+          chatNs.to(`user:${receiverId}`).emit('chat:message:notify', {
+            orderId: payload.orderId,
+            message: created,
+          });
+
+          await emitThreadsForUser(currentUserId);
+          await emitThreadsForUser(receiverId);
+        } catch (error) {
+          console.error('Chat Send Error:', error);
+        }
+      },
+    );
+
+    socket.on('chat:message:seen', async (data: { orderId: string }) => {
+      const { orderId } = data;
+      if (!orderId || !mongoose.isValidObjectId(orderId)) return;
+
+      try {
+        await markConversationAsReadInDB(orderId, currentUserId);
+        await emitThreadsForUser(currentUserId);
+      } catch (error) {
+        console.error('Chat Seen Error:', error);
+      }
+    });
 
     socket.on(
       'chat:typing',
@@ -145,7 +376,9 @@ export const initSocket = (server: HttpServer) => {
     );
 
     socket.on('disconnect', () => {
-      onlineUsers.delete(currentUserId);
+      socketActiveConversation.delete(socket.id);
+      removeOnlineUserSocket(currentUserId, socket.id);
+      emitOnlineUsers();
       console.log(`User disconnected from Chat: ${currentUserId}`);
     });
   });
