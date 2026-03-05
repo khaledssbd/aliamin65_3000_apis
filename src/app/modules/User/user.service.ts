@@ -94,10 +94,14 @@ const createDriverProfileIntoDB = async (
   payload: Record<string, any>,
   files: any,
 ) => {
+  // if (user.role === ROLE.DRIVER) {
+  //   throw new AppError(httpStatus.BAD_REQUEST, 'You already applied for this!');
+  // }
+
   const fileMap = (files ?? {}) as Record<string, Express.Multer.File[]>;
   const { license, selfie, insuranceDocument } = fileMap;
 
-  // ১. Primary validation
+  // 1. Primary validation
   if (!license?.[0] || !selfie?.[0] || !insuranceDocument?.[0]) {
     throw new AppError(
       httpStatus.BAD_REQUEST,

@@ -1,17 +1,7 @@
-import { EventEmitter } from 'events';
 import { Server as HttpServer } from 'http';
 import { Server as IOServer } from 'socket.io';
 import OrderModel from '../modules/Order/order.model';
 import UserModel from '../modules/User/user.model';
-
-let emitter: EventEmitter | null = null;
-
-export const initEventBus = () => {
-  emitter = new EventEmitter();
-  return emitter;
-};
-
-export const getEventBus = () => emitter;
 
 let io: IOServer | null = null;
 
