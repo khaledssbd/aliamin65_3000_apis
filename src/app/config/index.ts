@@ -66,5 +66,9 @@ export default {
     karmacheck_api_key: process.env.KARMACHECK_API_KEY,
     sterling_api_key: process.env.STERLING_API_KEY,
     veriff_api_key: process.env.VERIFF_API_KEY,
+    veriff_base_url: process.env.VERIFF_BASE_URL,
+    veriff_shared_secret: process.env.VERIFF_SHARED_SECRET,
+    veriff_callback_url: process.env.VERIFF_CALLBACK_URL,
+    default_background_provider: process.env.DEFAULT_BACKGROUND_PROVIDER,
   },
 };

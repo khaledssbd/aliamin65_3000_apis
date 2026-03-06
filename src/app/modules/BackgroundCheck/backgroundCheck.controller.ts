@@ -10,7 +10,34 @@ const checkDriverBackgroundStatus = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Background check started successfully!',
+    message: 'Background check status synced successfully!',
+    data: doc,
+  });
+});
+
+// createBackgroundCheckForDriver
+const createBackgroundCheckForDriver = asyncHandler(async (req, res) => {
+  const doc = await BackgroundCheckService.createBackgroundCheckForDriverInDB(
+    String(req.params.driverId),
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Background check created successfully!',
+    data: doc,
+  });
+});
+
+// syncDriverBackgroundStatusByDriverId
+const syncDriverBackgroundStatusByDriverId = asyncHandler(async (req, res) => {
+  const doc =
+    await BackgroundCheckService.syncDriverBackgroundStatusByDriverIdIntoDB(
+      String(req.params.driverId),
+    );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Background check status synced successfully!',
     data: doc,
   });
 });
@@ -45,6 +72,8 @@ const getDriverBackgroundDataByHisUserId = asyncHandler(async (req, res) => {
 
 export const BackgroundCheckController = {
   checkDriverBackgroundStatus,
+  createBackgroundCheckForDriver,
+  syncDriverBackgroundStatusByDriverId,
   getDriverBackgroundDataByHisDriverId,
   getDriverBackgroundDataByHisUserId,
 };

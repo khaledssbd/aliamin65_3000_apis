@@ -21,6 +21,8 @@ import {
 import { UserValidation } from './user.validation';
 import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
 import DriverModel from '../Driver/driver.model';
+import BackgroundCheckModel from '../BackgroundCheck/backgroundCheck.model';
+import { startVerificationWithVERIFF } from '../BackgroundCheck/backgroundCheck.util';
 // import BookModel from '../Book/book.model';
 // import { OrderModel } from '../Order/order.model';
 import {
@@ -162,11 +164,57 @@ const createDriverProfileIntoDB = async (
     };
 
     // 4. Database update (Ensure atomicity)
-    await DriverModel.findOneAndUpdate(
+    const driver = await DriverModel.findOneAndUpdate(
       { user: user._id },
       { $set: driverData },
       { upsert: true, new: true, setDefaultsOnInsert: true, session },
     );
+
+    const existingBackgroundCheck = await BackgroundCheckModel.findOne({
+      driver: driver._id,
+    }).session(session);
+
+    if (!existingBackgroundCheck) {
+      const createdDocs = await BackgroundCheckModel.create(
+        [
+          {
+            driver: driver._id,
+            provider:
+              (config.status.default_background_provider as
+                | 'CHECKR'
+                | 'KARMACHECK'
+                | 'STERLING'
+                | 'VERIFF'
+                | undefined) ?? 'VERIFF',
+            status: 'PENDING',
+            startedAt: new Date(),
+          },
+        ],
+        { session },
+      );
+
+      const created = createdDocs?.[0];
+      if (
+        created?.provider === 'VERIFF' &&
+        config.status.veriff_api_key &&
+        license?.[0]?.buffer &&
+        selfie?.[0]?.buffer
+      ) {
+        try {
+          const { sessionId } = await startVerificationWithVERIFF({
+            vendorData: String(user._id),
+            endUserId: String(user._id),
+            licenseImage: license[0].buffer,
+            selfieImage: selfie[0].buffer,
+          });
+
+          created.reportId = sessionId;
+          await created.save({ session });
+        } catch {
+          // If provider session start fails, we keep doc in PENDING state without reportId
+        }
+      }
+    }
 
     // Update user role
     user.role = 'DRIVER';
