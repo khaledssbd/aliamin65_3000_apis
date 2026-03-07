@@ -142,11 +142,27 @@ const createDriverProfileIntoDB = async (
       vehicleModel,
       vehicleYear,
       vehiclePlate,
+      firstName,
+      lastName,
+      dateOfBirth,
+      idNumber,
+      documentType,
+      documentCountry,
+      fullAddress,
     } = payload;
 
     const driverData = {
       licenseImageUrl: uploaded.licenseUrl,
       selfieImageUrl: uploaded.selfieUrl,
+      identity: {
+        firstName: firstName ? String(firstName) : undefined,
+        lastName: lastName ? String(lastName) : undefined,
+        dateOfBirth: dateOfBirth ? new Date(String(dateOfBirth)) : undefined,
+        idNumber: idNumber ? String(idNumber) : undefined,
+        documentType: documentType ? String(documentType) : undefined,
+        documentCountry: documentCountry ? String(documentCountry) : undefined,
+        fullAddress: fullAddress ? String(fullAddress) : undefined,
+      },
       insurance: {
         provider: insuranceProvider,
         policyNumber: insurancePolicyNumber,
@@ -179,13 +195,7 @@ const createDriverProfileIntoDB = async (
         [
           {
             driver: driver._id,
-            provider:
-              (config.status.default_background_provider as
-                | 'CHECKR'
-                | 'KARMACHECK'
-                | 'STERLING'
-                | 'VERIFF'
-                | undefined) ?? 'VERIFF',
+            provider: config.status.default_background_provider || 'VERIFF',
             status: 'PENDING',
             startedAt: new Date(),
           },
@@ -204,6 +214,19 @@ const createDriverProfileIntoDB = async (
           const { sessionId } = await startVerificationWithVERIFF({
             vendorData: String(user._id),
             endUserId: String(user._id),
+            person: {
+              firstName: driverData.identity.firstName,
+              lastName: driverData.identity.lastName,
+              idNumber: driverData.identity.idNumber,
+            },
+            document: {
+              number: driverData.identity.idNumber,
+              type: driverData.identity.documentType,
+              country: driverData.identity.documentCountry,
+            },
+            address: {
+              fullAddress: driverData.identity.fullAddress,
+            },
             licenseImage: license[0].buffer,
             selfieImage: selfie[0].buffer,
           });

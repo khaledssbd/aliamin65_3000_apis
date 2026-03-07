@@ -7,6 +7,15 @@ export interface IDriver extends Document {
   user: Types.ObjectId;
   licenseImageUrl?: string;
   selfieImageUrl?: string;
+  identity?: {
+    firstName?: string;
+    lastName?: string;
+    dateOfBirth?: Date;
+    idNumber?: string;
+    documentType?: string;
+    documentCountry?: string;
+    fullAddress?: string;
+  };
   isAvailable?: boolean;
   insurance?: {
     provider?: string;

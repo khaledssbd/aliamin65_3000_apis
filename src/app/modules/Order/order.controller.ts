@@ -10,6 +10,7 @@ const createOrder = asyncHandler(async (req, res) => {
   const result = await OrderService.createOrderIntoDB(req.user, req.body);
 
   const ordersNs = getIO()?.of('/orders');
+
   ordersNs?.to(`customer:${String(req.user._id)}`).emit('order:created', {
     orderId: result._id,
   });
@@ -80,6 +81,7 @@ const assignDriverToOrder = asyncHandler(async (req, res) => {
     String(req.params.id),
     req.body.driverId,
   );
+
   getIO()?.emit('order:assigned', {
     orderId: result?._id,
     driverId: result?.driver,

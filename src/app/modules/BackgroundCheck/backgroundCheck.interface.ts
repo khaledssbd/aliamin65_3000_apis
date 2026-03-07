@@ -1,11 +1,7 @@
 import { Document, Types } from 'mongoose';
 import { TBackgroundStatus } from '../Driver/driver.interface';
 
-export type TBackgroundProvider =
-  | 'CHECKR'
-  | 'KARMACHECK'
-  | 'STERLING'
-  | 'VERIFF';
+export type TBackgroundProvider = 'VERIFF';
 
 export interface IBackgroundCheck extends Document {
   driver: Types.ObjectId;

@@ -70,6 +70,14 @@ const createDriverAccountSchema = z.object({
     vehicleYear: z.string().optional(),
     vehiclePlate: z.string().optional(),
 
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    dateOfBirth: z.string().optional(),
+    idNumber: z.string().optional(),
+    documentType: z.string().optional(),
+    documentCountry: z.string().optional(),
+    fullAddress: z.string().optional(),
+
     // role: zodEnumFromObject({ DRIVER: 'DRIVER' }),
     role: z.enum(['DRIVER']),
   }),

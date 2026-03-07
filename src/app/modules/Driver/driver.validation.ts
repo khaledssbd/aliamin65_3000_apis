@@ -39,9 +39,9 @@ const availabilitySchema = z.object({
 const idParamSchema = z.object({ params: z.object({ id: z.string() }) });
 
 export const DriverValidation = {
-  onboarding: onboardingSchema,
-  insurance: insuranceSchema,
-  vehicle: vehicleSchema,
-  availability: availabilitySchema,
-  idParam: idParamSchema,
+  onboardingSchema,
+  insuranceSchema,
+  vehicleSchema,
+  availabilitySchema,
+  idParamSchema,
 };
