@@ -52,13 +52,7 @@ const createBackgroundCheckForDriverInDB = async (driverId: string) => {
 
   if (existing) return existing;
 
-  const provider =
-    (config.status.default_background_provider as
-      | 'CHECKR'
-      | 'KARMACHECK'
-      | 'STERLING'
-      | 'VERIFF'
-      | undefined) ?? 'VERIFF';
+  const provider = config.status.default_background_provider || 'VERIFF';
 
   const doc = await BackgroundCheckModel.create({
     driver: driverId,

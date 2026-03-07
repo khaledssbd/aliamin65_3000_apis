@@ -39,7 +39,8 @@ const sendOtpEmail = async ({
 
     // Email options: from, to, subject, and HTML body
     const mailOptions = {
-      from: `${config.preffered_website_name} 📖 <${config.nodemailer.email}>`,
+      // from: `${config.preffered_website_name} 🧊💦🫧🧺👚☃️ <${config.nodemailer.email}>`,
+      from: `${config.preffered_website_name} 🧊 <${config.nodemailer.email}>`,
       to: email,
       subject: subject,
       html: htmlTemplate,

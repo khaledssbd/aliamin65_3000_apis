@@ -10,7 +10,7 @@ const router = Router();
 router.post(
   '/onboarding',
   auth(ROLE.DRIVER),
-  validateRequest(DriverValidation.onboarding),
+  validateRequest(DriverValidation.onboardingSchema),
   DriverController.onboardDriver,
 );
 
@@ -18,7 +18,7 @@ router.post(
 router.post(
   '/insurance',
   auth(ROLE.DRIVER),
-  validateRequest(DriverValidation.insurance),
+  validateRequest(DriverValidation.insuranceSchema),
   DriverController.updateDriverInsurance,
 );
 
@@ -26,7 +26,7 @@ router.post(
 router.post(
   '/vehicle',
   auth(ROLE.DRIVER),
-  validateRequest(DriverValidation.vehicle),
+  validateRequest(DriverValidation.vehicleSchema),
   DriverController.updateDriverVehicle,
 );
 
@@ -37,7 +37,7 @@ router.get('/me', auth(ROLE.DRIVER), DriverController.getMyDriverProfile);
 router.patch(
   '/availability',
   auth(ROLE.DRIVER),
-  validateRequest(DriverValidation.availability),
+  validateRequest(DriverValidation.availabilitySchema),
   DriverController.updateDriverAvailability,
 );
 

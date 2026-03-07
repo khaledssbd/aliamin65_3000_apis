@@ -85,6 +85,7 @@ export const initSocket = (server: HttpServer) => {
     const currentUserId = socket.handshake.query.userId as string;
     console.log(`User connected to Orders: ${currentUserId}`);
 
+    // CUSTOMER or DRIVER join for orders: orders:join
     socket.on('orders:join', (data: { orderId?: string; role?: string }) => {
       const { orderId, role } = data;
       if (role === 'DRIVER') socket.join(`driver:${currentUserId}`);
@@ -92,6 +93,7 @@ export const initSocket = (server: HttpServer) => {
       if (orderId) socket.join(`order:${orderId}`);
     });
 
+    // DRIVER push location for CUSTOMER tracking
     socket.on(
       'order:tracking:location:push',
       async (data: { orderId: string; lat: number; lng: number }) => {
@@ -134,6 +136,7 @@ export const initSocket = (server: HttpServer) => {
 
   const socketActiveConversation = new Map<string, string | null>();
 
+  // emit online users list to all users who are listening to: chat:online:users
   const emitOnlineUsers = () => {
     chatNs.emit('chat:online:users', { userIds: getOnlineUserIds() });
   };
@@ -216,10 +219,12 @@ export const initSocket = (server: HttpServer) => {
     emitOnlineUsers();
     emitThreadsForUser(currentUserId);
 
+    // user see chat list on sidebar => chat:threads:list
     socket.on('chat:threads:list', async () => {
       await emitThreadsForUser(currentUserId);
     });
 
+    // user select a conversation to see all messages: chat:conversation:join
     socket.on(
       'chat:conversation:join',
       async ({ orderId }: { orderId: string }) => {
@@ -243,6 +248,7 @@ export const initSocket = (server: HttpServer) => {
       },
     );
 
+    // user leave a conversation: chat:conversation:leave
     socket.on(
       'chat:conversation:leave',
       async ({ orderId }: { orderId: string }) => {
@@ -260,6 +266,7 @@ export const initSocket = (server: HttpServer) => {
       },
     );
 
+    // user select a conversation to see all messages: chat:messages:list
     socket.on(
       'chat:messages:list',
       async (data: { orderId: string; limit?: number }) => {
@@ -285,6 +292,7 @@ export const initSocket = (server: HttpServer) => {
       },
     );
 
+    // user send a message: chat:message:send
     socket.on(
       'chat:message:send',
       async (payload: {
@@ -309,11 +317,11 @@ export const initSocket = (server: HttpServer) => {
             if (!order) return;
 
             const customerId = order.customer ? String(order.customer) : null;
-            
+
             const driverId = order.driver ? String(order.driver) : null;
-            
+
             if (!customerId || !driverId) return;
-            
+
             receiverId = customerId === currentUserId ? driverId : customerId;
           }
 
@@ -353,6 +361,7 @@ export const initSocket = (server: HttpServer) => {
       },
     );
 
+    // user mark conversation as read: chat:message:seen
     socket.on('chat:message:seen', async (data: { orderId: string }) => {
       const { orderId } = data;
       if (!orderId || !mongoose.isValidObjectId(orderId)) return;
@@ -365,6 +374,7 @@ export const initSocket = (server: HttpServer) => {
       }
     });
 
+    // user typing: chat:typing
     socket.on(
       'chat:typing',
       ({ orderId, isTyping }: { orderId: string; isTyping: boolean }) => {
@@ -380,6 +390,109 @@ export const initSocket = (server: HttpServer) => {
       removeOnlineUserSocket(currentUserId, socket.id);
       emitOnlineUsers();
       console.log(`User disconnected from Chat: ${currentUserId}`);
+    });
+  });
+
+  // --- CALL NAMESPACE (WebRTC Signaling) ---
+  const callNs = io.of('/call');
+  callNs.use(checkAuth);
+
+  const activeCalls = new Map<string, Set<string>>();
+  // roomId -> socketIds
+
+  callNs.on('connection', (socket) => {
+    const currentUserId = socket.handshake.query.userId as string;
+    console.log(`User connected to Call: ${currentUserId}`);
+
+    socket.on('call:join', ({ roomId }: { roomId: string }) => {
+      if (!roomId) return;
+
+      socket.join(`call:${roomId}`);
+
+      const members = activeCalls.get(roomId) || new Set();
+      members.add(socket.id);
+      activeCalls.set(roomId, members);
+
+      callNs.to(`call:${roomId}`).emit('call:user:joined', {
+        userId: currentUserId,
+        socketId: socket.id,
+      });
+    });
+
+    socket.on(
+      'call:offer',
+      ({
+        roomId,
+        offer,
+        to,
+      }: {
+        roomId: string;
+        offer: RTCSessionDescriptionInit;
+        to: string;
+      }) => {
+        callNs.to(`user:${to}`).emit('call:offer', {
+          roomId,
+          offer,
+          from: currentUserId,
+        });
+      },
+    );
+
+    socket.on(
+      'call:answer',
+      ({
+        roomId,
+        answer,
+        to,
+      }: {
+        roomId: string;
+        answer: RTCSessionDescriptionInit;
+        to: string;
+      }) => {
+        callNs.to(`user:${to}`).emit('call:answer', {
+          roomId,
+          answer,
+          from: currentUserId,
+        });
+      },
+    );
+
+    socket.on(
+      'call:ice-candidate',
+      ({
+        to,
+        candidate,
+        roomId,
+      }: {
+        to: string;
+        candidate: RTCIceCandidateInit;
+        roomId: string;
+      }) => {
+        callNs.to(`user:${to}`).emit('call:ice-candidate', {
+          candidate,
+          from: currentUserId,
+          roomId,
+        });
+      },
+    );
+
+    socket.on('call:end', ({ roomId }: { roomId: string }) => {
+      socket.leave(`call:${roomId}`);
+
+      const members = activeCalls.get(roomId);
+      if (members) {
+        members.delete(socket.id);
+        if (members.size === 0) activeCalls.delete(roomId);
+      }
+
+      callNs.to(`call:${roomId}`).emit('call:ended', {
+        roomId,
+        userId: currentUserId,
+      });
+    });
+
+    socket.on('disconnect', () => {
+      console.log(`User disconnected from Call: ${currentUserId}`);
     });
   });
 

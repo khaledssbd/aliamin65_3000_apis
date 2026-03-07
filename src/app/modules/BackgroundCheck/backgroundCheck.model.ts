@@ -11,7 +11,7 @@ const backgroundCheckSchema = new Schema<IBackgroundCheck>(
     },
     provider: {
       type: String,
-      enum: ['CHECKR', 'KARMACHECK', 'STERLING', 'VERIFF'],
+      enum: ['VERIFF'],
       required: true,
     },
     status: {

@@ -7,7 +7,10 @@ import DriverModel from './driver.model';
 
 // 1. onboardDriver
 const onboardDriver = asyncHandler(async (req, res) => {
-  const result = await DriverService.upsertDriverProfileIntoDB(req.user._id, req.body);
+  const result = await DriverService.upsertDriverProfileIntoDB(
+    req.user._id,
+    req.body,
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -59,9 +62,10 @@ const updateDriverAvailability = asyncHandler(async (req, res) => {
     req.user._id,
     req.body.isAvailable,
   );
-  getIO()?.emit('driver:availability:updated', {
-    isAvailable: req.body.isAvailable,
-  });
+
+  // getIO()?.emit('driver:availability:updated', {
+  //   isAvailable: req.body.isAvailable,
+  // });
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -72,7 +76,9 @@ const updateDriverAvailability = asyncHandler(async (req, res) => {
 
 // 6. getAvailableJobsForDriver
 const getAvailableJobsForDriver = asyncHandler(async (req, res) => {
-  const result = await DriverService.getAvailableJobsForDriverFromDB(req.user._id);
+  const result = await DriverService.getAvailableJobsForDriverFromDB(
+    req.user._id,
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -89,6 +95,7 @@ const acceptJobByDriver = asyncHandler(async (req, res) => {
   );
 
   const ordersNs = getIO()?.of('/orders');
+
   if (result) {
     const order = await OrderModel.findById(String(req.params.orderId)).select(
       'customer',

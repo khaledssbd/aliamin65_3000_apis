@@ -11,6 +11,15 @@ const driverSchema = new Schema<IDriver>(
     },
     licenseImageUrl: { type: String },
     selfieImageUrl: { type: String },
+    identity: {
+      firstName: { type: String },
+      lastName: { type: String },
+      dateOfBirth: { type: Date },
+      idNumber: { type: String },
+      documentType: { type: String },
+      documentCountry: { type: String },
+      fullAddress: { type: String },
+    },
     isAvailable: { type: Boolean, default: false },
     insurance: {
       provider: { type: String },
