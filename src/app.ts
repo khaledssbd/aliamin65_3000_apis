@@ -68,7 +68,9 @@ app.get('/', (req: Request, res: Response) => {
       )} minutes`,
     },
     developerContact: {
-      email: ['khaledssbd@gmail.com'],
+      name: 'Khaled Siddique',
+      email: 'khaledssbd@gmail.com',
+      website: 'https://khaled-siddique.vercel.app',
     },
   });
 });
