@@ -5,6 +5,7 @@ export type TBackgroundStatus = 'PENDING' | 'APPROVED' | 'FAILED';
 
 export interface IDriver extends Document {
   user: Types.ObjectId;
+  stripeConnectedAccountId?: string;
   licenseImageUrl?: string;
   selfieImageUrl?: string;
   identity?: {

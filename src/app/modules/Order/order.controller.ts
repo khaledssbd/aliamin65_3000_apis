@@ -4,6 +4,7 @@ import { OrderService } from './order.service';
 import { getIO } from '../../socket';
 import DriverModel from '../Driver/driver.model';
 import UserModel from '../User/user.model';
+import mongoose from 'mongoose';
 
 // 1. createOrder
 const createOrder = asyncHandler(async (req, res) => {
@@ -15,30 +16,90 @@ const createOrder = asyncHandler(async (req, res) => {
     orderId: result._id,
   });
 
-  const customer = await UserModel.findById(req.user._id).select('address');
-  const customerAddress = String(customer?.address ?? '').trim();
+  const order = await OrderService.getOrderByIdFromDB(
+    String(result._id),
+    req.user._id,
+  );
 
-  const availableDrivers = await DriverModel.find({ isAvailable: true })
-    .populate('user', 'address')
-    .select('user');
+  const pickupLocation = order?.pickupLocation;
+  const expectedRadiusKm = order?.expectedRadiusKm ?? 3; // fallback radius
 
-  const matched = customerAddress
-    ? availableDrivers.filter((d) => {
-        const populated = d.user as unknown;
-        const addr =
-          populated &&
-          typeof populated === 'object' &&
-          'address' in populated &&
-          typeof (populated as { address?: unknown }).address === 'string'
-            ? String((populated as { address?: string }).address).trim()
-            : '';
-        return addr && addr === customerAddress;
-      })
-    : [];
+  const availableDrivers = await DriverModel.find({ isAvailable: true }).select(
+    'user',
+  );
 
-  const targets = matched.length ? matched : availableDrivers;
+  // Load driver users with currentLocation
+  const driverUserIds = availableDrivers.map((d) => d.user);
+  const driverUsers = await UserModel.find({
+    _id: { $in: driverUserIds },
+  }).select('currentLocation');
+
+  const driverLocationMap = new Map<
+    string,
+    { type?: string; coordinates?: number[] }
+  >();
+  driverUsers.forEach((u) => {
+    const loc = (u as unknown as { currentLocation?: unknown })
+      .currentLocation as
+      | {
+          type?: string;
+          coordinates?: number[];
+        }
+      | undefined;
+    driverLocationMap.set(String(u._id), loc ?? {});
+  });
+
+  const deg2rad = (deg: number) => (deg * Math.PI) / 180;
+  const haversineKm = (
+    lat1: number,
+    lng1: number,
+    lat2: number,
+    lng2: number,
+  ) => {
+    const R = 6371; // km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLng = deg2rad(lng2 - lng1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) *
+        Math.cos(deg2rad(lat2)) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  let targetDrivers = availableDrivers;
+
+  if (
+    pickupLocation &&
+    Array.isArray(pickupLocation.coordinates) &&
+    pickupLocation.coordinates.length === 2
+  ) {
+    const [pickupLng, pickupLat] = pickupLocation.coordinates;
+    targetDrivers = availableDrivers.filter((d) => {
+      const uid = String(d.user);
+      const loc = driverLocationMap.get(uid);
+      if (
+        !loc ||
+        !Array.isArray(loc.coordinates) ||
+        loc.coordinates.length !== 2
+      ) {
+        return false;
+      }
+      const [driverLng, driverLat] = loc.coordinates;
+      const distKm = haversineKm(pickupLat, pickupLng, driverLat, driverLng);
+      return distKm <= expectedRadiusKm;
+    });
+  }
+
+  // If no drivers matched by radius, fall back to all available
+  const targets = targetDrivers.length ? targetDrivers : availableDrivers;
+
   targets.forEach((d) => {
-    ordersNs?.to(`driver:${String(d.user)}`).emit('driver:job:new', {
+    const driverUserId =
+      d.user instanceof mongoose.Types.ObjectId ? String(d.user) : String(d.user);
+    ordersNs?.to(`driver:${driverUserId}`).emit('driver:job:new', {
       orderId: result._id,
     });
   });

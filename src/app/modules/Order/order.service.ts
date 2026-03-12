@@ -27,9 +27,39 @@ const createOrderIntoDB = async (
     scheduledPickupAt?: string;
     bags: number;
     specialInstructions?: string;
+    pickupLat?: number;
+    pickupLng?: number;
+    expectedRadiusKm?: number;
   },
 ) => {
   const { total, pricePerBag } = await computeTotal(payload.bags);
+
+  const pickupLat =
+    typeof payload.pickupLat === 'number'
+      ? payload.pickupLat
+      : payload.pickupLat
+        ? Number(payload.pickupLat)
+        : undefined;
+  const pickupLng =
+    typeof payload.pickupLng === 'number'
+      ? payload.pickupLng
+      : payload.pickupLng
+        ? Number(payload.pickupLng)
+        : undefined;
+
+  const pickupLocation =
+    typeof pickupLat === 'number' &&
+    Number.isFinite(pickupLat) &&
+    typeof pickupLng === 'number' &&
+    Number.isFinite(pickupLng)
+      ? { type: 'Point' as const, coordinates: [pickupLng, pickupLat] as const }
+      : undefined;
+
+  const expectedRadiusKm =
+    payload.expectedRadiusKm !== undefined && payload.expectedRadiusKm !== null
+      ? Math.max(0.1, Number(payload.expectedRadiusKm))
+      : undefined;
+
   const doc = await OrderModel.create({
     customer: customer._id,
     scheduledPickupAt: payload.scheduledPickupAt,
@@ -38,6 +68,8 @@ const createOrderIntoDB = async (
     pickupType: payload.pickupType,
     bags: payload.bags,
     specialInstructions: payload.specialInstructions,
+    pickupLocation,
+    expectedRadiusKm,
     status: ORDER_STATUS.REQUESTED,
     pricePerBag,
     total,

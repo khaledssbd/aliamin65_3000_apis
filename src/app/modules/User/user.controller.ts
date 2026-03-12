@@ -16,21 +16,6 @@ const createUser = asyncHandler(async (req, res) => {
   });
 });
 
-// createDriverProfile
-const createDriverProfile = asyncHandler(async (req, res) => {
-  const result = await UserService.createDriverProfileIntoDB(
-    req.user,
-    req.body,
-    req.files,
-  );
-
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    message: 'Driver account created successfully!',
-    data: result,
-  });
-});
-
 // 2. sendSignupOtpAgain
 const sendSignupOtpAgain = asyncHandler(async (req, res) => {
   const userEmail = req.body.userEmail;
@@ -56,7 +41,22 @@ const verifySignupOtp = asyncHandler(async (req, res) => {
   });
 });
 
-// 4. signin
+// 4. createDriverProfile
+const createDriverProfile = asyncHandler(async (req, res) => {
+  const result = await UserService.createDriverProfileIntoDB(
+    req.user,
+    req.body,
+    req.files,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Driver account created successfully!',
+    data: result,
+  });
+});
+
+// 5. signin
 const signin = asyncHandler(async (req, res) => {
   const result = await UserService.signinIntoDB(req.body);
 
@@ -67,7 +67,7 @@ const signin = asyncHandler(async (req, res) => {
   });
 });
 
-// 5. updateProfilePhoto
+// 6. updateProfilePhoto
 const updateProfilePhoto = asyncHandler(async (req, res) => {
   const result = await UserService.updateProfilePhotoIntoDB(req.user, req.file);
 
@@ -78,7 +78,18 @@ const updateProfilePhoto = asyncHandler(async (req, res) => {
   });
 });
 
-// 6. changePassword
+// 7. updateUserData
+const updateUserData = asyncHandler(async (req, res) => {
+  const result = await UserService.updateUserDataIntoDB(req.body, req.user);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'User data updated successfully!',
+    data: result,
+  });
+});
+
+// 8. changePassword
 const changePassword = asyncHandler(async (req, res) => {
   const result = await UserService.changePasswordIntoDB(req.body, req.user);
 
@@ -89,7 +100,7 @@ const changePassword = asyncHandler(async (req, res) => {
   });
 });
 
-// 7. forgotPassword
+// 9. forgotPassword
 const forgotPassword = asyncHandler(async (req, res) => {
   const email = req.body.email;
   const result = await UserService.forgotPasswordIntoDB(email);
@@ -102,7 +113,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
   });
 });
 
-// 8. sendForgotPasswordOtpAgain
+// 10. sendForgotPasswordOtpAgain
 const sendForgotPasswordOtpAgain = asyncHandler(async (req, res) => {
   const token = req.body.token;
   const result = await UserService.sendForgotPasswordOtpAgainIntoDB(token);
@@ -115,7 +126,7 @@ const sendForgotPasswordOtpAgain = asyncHandler(async (req, res) => {
   });
 });
 
-// 9. verifyOtpForForgotPassword
+// 11. verifyOtpForForgotPassword
 const verifyOtpForForgotPassword = asyncHandler(async (req, res) => {
   const result = await UserService.verifyOtpForForgotPasswordIntoDB(req.body);
 
@@ -126,7 +137,7 @@ const verifyOtpForForgotPassword = asyncHandler(async (req, res) => {
   });
 });
 
-// 10. resetPassword
+// 12. resetPassword
 const resetPassword = asyncHandler(async (req, res) => {
   const result = await UserService.resetPasswordIntoDB(req.body);
 
@@ -137,35 +148,13 @@ const resetPassword = asyncHandler(async (req, res) => {
   });
 });
 
-// 11. fetchProfile
+// 13. fetchProfile
 const fetchProfile = asyncHandler(async (req, res) => {
   const result = await UserService.fetchProfileFromDB(req.user);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Profile data fetched successfully!',
-    data: result,
-  });
-});
-
-// 12. deactivateUserAccount
-const deactivateUserAccount = asyncHandler(async (req, res) => {
-  const result = await UserService.deactivateAccountIntoDB(req.user, req.body);
-
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    message: 'Account deactivated successfully!',
-    data: result,
-  });
-});
-
-// 13. deleteSpecificAccount
-const deleteSpecificUserAccount = asyncHandler(async (req, res) => {
-  const result = await UserService.deleteSpecificUserAccountIntoDB(req.user);
-
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    message: 'Account deleted successfully!',
     data: result,
   });
 });
@@ -186,18 +175,29 @@ const getNewAccessToken = asyncHandler(async (req, res) => {
   });
 });
 
-// 15. updateUserData
-const updateUserData = asyncHandler(async (req, res) => {
-  const result = await UserService.updateUserDataIntoDB(req.body, req.user);
+// 15. deactivateUserAccount
+const deactivateUserAccount = asyncHandler(async (req, res) => {
+  const result = await UserService.deactivateAccountIntoDB(req.user, req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'User data updated successfully!',
+    message: 'Account deactivated successfully!',
     data: result,
   });
 });
 
-// 16. adminGetAllUsers
+// 16. deleteSpecificAccount
+const deleteSpecificUserAccount = asyncHandler(async (req, res) => {
+  const result = await UserService.deleteSpecificUserAccountIntoDB(req.user);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Account deleted successfully!',
+    data: result,
+  });
+});
+
+// 17. adminGetAllUsers
 const adminGetAllUsers = asyncHandler(async (req, res) => {
   const result = await UserService.adminGetAllUsersFromDB(req.query);
 
@@ -209,7 +209,7 @@ const adminGetAllUsers = asyncHandler(async (req, res) => {
   });
 });
 
-// 17. adminGetAllMetaData
+// 18. adminGetAllMetaData
 // const adminGetAllMetaData = asyncHandler(async (req, res) => {
 //   const result = await UserService.adminGetAllMetaDataFromDB();
 
@@ -220,7 +220,7 @@ const adminGetAllUsers = asyncHandler(async (req, res) => {
 //   });
 // });
 
-// 18. getAllUser
+// 19. getAllUser
 // const getAllUser = asyncHandler(async (req, res) => {
 //   const result = await UserService.getAllUserFromDB(req.query);
 
@@ -234,21 +234,21 @@ const adminGetAllUsers = asyncHandler(async (req, res) => {
 
 export const UserController = {
   createUser,
-  createDriverProfile,
   sendSignupOtpAgain,
   verifySignupOtp,
+  createDriverProfile,
   signin,
   updateProfilePhoto,
+  updateUserData,
   changePassword,
   forgotPassword,
   sendForgotPasswordOtpAgain,
   verifyOtpForForgotPassword,
   resetPassword,
   fetchProfile,
+  getNewAccessToken,
   deactivateUserAccount,
   deleteSpecificUserAccount,
-  getNewAccessToken,
-  updateUserData,
   adminGetAllUsers,
   // adminGetAllMetaData,
   // getAllUser,

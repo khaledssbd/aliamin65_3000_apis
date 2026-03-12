@@ -15,6 +15,16 @@ const orderSchema = new Schema<IOrder>(
       enum: ['WASH_DRY', 'DRY_CLEAN'],
       default: 'WASH_DRY',
     },
+    pickupLocation: {
+      type: {
+        type: String,
+        enum: ['Point'],
+      },
+      coordinates: {
+        type: [Number],
+      },
+    },
+    expectedRadiusKm: { type: Number, min: 0.1, max: 200 },
     bags: { type: Number, required: true, min: 1 },
     pickupType: { type: String, enum: ['ASAP', 'SCHEDULED'], default: 'ASAP' },
     scheduledPickupAt: { type: Date },
@@ -55,6 +65,7 @@ const orderSchema = new Schema<IOrder>(
 );
 
 orderSchema.index({ customer: 1, status: 1 });
+orderSchema.index({ pickupLocation: '2dsphere' });
 
 const OrderModel = model<IOrder>('Order', orderSchema);
 export default OrderModel;

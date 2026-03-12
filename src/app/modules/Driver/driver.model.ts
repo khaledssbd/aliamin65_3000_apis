@@ -9,6 +9,7 @@ const driverSchema = new Schema<IDriver>(
       required: true,
       unique: true,
     },
+    stripeConnectedAccountId: { type: String },
     licenseImageUrl: { type: String },
     selfieImageUrl: { type: String },
     identity: {

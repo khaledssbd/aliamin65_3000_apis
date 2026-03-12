@@ -26,7 +26,7 @@ export interface IUser extends Document {
   role: TRole;
   isActive: boolean;
   isDeleted: boolean;
-  deactivationReason: string;
+  deactivationReason?: string;
 
   createdAt: Date;
   updatedAt: Date;

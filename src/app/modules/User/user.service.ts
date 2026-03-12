@@ -22,7 +22,7 @@ import { UserValidation } from './user.validation';
 import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
 import DriverModel from '../Driver/driver.model';
 import BackgroundCheckModel from '../BackgroundCheck/backgroundCheck.model';
-import { startVerificationWithVERIFF } from '../BackgroundCheck/backgroundCheck.util';
+// import { startVerificationWithVERIFF } from '../BackgroundCheck/backgroundCheck.util';
 // import BookModel from '../Book/book.model';
 // import { OrderModel } from '../Order/order.model';
 import {
@@ -90,7 +90,112 @@ const createUserIntoDB = async (payload: IUser) => {
   }
 };
 
-// 2. createDriverProfileIntoDB
+// 2. sendSignupOtpAgainIntoDB
+const sendSignupOtpAgainIntoDB = async (userEmail: string) => {
+  const now = new Date();
+  const user = await UserModel.isUserExistsByEmailWithPassword(userEmail);
+
+  if (!user) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'You must sign up first to get an OTP!',
+    );
+  } else if (!user.otpExpiry || user.otpExpiry < now) {
+    // sending new OTP if previous one is expired
+    const otp = generateOtp();
+
+    // send OTP via Email
+    await sendOtpEmail({ email: user?.email, otp, name: user?.name });
+
+    user.otp = otp;
+    user.otpExpiry = new Date(now.getTime() + OTP_EXPIRY_MINUTES * 60 * 1000);
+    await user.save();
+
+    return {
+      userEmail: user.email,
+    };
+  } else if (user.isVerifiedByOTP) {
+    // if user is already verified
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'This account is already verified!',
+    );
+  } else {
+    // if OTP is still valid
+    await sendOtpEmail({
+      email: user?.email,
+      otp: user?.otp,
+      name: user?.name,
+      customMessage: 'Verify quickly using this OTP!',
+    });
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'An OTP was already sent. Please wait until it expires before requesting a new one.',
+    );
+  }
+};
+
+// 3. verifySignupOtpIntoDB
+const verifySignupOtpIntoDB = async (userEmail: string, otp: string) => {
+  const now = new Date();
+  const user = await UserModel.isUserExistsByEmailWithPassword(userEmail);
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, 'User not found!');
+  }
+
+  // Check if the user is already verified
+  if (user.isVerifiedByOTP) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'This account is already verified!',
+    );
+  }
+
+  // Check if OTP is expired
+  if (!user.otpExpiry || user.otpExpiry < now) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'OTP has been expired. Please request a new one!',
+    );
+  }
+
+  // If OTP is invalid, throw error
+  if (user?.otp !== otp) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid OTP!');
+  }
+
+  // Mark user as verified
+  user.isVerifiedByOTP = true;
+  await user.save();
+
+  // Prepare user data for token generation
+  const accessTokenPayload = {
+    _id: user?._id.toString(),
+    name: user?.name,
+    address: user?.address,
+    phone: user?.phone,
+    email: user?.email,
+    image: user?.image || defaultUserImage,
+    role: user?.role,
+  };
+
+  const refreshTokenPayload = {
+    email: user?.email,
+  };
+
+  // tokens
+  const accessToken = createAccessToken(accessTokenPayload);
+  const refreshToken = createRefreshToken(refreshTokenPayload);
+
+  return {
+    accessToken,
+    refreshToken,
+    user: accessTokenPayload,
+  };
+};
+
+// 4. createDriverProfileIntoDB
 const createDriverProfileIntoDB = async (
   user: IUser,
   payload: Record<string, any>,
@@ -202,41 +307,44 @@ const createDriverProfileIntoDB = async (
         ],
         { session },
       );
-
-      const created = createdDocs?.[0];
-      if (
-        created?.provider === 'VERIFF' &&
-        config.status.veriff_api_key &&
-        license?.[0]?.buffer &&
-        selfie?.[0]?.buffer
-      ) {
-        try {
-          const { sessionId } = await startVerificationWithVERIFF({
-            vendorData: String(user._id),
-            endUserId: String(user._id),
-            person: {
-              firstName: driverData.identity.firstName,
-              lastName: driverData.identity.lastName,
-              idNumber: driverData.identity.idNumber,
-            },
-            document: {
-              number: driverData.identity.idNumber,
-              type: driverData.identity.documentType,
-              country: driverData.identity.documentCountry,
-            },
-            address: {
-              fullAddress: driverData.identity.fullAddress,
-            },
-            licenseImage: license[0].buffer,
-            selfieImage: selfie[0].buffer,
-          });
-
-          created.reportId = sessionId;
-          await created.save({ session });
-        } catch {
-          // If provider session start fails, we keep doc in PENDING state without reportId
-        }
-      }
+      void createdDocs?.[0];
+      // NOTE: VERIFF auto-verification is temporarily disabled.
+      // We still create the BackgroundCheck doc in PENDING state, but we don't start
+      // an external provider session here.
+      //
+      // if (
+      //   created?.provider === 'VERIFF' &&
+      //   config.status.veriff_api_key &&
+      //   license?.[0]?.buffer &&
+      //   selfie?.[0]?.buffer
+      // ) {
+      //   try {
+      //     const { sessionId } = await startVerificationWithVERIFF({
+      //       vendorData: String(user._id),
+      //       endUserId: String(user._id),
+      //       person: {
+      //         firstName: driverData.identity.firstName,
+      //         lastName: driverData.identity.lastName,
+      //         idNumber: driverData.identity.idNumber,
+      //       },
+      //       document: {
+      //         number: driverData.identity.idNumber,
+      //         type: driverData.identity.documentType,
+      //         country: driverData.identity.documentCountry,
+      //       },
+      //       address: {
+      //         fullAddress: driverData.identity.fullAddress,
+      //       },
+      //       licenseImage: license[0].buffer,
+      //       selfieImage: selfie[0].buffer,
+      //     });
+      //
+      //     created.reportId = sessionId;
+      //     await created.save({ session });
+      //   } catch {
+      //     // If provider session start fails, we keep doc in PENDING state without reportId
+      //   }
+      // }
     }
 
     // Update user role
@@ -276,111 +384,6 @@ const createDriverProfileIntoDB = async (
     }
     throw error;
   }
-};
-
-// 3. sendSignupOtpAgainIntoDB
-const sendSignupOtpAgainIntoDB = async (userEmail: string) => {
-  const now = new Date();
-  const user = await UserModel.isUserExistsByEmailWithPassword(userEmail);
-
-  if (!user) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      'You must sign up first to get an OTP!',
-    );
-  } else if (!user.otpExpiry || user.otpExpiry < now) {
-    // sending new OTP if previous one is expired
-    const otp = generateOtp();
-
-    // send OTP via Email
-    await sendOtpEmail({ email: user?.email, otp, name: user?.name });
-
-    user.otp = otp;
-    user.otpExpiry = new Date(now.getTime() + OTP_EXPIRY_MINUTES * 60 * 1000);
-    await user.save();
-
-    return {
-      userEmail: user.email,
-    };
-  } else if (user.isVerifiedByOTP) {
-    // if user is already verified
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      'This account is already verified!',
-    );
-  } else {
-    // if OTP is still valid
-    await sendOtpEmail({
-      email: user?.email,
-      otp: user?.otp,
-      name: user?.name,
-      customMessage: 'Verify quickly using this OTP!',
-    });
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      'An OTP was already sent. Please wait until it expires before requesting a new one.',
-    );
-  }
-};
-
-// 4. verifySignupOtpIntoDB
-const verifySignupOtpIntoDB = async (userEmail: string, otp: string) => {
-  const now = new Date();
-  const user = await UserModel.isUserExistsByEmailWithPassword(userEmail);
-
-  if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, 'User not found!');
-  }
-
-  // Check if the user is already verified
-  if (user.isVerifiedByOTP) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      'This account is already verified!',
-    );
-  }
-
-  // Check if OTP is expired
-  if (!user.otpExpiry || user.otpExpiry < now) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      'OTP has been expired. Please request a new one!',
-    );
-  }
-
-  // If OTP is invalid, throw error
-  if (user?.otp !== otp) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid OTP!');
-  }
-
-  // Mark user as verified
-  user.isVerifiedByOTP = true;
-  await user.save();
-
-  // Prepare user data for token generation
-  const accessTokenPayload = {
-    _id: user?._id.toString(),
-    name: user?.name,
-    address: user?.address,
-    phone: user?.phone,
-    email: user?.email,
-    image: user?.image || defaultUserImage,
-    role: user?.role,
-  };
-
-  const refreshTokenPayload = {
-    email: user?.email,
-  };
-
-  // tokens
-  const accessToken = createAccessToken(accessTokenPayload);
-  const refreshToken = createRefreshToken(refreshTokenPayload);
-
-  return {
-    accessToken,
-    refreshToken,
-    user: accessTokenPayload,
-  };
 };
 
 // 5. signinIntoDB
@@ -502,7 +505,45 @@ const updateProfilePhotoIntoDB = async (
   };
 };
 
-// 7. changePasswordIntoDB
+// 7. updateUserDataIntoDB
+const updateUserDataIntoDB = async (
+  payload: TUpdateUserPayload,
+  userData: IUser,
+) => {
+  const user = await UserModel.findByIdAndUpdate(
+    userData._id,
+    {
+      name: payload.name,
+      // address: payload.address,
+      phone: payload.phone,
+    },
+    { new: true },
+  );
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, 'User not found!');
+  }
+
+  // Prepare user data for tokens
+  const accessTokenPayload = {
+    _id: user._id.toString(),
+    name: user.name,
+    address: user.address,
+    phone: user.phone,
+    email: user.email,
+    image: user.image || defaultUserImage,
+    role: user.role,
+  };
+
+  const accessToken = createAccessToken(accessTokenPayload);
+
+  return {
+    accessToken,
+    user: accessTokenPayload,
+  };
+};
+
+// 8. changePasswordIntoDB
 const changePasswordIntoDB = async (
   payload: z.infer<typeof UserValidation.changePasswordSchema.shape.body>,
   userData: IUser,
@@ -557,7 +598,7 @@ const changePasswordIntoDB = async (
   };
 };
 
-// 8. forgotPasswordIntoDB
+// 9. forgotPasswordIntoDB
 const forgotPasswordIntoDB = async (email: string) => {
   const user = await UserModel.findOne({ email, isActive: true });
 
@@ -600,7 +641,7 @@ const forgotPasswordIntoDB = async (email: string) => {
   return { token };
 };
 
-// 9. sendForgotPasswordOtpAgainIntoDB
+// 10. sendForgotPasswordOtpAgainIntoDB
 const sendForgotPasswordOtpAgainIntoDB = async (forgotPassToken: string) => {
   let decoded: any;
   try {
@@ -652,7 +693,7 @@ const sendForgotPasswordOtpAgainIntoDB = async (forgotPassToken: string) => {
   return null;
 };
 
-// 10. verifyOtpForForgotPasswordIntoDB
+// 11. verifyOtpForForgotPasswordIntoDB
 const verifyOtpForForgotPasswordIntoDB = async (payload: {
   token: string;
   otp: string;
@@ -710,7 +751,7 @@ const verifyOtpForForgotPasswordIntoDB = async (payload: {
   return { resetPasswordToken };
 };
 
-// 11. resetPasswordIntoDB
+// 12. resetPasswordIntoDB
 const resetPasswordIntoDB = async (
   payload: z.infer<typeof UserValidation.resetPasswordSchema.shape.body>,
 ) => {
@@ -747,7 +788,7 @@ const resetPasswordIntoDB = async (
   return null;
 };
 
-// 12. getMeFromDB
+// 13. fetchProfileFromDB
 const fetchProfileFromDB = async (user: IUser) => {
   const result = await UserModel.findById(user._id).select(
     '-password -passwordChangedAt -otp -otpExpiry -isActive -isDeleted -deactivationReason -createdAt -updatedAt',
@@ -756,58 +797,7 @@ const fetchProfileFromDB = async (user: IUser) => {
   return result;
 };
 
-// 13. deactivateAccountIntoDB
-const deactivateAccountIntoDB = async (
-  user: IUser,
-  payload: TDeactiveAccountPayload,
-) => {
-  const { email, password, deactivationReason } = payload;
-
-  const currentUser = await UserModel.findOne({
-    _id: user._id,
-    email: email,
-  }).select('+password');
-
-  if (!currentUser) {
-    throw new AppError(httpStatus.NOT_FOUND, 'User not found!');
-  }
-
-  const isPasswordCorrect = currentUser.isPasswordMatched(password);
-
-  if (!isPasswordCorrect) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid credentials');
-  }
-
-  const result = await UserModel.findByIdAndUpdate(
-    user._id,
-    {
-      $set: {
-        isActive: false,
-        deactivationReason,
-      },
-    },
-    { new: true, select: 'email name address isActive deactivationReason' },
-  );
-
-  return result;
-};
-
-// 14. deleteSpecificUserAccountIntoDB
-const deleteSpecificUserAccountIntoDB = async (user: IUser) => {
-  const result = await UserModel.findByIdAndUpdate(
-    user._id,
-    {
-      $set: {
-        isDeleted: true,
-      },
-    },
-    { new: true, select: 'email name address isDeleted' },
-  );
-
-  return result;
-};
-
-// 15. getNewAccessTokenFromDB
+// 14. getNewAccessTokenFromDB
 const getNewAccessTokenFromDB = async (refreshToken: string) => {
   // checking if the given token is valid
   const decoded = verifyToken(
@@ -859,42 +849,55 @@ const getNewAccessTokenFromDB = async (refreshToken: string) => {
   };
 };
 
-// 16. updateUserDataIntoDB
-const updateUserDataIntoDB = async (
-  payload: TUpdateUserPayload,
-  userData: IUser,
+// 15. deactivateAccountIntoDB
+const deactivateAccountIntoDB = async (
+  user: IUser,
+  payload: TDeactiveAccountPayload,
 ) => {
-  const user = await UserModel.findByIdAndUpdate(
-    userData._id,
-    {
-      name: payload.name,
-      // address: payload.address,
-      phone: payload.phone,
-    },
-    { new: true },
-  );
+  const { email, password, deactivationReason } = payload;
 
-  if (!user) {
+  const currentUser = await UserModel.findOne({
+    _id: user._id,
+    email: email,
+  }).select('+password');
+
+  if (!currentUser) {
     throw new AppError(httpStatus.NOT_FOUND, 'User not found!');
   }
 
-  // Prepare user data for tokens
-  const accessTokenPayload = {
-    _id: user._id.toString(),
-    name: user.name,
-    address: user.address,
-    phone: user.phone,
-    email: user.email,
-    image: user.image || defaultUserImage,
-    role: user.role,
-  };
+  const isPasswordCorrect = currentUser.isPasswordMatched(password);
 
-  const accessToken = createAccessToken(accessTokenPayload);
+  if (!isPasswordCorrect) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid credentials');
+  }
 
-  return {
-    accessToken,
-    user: accessTokenPayload,
-  };
+  const result = await UserModel.findByIdAndUpdate(
+    user._id,
+    {
+      $set: {
+        isActive: false,
+        deactivationReason,
+      },
+    },
+    { new: true, select: 'email name address isActive deactivationReason' },
+  );
+
+  return result;
+};
+
+// 16. deleteSpecificUserAccountIntoDB
+const deleteSpecificUserAccountIntoDB = async (user: IUser) => {
+  const result = await UserModel.findByIdAndUpdate(
+    user._id,
+    {
+      $set: {
+        isDeleted: true,
+      },
+    },
+    { new: true, select: 'email name address isDeleted' },
+  );
+
+  return result;
 };
 
 // 17. adminGetAllUsersFromDB (using MongoDB aggregation)
@@ -1444,21 +1447,21 @@ const adminGetAllUsersFromDB = async (query: Record<string, unknown>) => {
 
 export const UserService = {
   createUserIntoDB,
-  createDriverProfileIntoDB,
   sendSignupOtpAgainIntoDB,
   verifySignupOtpIntoDB,
+  createDriverProfileIntoDB,
   signinIntoDB,
   updateProfilePhotoIntoDB,
+  updateUserDataIntoDB,
   changePasswordIntoDB,
   forgotPasswordIntoDB,
   sendForgotPasswordOtpAgainIntoDB,
   verifyOtpForForgotPasswordIntoDB,
   resetPasswordIntoDB,
   fetchProfileFromDB,
+  getNewAccessTokenFromDB,
   deactivateAccountIntoDB,
   deleteSpecificUserAccountIntoDB,
-  getNewAccessTokenFromDB,
-  updateUserDataIntoDB,
   adminGetAllUsersFromDB,
   // adminGetAllMetaDataFromDB,
   // getAllUserFromDB,

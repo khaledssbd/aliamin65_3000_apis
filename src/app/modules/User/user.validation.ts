@@ -38,6 +38,46 @@ const createUserSchema = z.object({
   }),
 });
 
+// 2. sendSignupOtpAgainSchema
+const sendSignupOtpAgainSchema = z.object({
+  body: z.object({
+    userEmail: z
+      .string({
+        error: 'Email is required!',
+      })
+      .email({ message: 'Invalid email format!' }) // Ensure it's a valid email
+      .transform((email) => email.toLowerCase()) // Convert email to lowercase
+      .refine((email) => email !== '', { message: 'Email is required!' }) // Check that email is not empty
+      .refine((value) => typeof value === 'string', {
+        message: 'Email must be string!', // Check that email is string
+      }),
+  }),
+});
+
+// 3. verifySignupOtpSchema
+const verifySignupOtpSchema = z.object({
+  body: z.object({
+    userEmail: z
+      .string({
+        error: 'Email is required!',
+      })
+      .email({ message: 'Invalid email format!' }) // Ensure it's a valid email
+      .transform((email) => email.toLowerCase()) // Convert email to lowercase
+      .refine((email) => email !== '', { message: 'Email is required!' }) // Check that email is not empty
+      .refine((value) => typeof value === 'string', {
+        message: 'Email must be string!', // Check that email is string
+      }),
+
+    otp: z
+      .string({
+        error: 'Password is required!',
+      })
+      .min(6, { message: 'Password must be at least 6 characters long!' })
+      .max(6, { message: 'Password cannot exceed 6 characters!' }),
+  }),
+});
+
+// 4. createDriverAccountSchema
 const createDriverAccountSchema = z.object({
   body: z.object({
     // name: z.string({
@@ -83,46 +123,7 @@ const createDriverAccountSchema = z.object({
   }),
 });
 
-// 2. sendSignupOtpAgainSchema
-const sendSignupOtpAgainSchema = z.object({
-  body: z.object({
-    userEmail: z
-      .string({
-        error: 'Email is required!',
-      })
-      .email({ message: 'Invalid email format!' }) // Ensure it's a valid email
-      .transform((email) => email.toLowerCase()) // Convert email to lowercase
-      .refine((email) => email !== '', { message: 'Email is required!' }) // Check that email is not empty
-      .refine((value) => typeof value === 'string', {
-        message: 'Email must be string!', // Check that email is string
-      }),
-  }),
-});
-
-// 3. verifySignupOtpSchema
-const verifySignupOtpSchema = z.object({
-  body: z.object({
-    userEmail: z
-      .string({
-        error: 'Email is required!',
-      })
-      .email({ message: 'Invalid email format!' }) // Ensure it's a valid email
-      .transform((email) => email.toLowerCase()) // Convert email to lowercase
-      .refine((email) => email !== '', { message: 'Email is required!' }) // Check that email is not empty
-      .refine((value) => typeof value === 'string', {
-        message: 'Email must be string!', // Check that email is string
-      }),
-
-    otp: z
-      .string({
-        error: 'Password is required!',
-      })
-      .min(6, { message: 'Password must be at least 6 characters long!' })
-      .max(6, { message: 'Password cannot exceed 6 characters!' }),
-  }),
-});
-
-// 4. signinSchema
+// 5. signinSchema
 const signinSchema = z.object({
   body: z.object({
     email: z
@@ -145,7 +146,18 @@ const signinSchema = z.object({
   }),
 });
 
-// 5. changePasswordSchema
+// 7. updateUserDataSchema
+const updateUserDataSchema = z.object({
+  body: z.object({
+    name: z.string().optional(),
+
+    address: z.string().optional(),
+
+    phone: z.string().optional(),
+  }),
+});
+
+// 8. changePasswordSchema
 const changePasswordSchema = z.object({
   body: z.object({
     oldPassword: z
@@ -164,7 +176,7 @@ const changePasswordSchema = z.object({
   }),
 });
 
-// 6. forgotPasswordSchema
+// 9. forgotPasswordSchema
 const forgotPasswordSchema = z.object({
   body: z.object({
     email: z
@@ -180,14 +192,14 @@ const forgotPasswordSchema = z.object({
   }),
 });
 
-// 7. sendForgotPasswordOtpAgainSchema
+// 10. sendForgotPasswordOtpAgainSchema
 const sendForgotPasswordOtpAgainSchema = z.object({
   body: z.object({
     token: z.string({ error: 'Token is required!' }),
   }),
 });
 
-// 8. verifyOtpForForgotPasswordSchema
+// 11. verifyOtpForForgotPasswordSchema
 const verifyOtpForForgotPasswordSchema = z.object({
   body: z.object({
     token: z.string({ error: 'Token is required!' }),
@@ -200,7 +212,7 @@ const verifyOtpForForgotPasswordSchema = z.object({
   }),
 });
 
-// 9. resetPasswordSchema
+// 12. resetPasswordSchema
 const resetPasswordSchema = z.object({
   body: z.object({
     resetPasswordToken: z.string({
@@ -216,7 +228,16 @@ const resetPasswordSchema = z.object({
   }),
 });
 
-// 10. deactivateUserAccountSchema
+// 14. getNewAccessTokenSchema
+const getNewAccessTokenSchema = z.object({
+  cookies: z.object({
+    refreshToken: z.string({
+      error: 'Refresh token is required!',
+    }),
+  }),
+});
+
+// 15. deactivateUserAccountSchema
 const deactivateUserAccountSchema = z.object({
   body: z
     .object({
@@ -248,38 +269,18 @@ const deactivateUserAccountSchema = z.object({
     .strict(),
 });
 
-// 11. getNewAccessTokenSchema
-const getNewAccessTokenSchema = z.object({
-  cookies: z.object({
-    refreshToken: z.string({
-      error: 'Refresh token is required!',
-    }),
-  }),
-});
-
-// 12. updateUserDataSchema
-const updateUserDataSchema = z.object({
-  body: z.object({
-    name: z.string().optional(),
-
-    address: z.string().optional(),
-
-    phone: z.string().optional(),
-  }),
-});
-
 export const UserValidation = {
   createUserSchema,
-  createDriverAccountSchema,
   sendSignupOtpAgainSchema,
   verifySignupOtpSchema,
+  createDriverAccountSchema,
   signinSchema,
+  updateUserDataSchema,
   changePasswordSchema,
   forgotPasswordSchema,
   sendForgotPasswordOtpAgainSchema,
   verifyOtpForForgotPasswordSchema,
   resetPasswordSchema,
-  deactivateUserAccountSchema,
-  updateUserDataSchema,
   getNewAccessTokenSchema,
+  deactivateUserAccountSchema,
 };

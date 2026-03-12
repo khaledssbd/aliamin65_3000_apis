@@ -17,6 +17,11 @@ export interface IOrder extends Document {
   customer: Types.ObjectId;
   driver?: Types.ObjectId;
   address: string;
+  pickupLocation?: {
+    type: 'Point';
+    coordinates: [number, number]; // [lng, lat]
+  };
+  expectedRadiusKm?: number;
   serviceType: TServiceType;
   pickupType: TPickupType;
   scheduledPickupAt?: Date;

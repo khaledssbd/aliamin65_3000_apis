@@ -59,7 +59,8 @@ const acceptJobByDriverIntoDB = async (userId: Types.ObjectId, orderId: string) 
     },
     {
       $set: {
-        driver: driver._id,
+        // Order.driver references User, not Driver
+        driver: userId,
         status: ORDER_STATUS.DRIVER_ASSIGNED,
         'timeline.driverAssignedAt': new Date(),
       },
@@ -87,7 +88,8 @@ const cancelJobByDriverIntoDB = async (
   if (!driver) return null;
 
   const doc = await OrderModel.findOneAndUpdate(
-    { _id: orderId, driver: driver._id },
+    // Order.driver references User, not Driver
+    { _id: orderId, driver: userId },
     {
       $set: { driver: null, status: ORDER_STATUS.REQUESTED },
       $push: { 'timeline.canceledAt': new Date() },
