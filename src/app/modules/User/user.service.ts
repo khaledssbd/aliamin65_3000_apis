@@ -100,6 +100,12 @@ const sendSignupOtpAgainIntoDB = async (userEmail: string) => {
       httpStatus.BAD_REQUEST,
       'You must sign up first to get an OTP!',
     );
+  } else if (user.isVerifiedByOTP) {
+    // if user is already verified
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'This account is already verified!',
+    );
   } else if (!user.otpExpiry || user.otpExpiry < now) {
     // sending new OTP if previous one is expired
     const otp = generateOtp();
@@ -114,12 +120,6 @@ const sendSignupOtpAgainIntoDB = async (userEmail: string) => {
     return {
       userEmail: user.email,
     };
-  } else if (user.isVerifiedByOTP) {
-    // if user is already verified
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      'This account is already verified!',
-    );
   } else {
     // if OTP is still valid
     await sendOtpEmail({
