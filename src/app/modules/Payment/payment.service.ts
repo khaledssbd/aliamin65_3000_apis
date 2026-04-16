@@ -4,16 +4,12 @@ import OrderModel from '../Order/order.model';
 import PricingModel from '../Pricing/pricing.model';
 import DriverModel from '../Driver/driver.model';
 import CardModel from '../Card/card.model';
+import Stripe from 'stripe';
 import config from '../../config';
 
-const stripeSecret = process.env.STRIPE_SECRET_KEY;
-// In case env is not configured yet, we keep a fallback-safe client
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const Stripe = require('stripe');
-const stripe =
-  stripeSecret && typeof stripeSecret === 'string'
-    ? new Stripe(stripeSecret, { apiVersion: '2025-04-30' })
-    : null;
+const stripe = new Stripe(config.stripe_secret_key as string, {
+  apiVersion: '2026-03-25.dahlia',
+});
 
 // 1. createPaymentIntentForMyOrderIntoDB
 const createPaymentIntentForMyOrderIntoDB = async (
@@ -103,12 +99,7 @@ const capturePaymentForMyOrderIntoDB = async (
     // - charge the customer to the platform account
     // - create a transfer or use transfer_data to pay the connected driver account
     // Here we only document the split in amounts and keep a single charge.
-    stripeChargeId =
-      (intent.charges &&
-        intent.charges.data &&
-        intent.charges.data[0] &&
-        intent.charges.data[0].id) ||
-      undefined;
+    stripeChargeId = intent.latest_charge as string | undefined;
   }
 
   const updated = await PaymentModel.findOneAndUpdate(

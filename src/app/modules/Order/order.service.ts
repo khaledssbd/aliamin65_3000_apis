@@ -52,7 +52,7 @@ const createOrderIntoDB = async (
     Number.isFinite(pickupLat) &&
     typeof pickupLng === 'number' &&
     Number.isFinite(pickupLng)
-      ? { type: 'Point' as const, coordinates: [pickupLng, pickupLat] as const }
+      ? { type: 'Point' as const, coordinates: [pickupLng, pickupLat] }
       : undefined;
 
   const expectedRadiusKm =
@@ -75,6 +75,7 @@ const createOrderIntoDB = async (
     total,
     timeline: { requestedAt: new Date() },
   });
+
   return doc;
 };
 

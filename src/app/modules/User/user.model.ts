@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { model, Schema } from 'mongoose';
+import { Aggregate, model, Query, Schema } from 'mongoose';
 import config from '../../config';
 import { defaultUserImage, ROLE } from './user.constant';
 import { IUser, IUserModel } from './user.interface';
@@ -95,24 +95,28 @@ userSchema.index({ currentLocation: '2dsphere' });
 // Custom hooks/methods
 
 // Hash password before saving
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function (this: IUser) {
+  // only hash if new user OR password modified
   if (this.isNew || this.isModified('password')) {
     if (!this.password) {
-      return next(
-        new AppError(httpStatus.BAD_REQUEST, 'Password is required!'),
-      );
+      throw new AppError(httpStatus.BAD_REQUEST, 'Password is required!');
     }
 
+    // 🔑 hash password
     this.password = await bcrypt.hash(
       this.password,
       Number(config.bcrypt_salt_rounds),
     );
+
+    // ⏱️ set password changed time
+    if (!this.isModified('passwordChangedAt')) {
+      this.passwordChangedAt = new Date();
+    }
   }
-  next();
 });
 
 // Clear password after saving
-userSchema.post('save', function (doc, next) {
+userSchema.post('save', function (doc: IUser, next) {
   if (doc) {
     doc.password = '';
   }
@@ -135,18 +139,27 @@ userSchema.post('save', function (doc, next) {
 // });
 
 // Remove deleted documents from find queries
-userSchema.pre('find', function (next) {
-  this.find({ isDeleted: { $ne: true } });
-  next();
+
+// all find queries
+userSchema.pre(/^find/, function (this: Query<IUser, IUser>) {
+  // only return non-deleted users
+  this.where({ isDeleted: { $ne: true } });
 });
 
-userSchema.pre('findOne', function (next) {
-  this.find({ isDeleted: { $ne: true } });
-  next();
-});
+//  single find query
+// userSchema.pre('find', function (next) {
+//   this.find({ isDeleted: { $ne: true } });
+//   next();
+// });
 
-// select: 0 Does NOT work for aggregation
-userSchema.pre('aggregate', function (next) {
+//  findOne query
+// userSchema.pre('findOne', function (next) {
+//   this.find({ isDeleted: { $ne: true } });
+//   next();
+// });
+
+// aggregation query select: 0 Does NOT work for aggregation
+userSchema.pre('aggregate', function (this: Aggregate<IUser>) {
   const pipeline = this.pipeline();
 
   // Always exclude soft-deleted users
@@ -168,8 +181,6 @@ userSchema.pre('aggregate', function (next) {
   };
 
   pipeline.unshift({ $project: projectStage });
-
-  next();
 });
 
 // isUserExistsByEmailWithPassword
@@ -190,7 +201,11 @@ userSchema.methods.isPasswordMatched = async function (
 userSchema.methods.isJWTIssuedBeforePasswordChanged = function (
   jwtIssuedTimestamp: number,
 ): boolean {
+  // if password not changed after jwt issue timestamp
+  if (!this.passwordChangedAt) return false;
+
   const passwordChangedTime = new Date(this.passwordChangedAt).getTime() / 1000;
+
   return passwordChangedTime > jwtIssuedTimestamp;
 };
 

@@ -33,6 +33,13 @@ import { ClientSession, startSession } from 'mongoose';
 
 // 1. createUserIntoDB
 const createUserIntoDB = async (payload: IUser) => {
+  // if (payload.role === ROLE.ADMIN || payload.role === ROLE.SUPER_ADMIN) {
+  //   throw new AppError(
+  //     httpStatus.BAD_REQUEST,
+  //     "You can't create a admin, super_apmin account here!",
+  //   );
+  // }
+
   const existingUser = await UserModel.isUserExistsByEmailWithPassword(
     payload.email,
   );

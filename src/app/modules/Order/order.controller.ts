@@ -98,7 +98,9 @@ const createOrder = asyncHandler(async (req, res) => {
 
   targets.forEach((d) => {
     const driverUserId =
-      d.user instanceof mongoose.Types.ObjectId ? String(d.user) : String(d.user);
+      d.user instanceof mongoose.Types.ObjectId
+        ? String(d.user)
+        : String(d.user);
     ordersNs?.to(`driver:${driverUserId}`).emit('driver:job:new', {
       orderId: result._id,
     });
