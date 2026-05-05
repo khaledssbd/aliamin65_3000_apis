@@ -5,6 +5,7 @@ import BackgroundCheckModel from './backgroundCheck.model';
 import { dispatchProviderStatusCheck } from './backgroundCheck.util';
 import httpStatus from 'http-status';
 import config from '../../config';
+import { TBackgroundProvider } from './backgroundCheck.interface';
 
 // checkDriverBackgroundStatusIntoDB
 const checkDriverBackgroundStatusIntoDB = async (id: string) => {
@@ -56,7 +57,7 @@ const createBackgroundCheckForDriverInDB = async (driverId: string) => {
 
   const doc = await BackgroundCheckModel.create({
     driver: driverId,
-    provider,
+    provider: provider as TBackgroundProvider,
     status: 'PENDING',
     startedAt: new Date(),
   });

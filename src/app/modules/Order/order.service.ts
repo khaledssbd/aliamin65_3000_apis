@@ -3,6 +3,7 @@ import PricingModel from '../Pricing/pricing.model';
 import { ORDER_STATUS } from '../../constants';
 import { Types } from 'mongoose';
 import { IUser } from '../User/user.interface';
+import { TPickupType, TServiceType } from './order.interface';
 
 // 0. computeTotal
 // const computeTotal = async (bags: number, tip = 0) => {
@@ -22,8 +23,8 @@ const computeTotal = async (bags: number) => {
 const createOrderIntoDB = async (
   customer: IUser,
   payload: {
-    serviceType: string;
-    pickupType: string;
+    serviceType: TServiceType;
+    pickupType: TPickupType;
     scheduledPickupAt?: string;
     bags: number;
     specialInstructions?: string;

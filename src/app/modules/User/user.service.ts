@@ -30,6 +30,7 @@ import {
   sendImageToCloudinary,
 } from '../../lib/upload';
 import { ClientSession, startSession } from 'mongoose';
+import { TBackgroundProvider } from '../BackgroundCheck/backgroundCheck.interface';
 
 // 1. createUserIntoDB
 const createUserIntoDB = async (payload: IUser) => {
@@ -303,18 +304,16 @@ const createDriverProfileIntoDB = async (
     }).session(session);
 
     if (!existingBackgroundCheck) {
-      const createdDocs = await BackgroundCheckModel.create(
-        [
-          {
-            driver: driver._id,
-            provider: config.status.default_background_provider || 'VERIFF',
-            status: 'PENDING',
-            startedAt: new Date(),
-          },
-        ],
-        { session },
-      );
-      void createdDocs?.[0];
+      const createdDocs = await new BackgroundCheckModel({
+        driver: driver._id,
+        provider:
+          (config.status.default_background_provider as TBackgroundProvider) ||
+          ('VERIFF' as TBackgroundProvider),
+        status: 'PENDING',
+        startedAt: new Date(),
+      }).save({ session });
+      void createdDocs;
+
       // NOTE: VERIFF auto-verification is temporarily disabled.
       // We still create the BackgroundCheck doc in PENDING state, but we don't start
       // an external provider session here.
