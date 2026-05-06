@@ -18,7 +18,7 @@ const createPageIntoDB = async (payload: IPage) => {
 
 // 4. updatePageIntoDB
 const updatePageIntoDB = async (id: string, payload: IPage) => {
-  return PageModel.findByIdAndUpdate(id, payload, { new: true });
+  return PageModel.findByIdAndUpdate(id, payload, { returnDocument: 'after' });
 };
 
 // 5. togglePagePublishStatusIntoDB

@@ -10,7 +10,7 @@ const upsertDriverProfileIntoDB = async (
 ) => {
   const doc = await DriverModel.findOneAndUpdate({ user: userId }, payload, {
     upsert: true,
-    new: true,
+    returnDocument: 'after',
     setDefaultsOnInsert: true,
   });
 
@@ -25,7 +25,7 @@ const setDriverAvailabilityIntoDB = async (
   const doc = await DriverModel.findOneAndUpdate(
     { user: userId },
     { $set: { isAvailable } },
-    { new: true },
+    { returnDocument: 'after' },
   );
   return doc;
 };
@@ -47,7 +47,10 @@ const getAvailableJobsForDriverFromDB = async (userId: Types.ObjectId) => {
 };
 
 // 5. acceptJobByDriverIntoDB
-const acceptJobByDriverIntoDB = async (userId: Types.ObjectId, orderId: string) => {
+const acceptJobByDriverIntoDB = async (
+  userId: Types.ObjectId,
+  orderId: string,
+) => {
   const driver = await DriverModel.findOne({ user: userId });
   if (!driver) return null;
 
@@ -66,13 +69,16 @@ const acceptJobByDriverIntoDB = async (userId: Types.ObjectId, orderId: string) 
       },
       $unset: { pendingDriver: 1 },
     },
-    { new: true },
+    { returnDocument: 'after' },
   );
   return doc;
 };
 
 // 6. declineJobByDriverIntoDB
-const declineJobByDriverIntoDB = async (userId: Types.ObjectId, orderId: string) => {
+const declineJobByDriverIntoDB = async (
+  userId: Types.ObjectId,
+  orderId: string,
+) => {
   // In a real scenario, we might track which drivers declined which jobs to avoid re-offering
   // For now, we'll just return success to indicate the driver's intent was handled
   return { userId, orderId, declined: true, declinedAt: new Date() };
@@ -94,7 +100,7 @@ const cancelJobByDriverIntoDB = async (
       $set: { driver: null, status: ORDER_STATUS.REQUESTED },
       $push: { 'timeline.canceledAt': new Date() },
     },
-    { new: true },
+    { returnDocument: 'after' },
   );
   return { order: doc, reason };
 };

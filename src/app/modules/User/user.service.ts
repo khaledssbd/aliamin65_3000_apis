@@ -29,7 +29,7 @@ import {
   deleteImageFromCloudinary,
   sendImageToCloudinary,
 } from '../../lib/upload';
-import { ClientSession, startSession } from 'mongoose';
+import { ClientSession, PipelineStage, startSession } from 'mongoose';
 import { TBackgroundProvider } from '../BackgroundCheck/backgroundCheck.interface';
 
 // 1. createUserIntoDB
@@ -63,12 +63,14 @@ const createUserIntoDB = async (payload: IUser) => {
       throw new AppError(
         httpStatus.BAD_REQUEST,
         'You have an unverified account, verify it with the new OTP sent to the mail!',
+        { isVerified: false },
       );
     } else {
       // if OTP is valid till now
       throw new AppError(
         httpStatus.BAD_REQUEST,
         'You have an unverified account, verify it now with the otp sent to the mail!',
+        { isVerified: false },
       );
     }
   }
@@ -130,12 +132,12 @@ const sendSignupOtpAgainIntoDB = async (userEmail: string) => {
     };
   } else {
     // if OTP is still valid
-    await sendOtpEmail({
-      email: user?.email,
-      otp: user?.otp,
-      name: user?.name,
-      customMessage: 'Verify quickly using this OTP!',
-    });
+    // await sendOtpEmail({
+    //   email: user?.email,
+    //   otp: user?.otp,
+    //   name: user?.name,
+    //   customMessage: 'Verify quickly using this OTP!',
+    // });
     throw new AppError(
       httpStatus.BAD_REQUEST,
       'An OTP was already sent. Please wait until it expires before requesting a new one.',
@@ -296,7 +298,12 @@ const createDriverProfileIntoDB = async (
     const driver = await DriverModel.findOneAndUpdate(
       { user: user._id },
       { $set: driverData },
-      { upsert: true, new: true, setDefaultsOnInsert: true, session },
+      {
+        upsert: true,
+        returnDocument: 'after',
+        setDefaultsOnInsert: true,
+        session,
+      },
     );
 
     const existingBackgroundCheck = await BackgroundCheckModel.findOne({
@@ -407,22 +414,34 @@ const signinIntoDB = async (payload: { email: string; password: string }) => {
 
   // no need this part as isDeleted is functioned to hide the soft deleted user
   // if (user.isDeleted) {
-  //   throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
+  //   throw new AppError(httpStatus.BAD_REQUEST, 'You are not authorized!');
   // }
 
   if (!user.isVerifiedByOTP) {
-    const otp = generateOtp();
+    const now = new Date();
 
-    await sendOtpEmail({ email: user?.email, otp, name: user?.name });
+    // if OTP expired sending new otp
+    if (!user.otpExpiry || user.otpExpiry < now) {
+      const otp = generateOtp();
+      await sendOtpEmail({ email: user?.email, otp, name: user?.name });
 
-    user.otp = otp;
-    user.otpExpiry = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
-    await user.save();
+      user.otp = otp;
+      user.otpExpiry = new Date(now.getTime() + OTP_EXPIRY_MINUTES * 60 * 1000);
+      await user.save();
 
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      'Verify your account with the new OTP sent to the mail!',
-    );
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        'You have an unverified account, verify it with the new OTP sent to the mail!',
+        { isVerified: false },
+      );
+    } else {
+      // if OTP is valid till now
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        'You have an unverified account, verify it now with the otp sent to the mail!',
+        { isVerified: false },
+      );
+    }
   }
 
   // Validate password
@@ -459,8 +478,8 @@ const signinIntoDB = async (payload: { email: string; password: string }) => {
 
 // 6. updateProfilePhotoIntoDB
 const updateProfilePhotoIntoDB = async (
-  user: IUser,
   imageFile: Express.Multer.File | undefined,
+  user: IUser,
 ) => {
   // 1. Validation: Ensure an image file is provided
   if (!imageFile) {
@@ -474,7 +493,7 @@ const updateProfilePhotoIntoDB = async (
   const userNewData = await UserModel.findByIdAndUpdate(
     user._id,
     { image: secure_url },
-    { new: true },
+    { returnDocument: 'after' },
   ).select('name address email image role phone');
 
   // 4. Rollback Logic: If DB update fails, delete the newly uploaded image from Cloudinary
@@ -523,7 +542,7 @@ const updateUserDataIntoDB = async (
       // address: payload.address,
       phone: payload.phone,
     },
-    { new: true },
+    { returnDocument: 'after' },
   );
 
   if (!user) {
@@ -556,6 +575,7 @@ const changePasswordIntoDB = async (
 ) => {
   const { oldPassword, newPassword } = payload;
 
+  // select password to use isPasswordMatched method
   const user = await UserModel.findOne({
     _id: userData._id,
     isActive: true,
@@ -569,7 +589,7 @@ const changePasswordIntoDB = async (
 
   if (!isCredentialsCorrect) {
     throw new AppError(
-      httpStatus.UNAUTHORIZED,
+      httpStatus.BAD_REQUEST,
       'Current password is not correct!',
     );
   }
@@ -601,6 +621,7 @@ const changePasswordIntoDB = async (
 
   return {
     accessToken,
+    // user: accessTokenPayload,
   };
 };
 
@@ -649,15 +670,16 @@ const forgotPasswordIntoDB = async (email: string) => {
 
 // 10. sendForgotPasswordOtpAgainIntoDB
 const sendForgotPasswordOtpAgainIntoDB = async (forgotPassToken: string) => {
-  let decoded: any;
+  let decoded: JwtPayload;
   try {
     decoded = jwt.verify(forgotPassToken, config.jwt.otp_secret!, {
       ignoreExpiration: true,
-    });
+    }) as JwtPayload;
   } catch {
     throw new AppError(httpStatus.BAD_REQUEST, 'Invalid token!');
   }
-  const email = decoded.email;
+
+  const email = decoded.email as string;
 
   if (!email) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Invalid token!');
@@ -704,16 +726,16 @@ const verifyOtpForForgotPasswordIntoDB = async (payload: {
   token: string;
   otp: string;
 }) => {
-  let decoded: any;
+  let decoded: JwtPayload;
   try {
     decoded = jwt.verify(payload.token, config.jwt.otp_secret!, {
       ignoreExpiration: true,
-    });
+    }) as JwtPayload;
   } catch {
     throw new AppError(httpStatus.BAD_REQUEST, 'Invalid token!');
   }
 
-  const email = decoded.email;
+  const email = decoded.email as string;
 
   const user = await UserModel.findOne({ email, isActive: true });
 
@@ -789,7 +811,10 @@ const resetPasswordIntoDB = async (
   }
 
   user.password = newPassword;
-  await user.save({ validateBeforeSave: true });
+  // user.passwordChangedAt = new Date(Date.now());
+
+  // await user.save({ validateBeforeSave: true }) // by default true
+  await user.save();
 
   return null;
 };
@@ -815,6 +840,7 @@ const getNewAccessTokenFromDB = async (refreshToken: string) => {
 
   // checking if the user is exist
   const user = await UserModel.isUserExistsByEmailWithPassword(email);
+
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, 'User not exists!');
   }
@@ -857,8 +883,8 @@ const getNewAccessTokenFromDB = async (refreshToken: string) => {
 
 // 15. deactivateAccountIntoDB
 const deactivateAccountIntoDB = async (
-  user: IUser,
   payload: TDeactiveAccountPayload,
+  user: IUser,
 ) => {
   const { email, password, deactivationReason } = payload;
 
@@ -885,7 +911,10 @@ const deactivateAccountIntoDB = async (
         deactivationReason,
       },
     },
-    { new: true, select: 'email name address isActive deactivationReason' },
+    {
+      returnDocument: 'after',
+      select: 'email name address isActive deactivationReason',
+    },
   );
 
   return result;
@@ -900,7 +929,7 @@ const deleteSpecificUserAccountIntoDB = async (user: IUser) => {
         isDeleted: true,
       },
     },
-    { new: true, select: 'email name address isDeleted' },
+    { returnDocument: 'after', select: 'email name address isDeleted' },
   );
 
   return result;
@@ -1009,7 +1038,7 @@ const adminGetAllUsersFromDB = async (query: Record<string, unknown>) => {
     limit: limitQuery,
     // fields: fieldsQuery,
     ...rawFilters
-  } = query as Record<string, any>;
+  } = query as Record<string, unknown>;
 
   const page = Number(pageQuery) || 1;
   const limit = Number(limitQuery) || 10;
@@ -1021,7 +1050,7 @@ const adminGetAllUsersFromDB = async (query: Record<string, unknown>) => {
     ...rawFilters,
   };
 
-  const pipeline: any[] = [{ $match: matchStage }];
+  const pipeline: PipelineStage[] = [{ $match: matchStage }];
 
   // Search by name, email, phone
   if (searchTerm) {
@@ -1082,7 +1111,7 @@ const adminGetAllUsersFromDB = async (query: Record<string, unknown>) => {
   // };
   // }
 
-  const facetPipeline: any = {
+  const facetPipeline: Record<string, PipelineStage.FacetPipelineStage[]> = {
     data: [{ $skip: skip }, { $limit: limit }],
     meta: [{ $count: 'total' }],
   };

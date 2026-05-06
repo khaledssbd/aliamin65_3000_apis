@@ -69,7 +69,7 @@ const signin = asyncHandler(async (req, res) => {
 
 // 6. updateProfilePhoto
 const updateProfilePhoto = asyncHandler(async (req, res) => {
-  const result = await UserService.updateProfilePhotoIntoDB(req.user, req.file);
+  const result = await UserService.updateProfilePhotoIntoDB(req.file, req.user);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -177,7 +177,7 @@ const getNewAccessToken = asyncHandler(async (req, res) => {
 
 // 15. deactivateUserAccount
 const deactivateUserAccount = asyncHandler(async (req, res) => {
-  const result = await UserService.deactivateAccountIntoDB(req.user, req.body);
+  const result = await UserService.deactivateAccountIntoDB(req.body, req.user);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

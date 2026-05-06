@@ -15,7 +15,7 @@ const createAddressIntoDB = async (
   const updated = await UserModel.findByIdAndUpdate(
     userId,
     { $set: { address: payload.address } },
-    { new: true },
+    { returnDocument: 'after' },
   ).select('address');
   return { address: updated?.address ?? '' };
 };
@@ -28,7 +28,7 @@ const updateAddressIntoDB = async (
   const updated = await UserModel.findByIdAndUpdate(
     userId,
     { $set: { address: payload.address } },
-    { new: true },
+    { returnDocument: 'after' },
   ).select('address');
   return { address: updated?.address ?? '' };
 };
@@ -38,7 +38,7 @@ const deleteAddressFromDB = async (userId: Types.ObjectId) => {
   const updated = await UserModel.findByIdAndUpdate(
     userId,
     { $set: { address: '' } },
-    { new: true },
+    { returnDocument: 'after' },
   ).select('address');
   return { address: updated?.address ?? '' };
 };

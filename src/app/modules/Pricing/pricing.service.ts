@@ -16,7 +16,7 @@ const createOrUpdatePricingInDB = async (payload: {
   const doc = await PricingModel.findOneAndUpdate(
     {},
     { $set: payload },
-    { new: true, upsert: true, setDefaultsOnInsert: true },
+    { returnDocument: 'after', upsert: true, setDefaultsOnInsert: true },
   );
 
   if (doc?._id) {

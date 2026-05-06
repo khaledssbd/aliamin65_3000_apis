@@ -14,7 +14,7 @@ const markMyNotificationAsReadIntoDB = async (
   return NotificationModel.findOneAndUpdate(
     { _id: id, user: userId },
     { $set: { readAt: new Date() } },
-    { new: true },
+    { returnDocument: 'after' },
   );
 };
 

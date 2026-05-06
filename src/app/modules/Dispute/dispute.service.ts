@@ -29,7 +29,7 @@ const updateDisputeStatusIntoDB = async (id: string, status: string) => {
   return DisputeModel.findByIdAndUpdate(
     id,
     { $set: { status } },
-    { new: true },
+    { returnDocument: 'after' },
   );
 };
 
@@ -38,7 +38,7 @@ const setDisputeAdminNotesIntoDB = async (id: string, adminNotes: string) => {
   return DisputeModel.findByIdAndUpdate(
     id,
     { $set: { adminNotes } },
-    { new: true },
+    { returnDocument: 'after' },
   );
 };
 

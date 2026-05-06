@@ -15,7 +15,9 @@ const getAllZonesFromDB = async () => {
 
 // 3. updateZone
 const updateZoneIntoDB = async (id: string, payload: Partial<IZone>) => {
-  const result = await ZoneModel.findByIdAndUpdate(id, payload, { new: true });
+  const result = await ZoneModel.findByIdAndUpdate(id, payload, {
+    returnDocument: 'after',
+  });
   return result;
 };
 

@@ -8,13 +8,15 @@ import handleCastError from '../errors/handleCastError';
 import handleDuplicateError from '../errors/handleDuplicateError';
 import AppError from './AppError';
 import handleValidationError from '../errors/handleValidationError';
+// import { errorLogger } from '../middlewares/logger';
 
 // global error handling middleware (four parameters error handler)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
+const globalErrorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   // settle default values
   let statusCode: number = httpStatus.INTERNAL_SERVER_ERROR;
   let message = 'Something went wrong!';
+  let meta = {};
   let errorSources: TErrorSources = [
     {
       path: '',
@@ -26,14 +28,14 @@ const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
   if (err instanceof ZodError) {
     const simplifiedError = handleZodError(err);
     statusCode = simplifiedError?.statusCode;
-    message = simplifiedError?.errorSources[0].message;
     // message = simplifiedError?.message;
+    message = simplifiedError?.errorSources[0].message;
     errorSources = simplifiedError?.errorSources;
   } else if (err?.name === 'ValidationError') {
     const simplifiedError = handleValidationError(err);
     statusCode = simplifiedError?.statusCode;
-    message = simplifiedError?.errorSources[0].message;
     // message = simplifiedError?.message;
+    message = simplifiedError?.errorSources[0].message;
     errorSources = simplifiedError?.errorSources;
   } else if (err?.name === 'CastError') {
     const simplifiedError = handleCastError(err);
@@ -48,6 +50,7 @@ const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
   } else if (err instanceof AppError) {
     statusCode = err?.statusCode;
     message = err.message;
+    meta = err?.meta || {};
     errorSources = [
       {
         path: '',
@@ -64,10 +67,15 @@ const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
     ];
   }
 
+  // (2)
+  // log error to Error.log logger
+  // errorLogger(err, req, statusCode);
+
   // ultimate return
   res.status(statusCode).json({
     success: false,
     message,
+    ...meta,
     errorSources,
     // err,
     stack: config.NODE_ENV === 'development' ? err?.stack : null,

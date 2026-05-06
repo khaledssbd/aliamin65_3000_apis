@@ -39,7 +39,7 @@ const setDefaultCardIntoDB = async (userId: Types.ObjectId, id: string) => {
   const doc = await CardModel.findOneAndUpdate(
     { _id: id, user: userId },
     { $set: { isDefault: true } },
-    { new: true },
+    { returnDocument: 'after' },
   );
   await CardModel.updateMany(
     { user: userId, _id: { $ne: id } },

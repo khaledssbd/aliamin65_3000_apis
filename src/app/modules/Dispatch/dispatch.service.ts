@@ -26,26 +26,20 @@ const createDispatchIntoDB = async (payload: {
 };
 
 // 2. reassignDispatchIntoDB
-const reassignDispatchIntoDB = async (
-  id: string,
-  driverId: string,
-) => {
+const reassignDispatchIntoDB = async (id: string, driverId: string) => {
   return DispatchModel.findByIdAndUpdate(
     id,
     { $set: { driver: driverId } },
-    { new: true },
+    { returnDocument: 'after' },
   );
 };
 
 // 3. updateDispatchSequenceIntoDB
-const updateDispatchSequenceIntoDB = async (
-  id: string,
-  sequence: string[],
-) => {
+const updateDispatchSequenceIntoDB = async (id: string, sequence: string[]) => {
   return DispatchModel.findByIdAndUpdate(
     id,
     { $set: { sequence } },
-    { new: true },
+    { returnDocument: 'after' },
   );
 };
 
@@ -54,14 +48,12 @@ const updateDispatchStatusIntoDB = async (id: string, status: string) => {
   return DispatchModel.findByIdAndUpdate(
     id,
     { $set: { status } },
-    { new: true },
+    { returnDocument: 'after' },
   );
 };
 
 // 5. getDriverDispatchesFromDB
-const getDriverDispatchesFromDB = async (
-  driverUserId: Types.ObjectId,
-) => {
+const getDriverDispatchesFromDB = async (driverUserId: Types.ObjectId) => {
   return DispatchModel.find({ driver: driverUserId })
     .sort({ createdAt: -1 })
     .limit(5);

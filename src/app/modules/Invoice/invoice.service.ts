@@ -49,7 +49,7 @@ const createInvoiceIntoDB = async (orderId: string) => {
       paid: true,
       generatedAt: new Date(),
     },
-    { upsert: true, new: true },
+    { upsert: true, returnDocument: 'after' },
   );
 
   return doc;

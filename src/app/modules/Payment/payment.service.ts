@@ -111,7 +111,7 @@ const capturePaymentForMyOrderIntoDB = async (
         stripeChargeId,
       },
     },
-    { new: true },
+    { returnDocument: 'after' },
   );
 
   // In DB you can also store the computed split if you want:

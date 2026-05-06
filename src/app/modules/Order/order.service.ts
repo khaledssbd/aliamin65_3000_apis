@@ -104,7 +104,7 @@ const assignDriverToOrderIntoDB = async (id: string, driverId: string) => {
         'timeline.driverAssignedAt': new Date(),
       },
     },
-    { new: true },
+    { returnDocument: 'after' },
   );
 };
 
@@ -119,7 +119,11 @@ const updateOrderStatusIntoDB = async (id: string, status: string) => {
     patch['timeline.outForDeliveryAt'] = now;
   if (status === ORDER_STATUS.DELIVERED) patch['timeline.deliveredAt'] = now;
   if (status === ORDER_STATUS.COMPLETED) patch['timeline.completedAt'] = now;
-  return OrderModel.findByIdAndUpdate(id, { $set: patch }, { new: true });
+  return OrderModel.findByIdAndUpdate(
+    id,
+    { $set: patch },
+    { returnDocument: 'after' },
+  );
 };
 
 // 6. updateBagCountIntoDB
@@ -132,7 +136,7 @@ const updateBagCountIntoDB = async (
   return OrderModel.findByIdAndUpdate(
     id,
     { $set: { [field]: count } },
-    { new: true },
+    { returnDocument: 'after' },
   );
 };
 
