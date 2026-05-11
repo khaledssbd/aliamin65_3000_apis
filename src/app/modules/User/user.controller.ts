@@ -68,7 +68,7 @@ const signin = asyncHandler(async (req, res) => {
 
 // 6. updateProfilePhoto
 const updateProfilePhoto = asyncHandler(async (req, res) => {
-  const result = await UserService.updateProfilePhotoIntoDB(req.file, req.user);
+  const result = await UserService.updateProfilePhotoIntoDB(req.user, req.file);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -83,7 +83,7 @@ const updateUserData = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'User data updated successfully!',
+    message: 'Data updated successfully!',
     data: result,
   });
 });
@@ -119,8 +119,7 @@ const sendForgotPasswordOtpAgain = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message:
-      'OTP sent again successfully. Please check your spam or junk folder too!',
+    message: 'OTP sent again. Please check your spam or junk folder too!',
     data: result,
   });
 });
@@ -142,7 +141,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Password reset successfully!',
+    message: 'Password has been reset successfully!',
     data: result,
   });
 });
@@ -153,7 +152,7 @@ const fetchProfile = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Profile data fetched successfully!',
+    message: 'Profile data retrieved successfully!',
     data: result,
   });
 });

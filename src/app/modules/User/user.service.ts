@@ -479,8 +479,8 @@ const signinIntoDB = async (payload: { email: string; password: string }) => {
 
 // 6. updateProfilePhotoIntoDB
 const updateProfilePhotoIntoDB = async (
-  imageFile: Express.Multer.File | undefined,
   userData: IUser,
+  imageFile: Express.Multer.File | undefined,
 ) => {
   // 1. Validation: Ensure an image file is provided
   if (!imageFile) {
