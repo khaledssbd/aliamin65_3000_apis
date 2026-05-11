@@ -207,7 +207,7 @@ const verifySignupOtpIntoDB = async (userEmail: string, otp: string) => {
 
 // 4. createDriverProfileIntoDB
 const createDriverProfileIntoDB = async (
-  user: IUser,
+  userData: IUser,
   payload: Record<string, any>,
   files: any,
 ) => {
@@ -296,7 +296,7 @@ const createDriverProfileIntoDB = async (
 
     // 4. Database update (Ensure atomicity)
     const driver = await DriverModel.findOneAndUpdate(
-      { user: user._id },
+      { user: userData._id },
       { $set: driverData },
       {
         upsert: true,
@@ -361,8 +361,8 @@ const createDriverProfileIntoDB = async (
     }
 
     // Update user role
-    user.role = 'DRIVER';
-    await user.save({ session });
+    userData.role = 'DRIVER';
+    await userData.save({ session });
 
     // Commit transaction
     await session.commitTransaction();
@@ -370,18 +370,18 @@ const createDriverProfileIntoDB = async (
 
     // Generate token (low chance of failure outside session)
     const accessTokenPayload = {
-      _id: user?._id.toString(),
-      name: user?.name,
-      address: user?.address,
-      phone: user?.phone,
-      email: user?.email,
-      image: user?.image || defaultUserImage,
-      role: user?.role,
+      _id: userData?._id.toString(),
+      name: userData?.name,
+      address: userData?.address,
+      phone: userData?.phone,
+      email: userData?.email,
+      image: userData?.image || defaultUserImage,
+      role: userData?.role,
     };
 
     return {
       accessToken: createAccessToken(accessTokenPayload),
-      refreshToken: createRefreshToken({ email: user.email }),
+      refreshToken: createRefreshToken({ email: userData.email }),
       user: accessTokenPayload,
     };
   } catch (error) {
@@ -480,7 +480,7 @@ const signinIntoDB = async (payload: { email: string; password: string }) => {
 // 6. updateProfilePhotoIntoDB
 const updateProfilePhotoIntoDB = async (
   imageFile: Express.Multer.File | undefined,
-  user: IUser,
+  userData: IUser,
 ) => {
   // 1. Validation: Ensure an image file is provided
   if (!imageFile) {
@@ -492,7 +492,7 @@ const updateProfilePhotoIntoDB = async (
 
   // 3. Update the user's image URL in the database
   const userNewData = await UserModel.findByIdAndUpdate(
-    user._id,
+    userData._id,
     { image: secure_url },
     { returnDocument: 'after' },
   ).select('name address email image role phone');
@@ -508,8 +508,8 @@ const updateProfilePhotoIntoDB = async (
   }
 
   // 5. Cleanup: Delete the previous image from Cloudinary if it exists and is not a default image
-  if (user?.image && user.image !== defaultUserImage) {
-    await deleteImageFromCloudinary(user.image);
+  if (userData?.image && userData.image !== defaultUserImage) {
+    await deleteImageFromCloudinary(userData.image);
   }
 
   // 6. Prepare payload and Generate a new Access Token with updated data
@@ -821,12 +821,12 @@ const resetPasswordIntoDB = async (
 };
 
 // 13. fetchProfileFromDB
-const fetchProfileFromDB = async (user: IUser) => {
-  const result = await UserModel.findById(user._id).select(
+const fetchProfileFromDB = async (userData: IUser) => {
+  const user = await UserModel.findById(userData._id).select(
     '-password -passwordChangedAt -otp -otpExpiry -isActive -isDeleted -deactivationReason -createdAt -updatedAt',
   );
 
-  return result;
+  return user;
 };
 
 // 14. getNewAccessTokenFromDB
@@ -885,12 +885,12 @@ const getNewAccessTokenFromDB = async (refreshToken: string) => {
 // 15. deactivateAccountIntoDB
 const deactivateAccountIntoDB = async (
   payload: TDeactiveAccountPayload,
-  user: IUser,
+  userData: IUser,
 ) => {
   const { email, password, deactivationReason } = payload;
 
   const currentUser = await UserModel.findOne({
-    _id: user._id,
+    _id: userData._id,
     email: email,
   }).select('+password');
 
@@ -905,7 +905,7 @@ const deactivateAccountIntoDB = async (
   }
 
   const result = await UserModel.findByIdAndUpdate(
-    user._id,
+    userData._id,
     {
       $set: {
         isActive: false,
@@ -922,9 +922,9 @@ const deactivateAccountIntoDB = async (
 };
 
 // 16. deleteSpecificUserAccountIntoDB
-const deleteSpecificUserAccountIntoDB = async (user: IUser) => {
+const deleteSpecificUserAccountIntoDB = async (userData: IUser) => {
   const result = await UserModel.findByIdAndUpdate(
-    user._id,
+    userData._id,
     {
       $set: {
         isDeleted: true,
