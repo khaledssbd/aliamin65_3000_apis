@@ -448,7 +448,7 @@ const signinIntoDB = async (payload: { email: string; password: string }) => {
   const isPasswordCorrect = await user.isPasswordMatched(payload.password);
 
   if (!isPasswordCorrect) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'Invalid credentials!');
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid credentials!');
   }
 
   // Prepare user data for token generation
@@ -465,6 +465,7 @@ const signinIntoDB = async (payload: { email: string; password: string }) => {
   const refreshTokenPayload = {
     email: user?.email,
   };
+
   // tokens
   const accessToken = createAccessToken(accessTokenPayload);
   const refreshToken = createRefreshToken(refreshTokenPayload);

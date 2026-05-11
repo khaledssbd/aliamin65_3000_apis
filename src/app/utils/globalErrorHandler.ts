@@ -11,7 +11,6 @@ import handleValidationError from '../errors/handleValidationError';
 // import { errorLogger } from '../middlewares/logger';
 
 // global error handling middleware (four parameters error handler)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const globalErrorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   // settle default values
   let statusCode: number = httpStatus.INTERNAL_SERVER_ERROR;

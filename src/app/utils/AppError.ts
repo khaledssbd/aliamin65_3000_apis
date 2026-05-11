@@ -126,6 +126,8 @@
 
 // ------------------------------   --------------------------------------
 
+import config from '../config';
+
 class AppError extends Error {
   public data: null = null;
   public success: boolean = false;
@@ -138,7 +140,7 @@ class AppError extends Error {
     super(message);
 
     // Development মোডে স্ট্যাক ট্রেস ক্যাপচার করার জন্য
-    if (process.env.NODE_ENV === 'development') {
+    if (config.NODE_ENV === 'development') {
       Error.captureStackTrace(this, this.constructor);
     }
   }
