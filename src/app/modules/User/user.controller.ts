@@ -1,7 +1,6 @@
 import httpStatus from 'http-status';
 import { AppError, asyncHandler } from '../../utils';
 import { UserService } from './user.service';
-// import { TProfileFileFields } from '../../types';
 import { sendResponse } from '../../utils';
 import { OTP_EXPIRY_MINUTES } from './user.constant';
 
@@ -80,7 +79,7 @@ const updateProfilePhoto = asyncHandler(async (req, res) => {
 
 // 7. updateUserData
 const updateUserData = asyncHandler(async (req, res) => {
-  const result = await UserService.updateUserDataIntoDB(req.body, req.user);
+  const result = await UserService.updateUserDataIntoDB(req.user, req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -91,7 +90,7 @@ const updateUserData = asyncHandler(async (req, res) => {
 
 // 8. changePassword
 const changePassword = asyncHandler(async (req, res) => {
-  const result = await UserService.changePasswordIntoDB(req.body, req.user);
+  const result = await UserService.changePasswordIntoDB(req.user, req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -166,6 +165,7 @@ const getNewAccessToken = asyncHandler(async (req, res) => {
   if (!refreshToken) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Refresh token is required!');
   }
+
   const result = await UserService.getNewAccessTokenFromDB(refreshToken);
 
   sendResponse(res, {
@@ -177,7 +177,7 @@ const getNewAccessToken = asyncHandler(async (req, res) => {
 
 // 15. deactivateUserAccount
 const deactivateUserAccount = asyncHandler(async (req, res) => {
-  const result = await UserService.deactivateAccountIntoDB(req.body, req.user);
+  const result = await UserService.deactivateAccountIntoDB(req.user, req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

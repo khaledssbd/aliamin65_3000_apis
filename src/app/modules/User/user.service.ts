@@ -533,8 +533,8 @@ const updateProfilePhotoIntoDB = async (
 
 // 7. updateUserDataIntoDB
 const updateUserDataIntoDB = async (
-  payload: TUpdateUserPayload,
   userData: IUser,
+  payload: TUpdateUserPayload,
 ) => {
   const user = await UserModel.findByIdAndUpdate(
     userData._id,
@@ -571,8 +571,8 @@ const updateUserDataIntoDB = async (
 
 // 8. changePasswordIntoDB
 const changePasswordIntoDB = async (
-  payload: z.infer<typeof UserValidation.changePasswordSchema.shape.body>,
   userData: IUser,
+  payload: z.infer<typeof UserValidation.changePasswordSchema.shape.body>,
 ) => {
   const { oldPassword, newPassword } = payload;
 
@@ -884,8 +884,8 @@ const getNewAccessTokenFromDB = async (refreshToken: string) => {
 
 // 15. deactivateAccountIntoDB
 const deactivateAccountIntoDB = async (
-  payload: TDeactiveAccountPayload,
   userData: IUser,
+  payload: TDeactiveAccountPayload,
 ) => {
   const { email, password, deactivationReason } = payload;
 
