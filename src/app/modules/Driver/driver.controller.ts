@@ -2,7 +2,6 @@ import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { DriverService } from './driver.service';
 import { getIO } from '../../socket';
-import OrderModel from '../Order/order.model';
 import DriverModel from './driver.model';
 
 // 1. onboardDriver
@@ -97,17 +96,12 @@ const acceptJobByDriver = asyncHandler(async (req, res) => {
   const ordersNs = getIO()?.of('/orders');
 
   if (result) {
-    const order = await OrderModel.findById(String(req.params.orderId)).select(
-      'customer',
-    );
-    if (order) {
-      ordersNs
-        ?.to(`customer:${String(order.customer)}`)
-        .emit('order:driver:accepted', {
-          orderId: req.params.orderId,
-          driverUserId: String(req.user._id),
-        });
-    }
+    ordersNs
+      ?.to(`customer:${String(result.customer)}`)
+      .emit('order:driver:accepted', {
+        orderId: req.params.orderId,
+        driverUserId: String(req.user._id),
+      });
 
     const availableDrivers = await DriverModel.find({
       isAvailable: true,

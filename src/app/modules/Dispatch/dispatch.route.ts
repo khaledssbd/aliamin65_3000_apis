@@ -6,11 +6,7 @@ import { DispatchController } from './dispatch.controller';
 const router = Router();
 
 // 1. createDispatch
-router.post(
-  '/',
-  auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
-  DispatchController.createDispatch,
-);
+router.post('/', auth(ROLE.DRIVER), DispatchController.createDispatch);
 
 // 2. reassignDispatch
 router.patch(
@@ -22,14 +18,14 @@ router.patch(
 // 3. updateDispatchSequence
 router.patch(
   '/:id/sequence',
-  auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
+  auth(ROLE.DRIVER, ROLE.ADMIN, ROLE.SUPER_ADMIN),
   DispatchController.updateDispatchSequence,
 );
 
 // 4. updateDispatchStatus
 router.patch(
   '/:id/status',
-  auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
+  auth(ROLE.DRIVER, ROLE.ADMIN, ROLE.SUPER_ADMIN),
   DispatchController.updateDispatchStatus,
 );
 

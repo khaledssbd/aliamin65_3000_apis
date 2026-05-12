@@ -61,7 +61,7 @@ const createOrderIntoDB = async (
       ? Math.max(0.1, Number(payload.expectedRadiusKm))
       : undefined;
 
-  const doc = await OrderModel.create({
+  const result = await OrderModel.create({
     customer: customer._id,
     scheduledPickupAt: payload.scheduledPickupAt,
     address: customer.address,
@@ -77,7 +77,7 @@ const createOrderIntoDB = async (
     timeline: { requestedAt: new Date() },
   });
 
-  return doc;
+  return result;
 };
 
 // 2. getMyOrdersFromDB

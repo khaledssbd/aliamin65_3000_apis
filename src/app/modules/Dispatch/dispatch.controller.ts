@@ -1,10 +1,14 @@
 import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { DispatchService } from './dispatch.service';
+import { ROLE } from '../User/user.constant';
 
 // 1. createDispatch
 const createDispatch = asyncHandler(async (req, res) => {
-  const result = await DispatchService.createDispatchIntoDB(req.body);
+  const result = await DispatchService.createDispatchIntoDB(
+    req.user._id,
+    req.body,
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -29,9 +33,11 @@ const reassignDispatch = asyncHandler(async (req, res) => {
 
 // 3. updateDispatchSequence
 const updateDispatchSequence = asyncHandler(async (req, res) => {
+  const driverUserId = req.user.role === ROLE.DRIVER ? req.user._id : undefined;
   const result = await DispatchService.updateDispatchSequenceIntoDB(
     String(req.params.id),
     req.body.sequence,
+    driverUserId,
   );
 
   sendResponse(res, {
@@ -43,9 +49,11 @@ const updateDispatchSequence = asyncHandler(async (req, res) => {
 
 // 4. updateDispatchStatus
 const updateDispatchStatus = asyncHandler(async (req, res) => {
+  const driverUserId = req.user.role === ROLE.DRIVER ? req.user._id : undefined;
   const result = await DispatchService.updateDispatchStatusIntoDB(
     String(req.params.id),
     req.body.status,
+    driverUserId,
   );
 
   sendResponse(res, {
@@ -57,9 +65,7 @@ const updateDispatchStatus = asyncHandler(async (req, res) => {
 
 // 5. getDriverDispatches
 const getDriverDispatches = asyncHandler(async (req, res) => {
-  const result = await DispatchService.getDriverDispatchesFromDB(
-    req.user._id,
-  );
+  const result = await DispatchService.getDriverDispatchesFromDB(req.user._id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -70,8 +76,10 @@ const getDriverDispatches = asyncHandler(async (req, res) => {
 
 // 6. getDispatch
 const getDispatch = asyncHandler(async (req, res) => {
+  const driverUserId = req.user.role === ROLE.DRIVER ? req.user._id : undefined;
   const result = await DispatchService.getDispatchFromDB(
     String(req.params.id),
+    driverUserId,
   );
 
   sendResponse(res, {

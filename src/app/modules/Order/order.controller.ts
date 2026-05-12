@@ -4,32 +4,20 @@ import { OrderService } from './order.service';
 import { getIO } from '../../socket';
 import DriverModel from '../Driver/driver.model';
 import UserModel from '../User/user.model';
-import mongoose from 'mongoose';
 
 // 1. createOrder
 const createOrder = asyncHandler(async (req, res) => {
   const result = await OrderService.createOrderIntoDB(req.user, req.body);
 
-  const ordersNs = getIO()?.of('/orders');
-
-  ordersNs?.to(`customer:${String(req.user._id)}`).emit('order:created', {
-    orderId: result._id,
-  });
-
-  const order = await OrderService.getOrderByIdFromDB(
-    String(result._id),
-    req.user._id,
-  );
-
-  const pickupLocation = order?.pickupLocation;
-  const expectedRadiusKm = order?.expectedRadiusKm ?? 3; // fallback radius
+  const pickupLocation = result.pickupLocation;
+  const expectedRadiusKm = result.expectedRadiusKm ?? 5; // fallback radius
 
   const availableDrivers = await DriverModel.find({ isAvailable: true }).select(
     'user',
   );
 
   // Load driver users with currentLocation
-  const driverUserIds = availableDrivers.map((d) => d.user);
+  const driverUserIds = availableDrivers.map((driver) => driver.user);
   const driverUsers = await UserModel.find({
     _id: { $in: driverUserIds },
   }).select('currentLocation');
@@ -38,15 +26,10 @@ const createOrder = asyncHandler(async (req, res) => {
     string,
     { type?: string; coordinates?: number[] }
   >();
-  driverUsers.forEach((u) => {
-    const loc = (u as unknown as { currentLocation?: unknown })
-      .currentLocation as
-      | {
-          type?: string;
-          coordinates?: number[];
-        }
-      | undefined;
-    driverLocationMap.set(String(u._id), loc ?? {});
+
+  driverUsers.forEach((driverUser) => {
+    const location = driverUser.currentLocation;
+    driverLocationMap.set(String(driverUser._id), location ?? {});
   });
 
   const deg2rad = (deg: number) => (deg * Math.PI) / 180;
@@ -77,9 +60,10 @@ const createOrder = asyncHandler(async (req, res) => {
     pickupLocation.coordinates.length === 2
   ) {
     const [pickupLng, pickupLat] = pickupLocation.coordinates;
-    targetDrivers = availableDrivers.filter((d) => {
-      const uid = String(d.user);
+    targetDrivers = availableDrivers.filter((driver) => {
+      const uid = String(driver.user);
       const loc = driverLocationMap.get(uid);
+
       if (
         !loc ||
         !Array.isArray(loc.coordinates) ||
@@ -87,6 +71,7 @@ const createOrder = asyncHandler(async (req, res) => {
       ) {
         return false;
       }
+
       const [driverLng, driverLat] = loc.coordinates;
       const distKm = haversineKm(pickupLat, pickupLng, driverLat, driverLng);
       return distKm <= expectedRadiusKm;
@@ -96,13 +81,25 @@ const createOrder = asyncHandler(async (req, res) => {
   // If no drivers matched by radius, fall back to all available
   const targets = targetDrivers.length ? targetDrivers : availableDrivers;
 
-  targets.forEach((d) => {
-    const driverUserId =
-      d.user instanceof mongoose.Types.ObjectId
-        ? String(d.user)
-        : String(d.user);
+  const ordersNs = getIO()?.of('/orders');
+
+  targets.forEach((driver) => {
+    const driverUserId = String(driver.user);
+
     ordersNs?.to(`driver:${driverUserId}`).emit('driver:job:new', {
-      orderId: result._id,
+      order: {
+        orderId: result._id,
+        address: result.address,
+        serviceType: result.serviceType,
+        pickupLocation: result.pickupLocation,
+        pickupType: result.pickupType,
+        scheduledPickupAt: result.scheduledPickupAt,
+        bags: result.bags,
+        expectedRadiusKm: result.expectedRadiusKm,
+        total: result.total,
+        status: result.status,
+        createdAt: result.createdAt,
+      },
     });
   });
 

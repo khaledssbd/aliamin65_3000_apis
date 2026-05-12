@@ -266,7 +266,7 @@ export const initSocket = (server: HttpServer) => {
       },
     );
 
-    // user select a conversation to see all messages: chat:messages:list
+    // user selected a conversation now we need to show all messages: chat:messages:list
     socket.on(
       'chat:messages:list',
       async (data: { orderId: string; limit?: number }) => {
