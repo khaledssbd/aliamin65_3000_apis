@@ -30,10 +30,20 @@ const togglePagePublishStatusIntoDB = async (id: string) => {
   return page;
 };
 
+// 6. upsertPageBySlugIntoDB
+const upsertPageBySlugIntoDB = async (payload: IPage) => {
+  return PageModel.findOneAndUpdate(
+    { slug: payload.slug },
+    { $set: payload },
+    { upsert: true, returnDocument: 'after', runValidators: true },
+  );
+};
+
 export const PageService = {
   getPageBySlugFromDB,
   getAllPagesFromDB,
   createPageIntoDB,
   updatePageIntoDB,
   togglePagePublishStatusIntoDB,
+  upsertPageBySlugIntoDB,
 };

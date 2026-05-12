@@ -1,8 +1,8 @@
 {
   "info": {
-    "name": "Clean Swift API v1",
+    "name": "sugsygo API v1",
     "_postman_id": "7f4b7c0f-7c8d-4d63-b7a3-8f6a0b1f0001",
-    "description": "Postman collection for Clean Swift backend. Uses {{baseUrl}} and role-based tokens.\n- Set variables: baseUrl, token_customer, token_driver, token_admin, token_superadmin\n- Fill placeholder IDs: addressId, addressId2, orderId, orderId2, driverId, dispatchId, pageId, notificationId, cardId, invoiceNumber, backgroundId\n- All endpoints are under /api/v1",
+    "description": "Postman collection for sugsygo backend. Uses {{baseUrl}} and role-based tokens.\n- Set variables: baseUrl, token_customer, token_driver, token_admin, token_superadmin\n- Fill placeholder IDs: addressId, addressId2, orderId, orderId2, driverId, dispatchId, pageId, notificationId, cardId, invoiceNumber, backgroundId\n- All endpoints are under /api/v1",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -1133,7 +1133,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"About Us\",\n  \"slug\": \"about-us\",\n  \"content\": \"<p>We are Clean Swift.</p>\",\n  \"published\": true\n}"
+              "raw": "{\n  \"title\": \"About Us\",\n  \"slug\": \"about-us\",\n  \"content\": \"<p>We are sugsygo.</p>\",\n  \"published\": true\n}"
             }
           }
         },

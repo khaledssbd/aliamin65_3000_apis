@@ -9,10 +9,12 @@ import config from './app/config';
 
 const app: Application = express();
 
+// app.disable('etag');
+
 // CORS configuration
 app.use(
   cors({
-    // credentials: true,
+    credentials: true,
     origin: [
       'http://localhost:3000',
       'http://localhost:3001',

@@ -24,6 +24,7 @@ export type TDeactiveAccountPayload = {
 
 export type TUpdateUserPayload = {
   name: string;
-  // address: string;
+  address?: string;
   phone: string;
+  dateOfBirth?: string;
 };

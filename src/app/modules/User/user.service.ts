@@ -540,7 +540,7 @@ const updateUserDataIntoDB = async (
     userData._id,
     {
       name: payload.name,
-      // address: payload.address,
+      address: payload.address,
       phone: payload.phone,
     },
     { returnDocument: 'after' },

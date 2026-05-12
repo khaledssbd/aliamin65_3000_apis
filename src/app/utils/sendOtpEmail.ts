@@ -9,7 +9,7 @@ const sendOtpEmail = async ({
   otp,
   name = 'User',
   subject = 'Your OTP for Account Verification',
-  logoCid = 'clean_swift_logo',
+  logoCid = 'sugsygo_logo',
   customMessage = '',
   attachments = [],
 }: {

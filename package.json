@@ -1,16 +1,16 @@
 {
-  "name": "clean_swift",
+  "name": "sudsygo_apis",
   "author": {
     "name": "Khaled Siddique",
     "email": "khaledssbd@gmail.com",
     "url": "https://khaled-siddique.vercel.app"
   },
-  "description": "Clean Swift is a premium, full-stack laundry and dry-cleaning service platform built with a focus on efficiency and modern user experience. Leveraging the power of Next.js and TypeScript, the application offers a seamless interface for users to schedule pickups, track orders in real-time, and manage laundry preferences. Styled with Tailwind CSS and backed by a robust Node.js/Express backend with MongoDB, Clean Swift ensures a secure, fast, and scalable solution for urban laundry management.",
+  "description": "sudsygo is a premium, full-stack laundry and dry-cleaning service platform built with a focus on efficiency and modern user experience. Leveraging the power of Next.js and TypeScript, the application offers a seamless interface for users to schedule pickups, track orders in real-time, and manage laundry preferences. Styled with Tailwind CSS and backed by a robust Node.js/Express backend with MongoDB, sudsygo ensures a secure, fast, and scalable solution for urban laundry management.",
   "keywords": [
     "laundry-service",
     "dry-cleaning",
     "on-demand-laundry",
-    "clean-swift",
+    "sudsygo",
     "nextjs-ecommerce",
     "typescript",
     "tailwind-css",

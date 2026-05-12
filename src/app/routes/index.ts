@@ -15,6 +15,7 @@ import { CardRoutes } from '../modules/Card/card.route';
 import { PageRoutes } from '../modules/Page/page.route';
 import { DispatchRoutes } from '../modules/Dispatch/dispatch.route';
 import { ZoneRoutes } from '../modules/Zone/zone.route';
+import { AdminRoutes } from '../modules/Admin/admin.route';
 // import { AdminLogRoutes } from '../modules/AdminLog/adminLog.route';
 
 const router = Router();
@@ -83,6 +84,10 @@ const moduleRoutes = [
   {
     path: '/zones',
     route: ZoneRoutes,
+  },
+  {
+    path: '/admin',
+    route: AdminRoutes,
   },
   // {
   //   path: '/admin-logs',
