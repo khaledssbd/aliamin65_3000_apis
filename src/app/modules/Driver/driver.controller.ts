@@ -86,6 +86,17 @@ const getAvailableJobsForDriver = asyncHandler(async (req, res) => {
   });
 });
 
+// getMyJobsForDriver
+const getMyJobsForDriver = asyncHandler(async (req, res) => {
+  const result = await DriverService.getMyJobsForDriverFromDB(req.user._id);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Driver jobs fetched successfully!',
+    data: result,
+  });
+});
+
 // 7. acceptJobByDriver
 const acceptJobByDriver = asyncHandler(async (req, res) => {
   const result = await DriverService.acceptJobByDriverIntoDB(
@@ -160,6 +171,7 @@ export const DriverController = {
   getMyDriverProfile,
   updateDriverAvailability,
   getAvailableJobsForDriver,
+  getMyJobsForDriver,
   acceptJobByDriver,
   declineJobByDriver,
   cancelJobByDriver,

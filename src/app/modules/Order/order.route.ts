@@ -64,4 +64,11 @@ router.post(
   OrderController.updateOrderStatus,
 );
 
+// 9. completeDeliveryAndCapturePayment
+router.post(
+  '/:id/stage/delivery/complete',
+  auth(ROLE.CUSTOMER, ROLE.DRIVER, ROLE.ADMIN, ROLE.SUPER_ADMIN),
+  OrderController.completeDeliveryAndCapturePayment,
+);
+
 export const OrderRoutes = router;

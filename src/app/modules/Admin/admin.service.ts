@@ -103,6 +103,7 @@ const getDashboardFromDB = async () => {
       totalRevenue: revenueAgg[0]?.totalRevenue ?? 0,
       pricePerBag: pricing?.pricePerBag ?? 45,
       driverEarningPercentage: pricing?.driverEarningPercentage ?? 70,
+      platformPercentage: 100 - (pricing?.driverEarningPercentage ?? 70),
     },
     recentCustomers,
     recentDrivers,

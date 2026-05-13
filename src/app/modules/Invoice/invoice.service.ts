@@ -14,7 +14,7 @@ const getInvoiceByNumberFromDB = async (invoiceNumber: string) => {
 };
 
 // 3. createInvoiceIntoDB
-const createInvoiceIntoDB = async (orderId: string) => {
+const createInvoiceIntoDB = async (orderId: string, totalOverride?: number) => {
   const order = await OrderModel.findById(orderId);
 
   if (!order) {
@@ -25,8 +25,12 @@ const createInvoiceIntoDB = async (orderId: string) => {
 
   const existingInvoice = await InvoiceModel.findOne({ invoiceNumber });
   if (existingInvoice) {
-    throw new AppError(httpStatus.CONFLICT, 'Invoice already exists!');
+    return existingInvoice;
   }
+
+  const baseTotal = order.total;
+  const total = totalOverride ?? baseTotal;
+  const tipAmount = Math.max(0, total - baseTotal);
 
   const lineItems = [
     {
@@ -34,8 +38,16 @@ const createInvoiceIntoDB = async (orderId: string) => {
       amount: order.pricePerBag,
       quantity: order.bags,
     },
+    ...(tipAmount
+      ? [
+          {
+            name: 'Tip',
+            amount: tipAmount,
+            quantity: 1,
+          },
+        ]
+      : []),
   ];
-  const total = order.total;
 
   const doc = await InvoiceModel.findOneAndUpdate(
     { order: order._id },

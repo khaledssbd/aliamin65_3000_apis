@@ -5,6 +5,7 @@ import { AppError } from '../../utils';
 import { ROLE, TRole } from '../User/user.constant';
 import OrderModel from '../Order/order.model';
 import { TChatContentType } from './chat.interface';
+import { sendImageToCloudinary } from '../../lib';
 
 // 1. getChatMessagesFromDB
 const getChatMessagesFromDB = async (orderId: string) => {
@@ -25,6 +26,13 @@ type TSendChatMessagePayload = {
   to?: string;
   contentType?: TChatContentType;
   content?: string;
+};
+
+type TSendChatImagePayload = {
+  orderId: string;
+  senderId: string;
+  to?: string;
+  imageFile: Express.Multer.File;
 };
 
 // sendChatMessageIntoDB
@@ -76,6 +84,48 @@ const sendChatMessageIntoDB = async (payload: TSendChatMessagePayload) => {
     to: receiverId,
     contentType,
     content,
+    deliveredAt: new Date(),
+  });
+
+  return ChatMessageModel.findById(created._id)
+    .populate('from', 'name email phone image role isActive')
+    .populate('to', 'name email phone image role isActive')
+    .lean();
+};
+
+// sendChatImageIntoDB
+const sendChatImageIntoDB = async (payload: TSendChatImagePayload) => {
+  const { orderId, senderId, imageFile } = payload;
+
+  if (!Types.ObjectId.isValid(orderId)) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid order id');
+  }
+
+  if (!Types.ObjectId.isValid(senderId)) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid sender id');
+  }
+
+  if (!imageFile) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Image is required');
+  }
+
+  const order = await OrderModel.findById(orderId).select('customer driver');
+  if (!order) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Order not found');
+  }
+
+  const uploaded = await sendImageToCloudinary(imageFile);
+  const created = await ChatMessageModel.create({
+    order: orderId,
+    from: senderId,
+    to:
+      payload.to && Types.ObjectId.isValid(payload.to)
+        ? payload.to
+        : String(order.customer) === senderId
+          ? order.driver
+          : order.customer,
+    contentType: 'IMAGE',
+    content: uploaded.secure_url,
     deliveredAt: new Date(),
   });
 
@@ -190,5 +240,6 @@ const getChatThreadsFromDB = async (userId: Types.ObjectId, role?: TRole) => {
 export const ChatService = {
   getChatMessagesFromDB,
   sendChatMessageIntoDB,
+  sendChatImageIntoDB,
   getChatThreadsFromDB,
 };

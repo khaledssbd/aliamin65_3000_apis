@@ -90,7 +90,9 @@ const getOrderByIdFromDB = async (id: string, userId?: Types.ObjectId) => {
   const filter: Record<string, unknown> = { _id: id };
 
   if (userId) filter.$or = [{ customer: userId }, { driver: userId }];
-  return OrderModel.findOne(filter).populate('driver');
+  return OrderModel.findOne(filter)
+    .populate('customer', 'name email phone image address')
+    .populate('driver', 'name email phone image role isActive');
 };
 
 // 4. assignDriverToOrderIntoDB

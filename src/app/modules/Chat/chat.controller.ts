@@ -32,6 +32,22 @@ const sendChatMessage = asyncHandler(async (req, res) => {
   });
 });
 
+// sendChatImage
+const sendChatImage = asyncHandler(async (req, res) => {
+  const doc = await ChatService.sendChatImageIntoDB({
+    orderId: String(req.params.orderId),
+    senderId: String(req.user._id),
+    to: req.body?.to,
+    imageFile: req.file as Express.Multer.File,
+  });
+
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    message: 'Chat image sent',
+    data: doc,
+  });
+});
+
 // 2. getChatThreads
 const getChatThreads = asyncHandler(async (req, res) => {
   const docs = await ChatService.getChatThreadsFromDB(
@@ -49,5 +65,6 @@ const getChatThreads = asyncHandler(async (req, res) => {
 export const ChatController = {
   getChatMessages,
   sendChatMessage,
+  sendChatImage,
   getChatThreads,
 };

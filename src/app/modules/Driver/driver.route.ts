@@ -48,6 +48,12 @@ router.get(
   DriverController.getAvailableJobsForDriver,
 );
 
+router.get(
+  '/jobs/my',
+  auth(ROLE.DRIVER),
+  DriverController.getMyJobsForDriver,
+);
+
 // 7. acceptJobByDriver
 router.post(
   '/jobs/:orderId/accept',

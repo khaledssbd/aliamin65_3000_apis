@@ -46,6 +46,14 @@ const getAvailableJobsForDriverFromDB = async (userId: Types.ObjectId) => {
     .limit(50);
 };
 
+// getMyJobsForDriverFromDB
+const getMyJobsForDriverFromDB = async (userId: Types.ObjectId) => {
+  return OrderModel.find({ driver: userId })
+    .sort({ createdAt: -1 })
+    .populate('customer', 'name email phone image address')
+    .limit(100);
+};
+
 // 5. acceptJobByDriverIntoDB
 const acceptJobByDriverIntoDB = async (
   userId: Types.ObjectId,
@@ -110,6 +118,7 @@ export const DriverService = {
   setDriverAvailabilityIntoDB,
   getDriverProfileFromDB,
   getAvailableJobsForDriverFromDB,
+  getMyJobsForDriverFromDB,
   acceptJobByDriverIntoDB,
   declineJobByDriverIntoDB,
   cancelJobByDriverIntoDB,

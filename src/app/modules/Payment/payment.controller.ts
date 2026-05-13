@@ -4,11 +4,16 @@ import { PaymentService } from './payment.service';
 
 // 1. createPaymentIntentForMyOrder
 const createPaymentIntentForMyOrder = asyncHandler(async (req, res) => {
+  const amount =
+    req.body?.amount !== undefined && req.body?.amount !== null
+      ? Number(req.body.amount)
+      : undefined;
+
   const { clientSecret } =
     await PaymentService.createPaymentIntentForMyOrderIntoDB(
       req.user._id,
       req.body.orderId,
-      req.body.amount,
+      Number.isFinite(amount as number) ? amount : undefined,
     );
 
   sendResponse(res, {
@@ -20,9 +25,15 @@ const createPaymentIntentForMyOrder = asyncHandler(async (req, res) => {
 
 // 2. capturePaymentForMyOrder
 const capturePaymentForMyOrder = asyncHandler(async (req, res) => {
+  const amount =
+    req.body?.amount !== undefined && req.body?.amount !== null
+      ? Number(req.body.amount)
+      : undefined;
+
   const doc = await PaymentService.capturePaymentForMyOrderIntoDB(
     req.user._id,
     req.body.orderId,
+    Number.isFinite(amount as number) ? amount : undefined,
   );
 
   sendResponse(res, {

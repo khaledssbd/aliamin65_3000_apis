@@ -4,6 +4,7 @@ import { OrderService } from './order.service';
 import { getIO } from '../../socket';
 import DriverModel from '../Driver/driver.model';
 import UserModel from '../User/user.model';
+import { ORDER_STATUS } from '../../constants';
 
 // 1. createOrder
 const createOrder = asyncHandler(async (req, res) => {
@@ -168,6 +169,28 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   });
 });
 
+// 6. completeDeliveryAndCapturePayment
+const completeDeliveryAndCapturePayment = asyncHandler(async (req, res) => {
+  const deliveredOrder = await OrderService.updateOrderStatusIntoDB(
+    String(req.params.id),
+    ORDER_STATUS.DELIVERED,
+  );
+
+  if (!deliveredOrder) {
+    return sendResponse(res, {
+      statusCode: httpStatus.NOT_FOUND,
+      message: 'Order not found!',
+      data: null,
+    });
+  }
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Delivery marked as delivered successfully!',
+    data: deliveredOrder,
+  });
+});
+
 // 6. updateBagCount
 const updateBagCount = asyncHandler(async (req, res) => {
   const result = await OrderService.updateBagCountIntoDB(
@@ -190,4 +213,5 @@ export const OrderController = {
   assignDriverToOrder,
   updateOrderStatus,
   updateBagCount,
+  completeDeliveryAndCapturePayment,
 };
