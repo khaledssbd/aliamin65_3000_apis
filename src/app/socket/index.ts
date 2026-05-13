@@ -5,9 +5,11 @@ import OrderModel from '../modules/Order/order.model';
 import UserModel from '../modules/User/user.model';
 import ChatMessageModel from '../modules/Chat/chat.model';
 import mongoose from 'mongoose';
+import { ROLE } from '../modules/User/user.constant';
 
 let io: IOServer | null = null;
 const onlineUsers = new Map<string, Set<string>>();
+const onlineUserRoles = new Map<string, string>();
 
 const addOnlineUserSocket = (userId: string, socketId: string) => {
   const current = onlineUsers.get(userId);
@@ -20,6 +22,7 @@ const removeOnlineUserSocket = (userId: string, socketId: string) => {
   if (!current) return;
   current.delete(socketId);
   if (current.size === 0) onlineUsers.delete(userId);
+  if (!onlineUsers.has(userId)) onlineUserRoles.delete(userId);
 };
 
 const getOnlineUserIds = () => Array.from(onlineUsers.keys());
@@ -65,8 +68,10 @@ export const initSocket = (server: HttpServer) => {
         socket.disconnect();
         return;
       }
+      socket.data.user = user;
       socket.join(`user:${userId}`);
       addOnlineUserSocket(userId, socket.id);
+      onlineUserRoles.set(userId, user.role);
       next();
     } catch (error: unknown) {
       console.error('Socket Middleware DB Error:', error);
@@ -141,10 +146,15 @@ export const initSocket = (server: HttpServer) => {
     chatNs.emit('chat:online:users', { userIds: getOnlineUserIds() });
   };
 
-  const listThreadsForUserFromDB = async (userId: string) => {
+  const listThreadsForUserFromDB = async (userId: string, role?: string) => {
     const uid = new mongoose.Types.ObjectId(userId);
+    const isAdmin = role === ROLE.ADMIN || role === ROLE.SUPER_ADMIN;
+    const matchStage = isAdmin
+      ? { order: { $exists: true, $ne: null } }
+      : { $or: [{ from: uid }, { to: uid }] };
+
     const threads = await ChatMessageModel.aggregate([
-      { $match: { $or: [{ from: uid }, { to: uid }] } },
+      { $match: matchStage },
       { $sort: { createdAt: 1 } },
       {
         $group: {
@@ -168,6 +178,69 @@ export const initSocket = (server: HttpServer) => {
                 0,
               ],
             },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: 'orders',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'order',
+        },
+      },
+      { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'order.customer',
+          foreignField: '_id',
+          as: 'customer',
+        },
+      },
+      { $unwind: { path: '$customer', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'order.driver',
+          foreignField: '_id',
+          as: 'driver',
+        },
+      },
+      { $unwind: { path: '$driver', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          orderId: '$_id',
+          lastMessageAt: 1,
+          lastMessage: 1,
+          lastContentType: 1,
+          lastFrom: 1,
+          unreadCount: 1,
+          order: {
+            _id: '$order._id',
+            status: '$order.status',
+            serviceType: '$order.serviceType',
+            address: '$order.address',
+            total: '$order.total',
+            createdAt: '$order.createdAt',
+          },
+          customer: {
+            _id: '$customer._id',
+            name: '$customer.name',
+            email: '$customer.email',
+            phone: '$customer.phone',
+            image: '$customer.image',
+            role: '$customer.role',
+            isActive: '$customer.isActive',
+          },
+          driver: {
+            _id: '$driver._id',
+            name: '$driver.name',
+            email: '$driver.email',
+            phone: '$driver.phone',
+            image: '$driver.image',
+            role: '$driver.role',
+            isActive: '$driver.isActive',
           },
         },
       },
@@ -195,11 +268,22 @@ export const initSocket = (server: HttpServer) => {
 
   const emitThreadsForUser = async (userId: string) => {
     try {
-      const threads = await listThreadsForUserFromDB(userId);
+      const threads = await listThreadsForUserFromDB(
+        userId,
+        onlineUserRoles.get(userId),
+      );
       chatNs.to(`user:${userId}`).emit('chat:threads', { threads });
     } catch (error) {
       console.error('Chat Threads Error:', error);
     }
+  };
+
+  const emitThreadsForAdmins = async () => {
+    const adminIds = Array.from(onlineUserRoles.entries())
+      .filter(([, role]) => role === ROLE.ADMIN || role === ROLE.SUPER_ADMIN)
+      .map(([userId]) => userId);
+
+    await Promise.all(adminIds.map((userId) => emitThreadsForUser(userId)));
   };
 
   const isAnySocketInRoom = (room: string, socketIds: Set<string>) => {
@@ -277,7 +361,9 @@ export const initSocket = (server: HttpServer) => {
         try {
           const messages = await ChatMessageModel.find({ order: orderId })
             .sort({ createdAt: 1 })
-            .limit(limit);
+            .limit(limit)
+            .populate('from', 'name email phone image role isActive')
+            .populate('to', 'name email phone image role isActive');
 
           socket.emit('chat:messages', { orderId, messages });
 
@@ -355,6 +441,7 @@ export const initSocket = (server: HttpServer) => {
 
           await emitThreadsForUser(currentUserId);
           await emitThreadsForUser(receiverId);
+          await emitThreadsForAdmins();
         } catch (error) {
           console.error('Chat Send Error:', error);
         }

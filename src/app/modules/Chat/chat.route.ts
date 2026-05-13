@@ -8,14 +8,20 @@ const router = Router();
 // 1. getChatMessages
 router.get(
   '/order/:orderId',
-  auth(ROLE.CUSTOMER, ROLE.DRIVER),
+  auth(ROLE.CUSTOMER, ROLE.DRIVER, ROLE.ADMIN, ROLE.SUPER_ADMIN),
   ChatController.getChatMessages,
+);
+
+router.post(
+  '/order/:orderId',
+  auth(ROLE.CUSTOMER, ROLE.DRIVER, ROLE.ADMIN, ROLE.SUPER_ADMIN),
+  ChatController.sendChatMessage,
 );
 
 // 2. getChatThreads
 router.get(
   '/threads',
-  auth(ROLE.CUSTOMER, ROLE.DRIVER),
+  auth(ROLE.CUSTOMER, ROLE.DRIVER, ROLE.ADMIN, ROLE.SUPER_ADMIN),
   ChatController.getChatThreads,
 );
 
