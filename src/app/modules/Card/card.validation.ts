@@ -25,4 +25,6 @@ export const CardValidation = {
   cardIdParamValidationSchema,
 };
 
-export type TCardAttachPayload = z.infer<typeof attachCardValidationSchema>['body'];
+export type TCardAttachPayload = z.infer<
+  typeof attachCardValidationSchema
+>['body'];

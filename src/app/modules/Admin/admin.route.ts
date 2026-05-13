@@ -40,6 +40,13 @@ router.patch(
   AdminController.toggleUserStatus,
 );
 
+// updateDriverStatus
+router.patch(
+  '/drivers/:id/status',
+  auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
+  AdminController.updateDriverStatus,
+);
+
 // getBookings
 router.get(
   '/get-all-bookings',

@@ -34,7 +34,10 @@ const sendChatMessage = asyncHandler(async (req, res) => {
 
 // 2. getChatThreads
 const getChatThreads = asyncHandler(async (req, res) => {
-  const docs = await ChatService.getChatThreadsFromDB(req.user._id, req.user.role);
+  const docs = await ChatService.getChatThreadsFromDB(
+    req.user._id,
+    req.user.role,
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

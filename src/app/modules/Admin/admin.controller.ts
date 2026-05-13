@@ -83,6 +83,29 @@ const toggleUserStatus = asyncHandler(async (req, res) => {
   });
 });
 
+// updateDriverStatus
+const updateDriverStatus = asyncHandler(async (req, res) => {
+  const status = String(req.body?.status ?? '').toUpperCase();
+  const result = await AdminService.updateDriverStatusIntoDB(
+    String(req.params.id),
+    status as 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED',
+  );
+
+  if (!result) {
+    return sendResponse(res, {
+      statusCode: httpStatus.BAD_REQUEST,
+      message: 'Driver profile not found or invalid status provided!',
+      data: null,
+    });
+  }
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Driver application status updated successfully!',
+    data: result,
+  });
+});
+
 // getBookings
 const getBookings = asyncHandler(async (req, res) => {
   const result = await AdminService.getBookingsFromDB(req.query);
@@ -113,6 +136,7 @@ export const AdminController = {
   getYearlyRevenueStats,
   getUsers,
   toggleUserStatus,
+  updateDriverStatus,
   getBookings,
   getPaymentHistories,
 };

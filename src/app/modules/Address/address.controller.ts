@@ -15,7 +15,10 @@ const getMyAddress = asyncHandler(async (req, res) => {
 
 // 2. createAddress
 const createAddress = asyncHandler(async (req, res) => {
-  const result = await AddressService.createAddressIntoDB(req.user._id, req.body);
+  const result = await AddressService.createAddressIntoDB(
+    req.user._id,
+    req.body,
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,

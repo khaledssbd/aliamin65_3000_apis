@@ -4,6 +4,7 @@ import DriverModel from '../Driver/driver.model';
 import OrderModel from '../Order/order.model';
 import PaymentModel from '../Payment/payment.model';
 import PricingModel from '../Pricing/pricing.model';
+import { TDriverStatus } from '../Driver/driver.interface';
 
 type TMonthlyRow = { _id: { month: number }; total: number };
 
@@ -179,13 +180,17 @@ const getUsersByRoleFromDB = async (
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .select('name email phone image role address isActive deactivationReason createdAt updatedAt')
+      .select(
+        'name email phone image role address isActive deactivationReason createdAt updatedAt',
+      )
       .lean(),
     UserModel.countDocuments(filter),
   ]);
 
   if (role === ROLE.DRIVER) {
-    const driverDocs = await DriverModel.find({ user: { $in: users.map((user) => user._id) } })
+    const driverDocs = await DriverModel.find({
+      user: { $in: users.map((user) => user._id) },
+    })
       .select(
         'user stripeConnectedAccountId licenseImageUrl selfieImageUrl identity isAvailable insurance vehicle backgroundCheckStatus reputationTier capacityLimit status createdAt updatedAt',
       )
@@ -234,6 +239,27 @@ const toggleUserStatusIntoDB = async (id: string) => {
   user.isActive = !user.isActive;
   await user.save();
   return user;
+};
+
+// updateDriverStatusIntoDB
+const updateDriverStatusIntoDB = async (
+  userId: string,
+  status: TDriverStatus,
+) => {
+  const allowedStatuses: TDriverStatus[] = [
+    'PENDING',
+    'APPROVED',
+    'REJECTED',
+    'SUSPENDED',
+  ];
+
+  if (!allowedStatuses.includes(status)) return null;
+
+  return DriverModel.findOneAndUpdate(
+    { user: userId },
+    { $set: { status } },
+    { returnDocument: 'after' },
+  ).lean();
 };
 
 // getBookingsFromDB
@@ -304,6 +330,7 @@ export const AdminService = {
   getYearlyRevenueStatsFromDB,
   getUsersByRoleFromDB,
   toggleUserStatusIntoDB,
+  updateDriverStatusIntoDB,
   getBookingsFromDB,
   getPaymentHistoriesFromDB,
 };

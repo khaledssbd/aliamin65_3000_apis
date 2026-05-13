@@ -9,7 +9,7 @@ const sendOtpEmail = async ({
   otp,
   name = 'User',
   subject = 'Your OTP for Account Verification',
-  logoCid = 'sugsygo_logo',
+  logoCid = 'sudsygo_logo',
   customMessage = '',
   attachments = [],
 }: {

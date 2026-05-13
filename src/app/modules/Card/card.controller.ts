@@ -15,10 +15,7 @@ const getSavedCards = asyncHandler(async (req, res) => {
 
 // 2. createCard
 const createCard = asyncHandler(async (req, res) => {
-  const doc = await CardService.createCardIntoDB(
-    req.user._id,
-    req.body,
-  );
+  const doc = await CardService.createCardIntoDB(req.user._id, req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
