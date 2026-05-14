@@ -6,6 +6,8 @@ import UserModel from '../modules/User/user.model';
 import ChatMessageModel from '../modules/Chat/chat.model';
 import mongoose from 'mongoose';
 import { ROLE } from '../modules/User/user.constant';
+import { verifyToken } from '../lib';
+import config from '../config';
 
 let io: IOServer | null = null;
 const onlineUsers = new Map<string, Set<string>>();
@@ -49,7 +51,30 @@ export const initSocket = (server: HttpServer) => {
 
   // --- REUSABLE MIDDLEWARE: Validates User from DB ---
   const checkAuth = async (socket: Socket, next: (err?: Error) => void) => {
-    const userId = socket.handshake.query.userId as string;
+    const queryUserId = socket.handshake.query.userId as string | undefined;
+    const authToken =
+      typeof socket.handshake.auth?.token === 'string'
+        ? socket.handshake.auth.token
+        : undefined;
+    const headerToken = socket.handshake.headers.authorization?.replace(
+      'Bearer ',
+      '',
+    );
+    let userId = queryUserId;
+
+    if (!userId && (authToken || headerToken)) {
+      try {
+        const decoded = verifyToken(
+          authToken || headerToken || '',
+          config.jwt.access_secret!,
+        ) as { _id?: string; id?: string };
+
+        userId = decoded._id || decoded.id;
+      } catch {
+        console.error('Socket Auth Failed: Invalid token');
+        return next(new Error('Unauthorized'));
+      }
+    }
 
     // // আইপি অ্যাড্রেস বের করার পদ্ধতি
     // const clientIp = socket.handshake.address;
@@ -64,20 +89,14 @@ export const initSocket = (server: HttpServer) => {
 
     if (!userId || !mongoose.isValidObjectId(userId)) {
       console.error('Socket Auth Failed: Invalid or missing User ID');
-      // return next(new Error('User ID is missing or invalid'));
-      socket.emit('error', 'User ID is missing');
-      socket.disconnect();
-      return;
+      return next(new Error('User ID is missing or invalid'));
     }
 
     try {
       const user = await UserModel.findById(userId);
       if (!user) {
         console.error(`Socket Auth Failed: User ${userId} not found`);
-        // return next(new Error('User not found'));
-        socket.emit('error', 'User not found');
-        socket.disconnect();
-        return;
+        return next(new Error('User not found'));
       }
       socket.data.user = user;
       socket.join(`user:${userId}`);
@@ -86,10 +105,7 @@ export const initSocket = (server: HttpServer) => {
       next();
     } catch (error: unknown) {
       console.error('Socket Middleware DB Error:', error);
-      // next(new Error('Internal Server Error'));
-      socket.emit('error', 'Internal Server Error');
-      socket.disconnect();
-      return;
+      return next(new Error('Internal Server Error'));
     }
   };
 
@@ -98,7 +114,7 @@ export const initSocket = (server: HttpServer) => {
   ordersNs.use(checkAuth);
 
   ordersNs.on('connection', (socket) => {
-    const currentUserId = socket.handshake.query.userId as string;
+    const currentUserId = String(socket.data.user?._id);
     console.log(`User connected to Orders: ${currentUserId}`);
 
     // CUSTOMER or DRIVER join for orders: orders:join
@@ -307,7 +323,7 @@ export const initSocket = (server: HttpServer) => {
   };
 
   chatNs.on('connection', (socket) => {
-    const currentUserId = socket.handshake.query.userId as string;
+    const currentUserId = String(socket.data.user?._id);
     console.log(`User connected to Chat: ${currentUserId}`);
 
     socketActiveConversation.set(socket.id, null);
