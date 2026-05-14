@@ -5,6 +5,7 @@ import OrderModel from '../Order/order.model';
 import PaymentModel from '../Payment/payment.model';
 import PricingModel from '../Pricing/pricing.model';
 import EarningModel from '../Earning/earning.model';
+import InvoiceModel from '../Invoice/invoice.model';
 import { TDriverStatus } from '../Driver/driver.interface';
 
 type TMonthlyRow = { _id: { month: number }; total: number };
@@ -322,14 +323,21 @@ const getPaymentHistoriesFromDB = async (query: Record<string, unknown>) => {
   const earnings = await EarningModel.find({ order: { $in: orderIds } })
     .select('order amountGross amountDriver amountPlatform payoutStatus')
     .lean();
+  const invoices = await InvoiceModel.find({ order: { $in: orderIds } })
+    .select('order invoiceNumber generatedAt')
+    .lean();
 
   const earningByOrderId = new Map(
     earnings.map(earning => [String(earning.order), earning]),
+  );
+  const invoiceByOrderId = new Map(
+    invoices.map(invoice => [String(invoice.order), invoice]),
   );
 
   const data = payments.map(payment => {
     const orderId = String(payment.order?._id ?? payment.order ?? '');
     const earning = earningByOrderId.get(orderId);
+    const invoice = invoiceByOrderId.get(orderId);
 
     return {
       ...payment,
@@ -337,6 +345,8 @@ const getPaymentHistoriesFromDB = async (query: Record<string, unknown>) => {
       amountDriver: earning?.amountDriver ?? 0,
       amountPlatform: earning?.amountPlatform ?? 0,
       payoutStatus: earning?.payoutStatus ?? null,
+      invoiceNumber: invoice?.invoiceNumber ?? null,
+      invoiceGeneratedAt: invoice?.generatedAt ?? null,
     };
   });
 
