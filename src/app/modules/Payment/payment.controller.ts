@@ -4,16 +4,16 @@ import { PaymentService } from './payment.service';
 
 // 1. createPaymentIntentForMyOrder
 const createPaymentIntentForMyOrder = asyncHandler(async (req, res) => {
-  const amount =
-    req.body?.amount !== undefined && req.body?.amount !== null
-      ? Number(req.body.amount)
+  const tipAmount =
+    req.body && req.body.tipAmount !== undefined && req.body.tipAmount !== null
+      ? Number(req.body.tipAmount)
       : undefined;
 
   const { clientSecret } =
     await PaymentService.createPaymentIntentForMyOrderIntoDB(
       req.user._id,
       req.body.orderId,
-      Number.isFinite(amount as number) ? amount : undefined,
+      Number.isFinite(tipAmount as number) ? tipAmount : undefined,
     );
 
   sendResponse(res, {
@@ -25,15 +25,15 @@ const createPaymentIntentForMyOrder = asyncHandler(async (req, res) => {
 
 // 2. capturePaymentForMyOrder
 const capturePaymentForMyOrder = asyncHandler(async (req, res) => {
-  const amount =
-    req.body?.amount !== undefined && req.body?.amount !== null
-      ? Number(req.body.amount)
+  const tipAmount =
+    req.body && req.body.tipAmount !== undefined && req.body.tipAmount !== null
+      ? Number(req.body.tipAmount)
       : undefined;
 
   const doc = await PaymentService.capturePaymentForMyOrderIntoDB(
     req.user._id,
     req.body.orderId,
-    Number.isFinite(amount as number) ? amount : undefined,
+    Number.isFinite(tipAmount as number) ? tipAmount : undefined,
   );
 
   sendResponse(res, {
@@ -47,6 +47,8 @@ const capturePaymentForMyOrder = asyncHandler(async (req, res) => {
 const getPaymentByOrderId = asyncHandler(async (req, res) => {
   const doc = await PaymentService.getPaymentByOrderIdFromDB(
     String(req.params.orderId),
+    req.user._id,
+    req.user.role,
   );
 
   sendResponse(res, {
@@ -56,8 +58,22 @@ const getPaymentByOrderId = asyncHandler(async (req, res) => {
   });
 });
 
+const handleStripeWebhook = asyncHandler(async (req, res) => {
+  const result = await PaymentService.handleStripeWebhookIntoDB(
+    req.body,
+    req.headers['stripe-signature'] as string | undefined,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Stripe webhook handled successfully!',
+    data: result,
+  });
+});
+
 export const PaymentController = {
   createPaymentIntentForMyOrder,
   capturePaymentForMyOrder,
   getPaymentByOrderId,
+  handleStripeWebhook,
 };

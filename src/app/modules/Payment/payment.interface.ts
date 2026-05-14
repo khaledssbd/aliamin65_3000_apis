@@ -6,7 +6,8 @@ export type TPaymentStatus =
   | 'processing'
   | 'succeeded'
   | 'canceled'
-  | 'requires_action';
+  | 'requires_action'
+  | 'requires_capture';
 
 export interface IPayment extends Document {
   order: Types.ObjectId;

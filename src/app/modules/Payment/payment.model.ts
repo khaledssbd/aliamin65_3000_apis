@@ -23,6 +23,7 @@ const paymentSchema = new Schema<IPayment>(
         'succeeded',
         'canceled',
         'requires_action',
+        'requires_capture',
       ],
       required: true,
     },

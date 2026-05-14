@@ -25,6 +25,7 @@ export default {
   bcrypt_salt_rounds: process.env.BCRYPT_SALT_ROUNDS,
   otp_expiry_minutes: process.env.OTP_EXPIRY_MINUTES,
   stripe_secret_key: process.env.STRIPE_SECRET_KEY,
+  stripe_webhook_secret: process.env.STRIPE_WEBHOOK_SECRET,
 
   jwt: {
     access_secret: process.env.JWT_ACCESS_SECRET,

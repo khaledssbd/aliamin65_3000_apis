@@ -15,7 +15,7 @@ router.post(
 // 2. capturePaymentForMyOrder
 router.post(
   '/confirm',
-  auth(ROLE.CUSTOMER, ROLE.ADMIN, ROLE.SUPER_ADMIN),
+  auth(ROLE.CUSTOMER),
   PaymentController.capturePaymentForMyOrder,
 );
 
