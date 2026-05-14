@@ -4,6 +4,7 @@ import DriverModel from '../Driver/driver.model';
 import OrderModel from '../Order/order.model';
 import PaymentModel from '../Payment/payment.model';
 import PricingModel from '../Pricing/pricing.model';
+import EarningModel from '../Earning/earning.model';
 import { TDriverStatus } from '../Driver/driver.interface';
 
 type TMonthlyRow = { _id: { month: number }; total: number };
@@ -297,7 +298,7 @@ const getPaymentHistoriesFromDB = async (query: Record<string, unknown>) => {
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  const [data, total] = await Promise.all([
+  const [payments, total] = await Promise.all([
     PaymentModel.find({})
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -313,6 +314,31 @@ const getPaymentHistoriesFromDB = async (query: Record<string, unknown>) => {
       .lean(),
     PaymentModel.countDocuments({}),
   ]);
+
+  const orderIds = payments
+    .map(payment => payment.order?._id ?? payment.order)
+    .filter(Boolean);
+
+  const earnings = await EarningModel.find({ order: { $in: orderIds } })
+    .select('order amountGross amountDriver amountPlatform payoutStatus')
+    .lean();
+
+  const earningByOrderId = new Map(
+    earnings.map(earning => [String(earning.order), earning]),
+  );
+
+  const data = payments.map(payment => {
+    const orderId = String(payment.order?._id ?? payment.order ?? '');
+    const earning = earningByOrderId.get(orderId);
+
+    return {
+      ...payment,
+      amountGross: earning?.amountGross ?? payment.amount ?? 0,
+      amountDriver: earning?.amountDriver ?? 0,
+      amountPlatform: earning?.amountPlatform ?? 0,
+      payoutStatus: earning?.payoutStatus ?? null,
+    };
+  });
 
   return {
     data,

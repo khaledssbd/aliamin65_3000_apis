@@ -51,6 +51,17 @@ export const initSocket = (server: HttpServer) => {
   const checkAuth = async (socket: Socket, next: (err?: Error) => void) => {
     const userId = socket.handshake.query.userId as string;
 
+    // // আইপি অ্যাড্রেস বের করার পদ্ধতি
+    // const clientIp = socket.handshake.address;
+    // const forwardedIp = socket.handshake.headers['x-forwarded-for'];
+
+    // console.log('--- New Connection Attempt ---');
+    // console.log('User ID from Query:', userId);
+    // console.log('Client IP:', clientIp);
+    // console.log('Forwarded IP (if behind proxy):', forwardedIp);
+    // console.log('User Agent:', socket.handshake.headers['user-agent']);
+    // console.log('------------------------------');
+
     if (!userId || !mongoose.isValidObjectId(userId)) {
       console.error('Socket Auth Failed: Invalid or missing User ID');
       // return next(new Error('User ID is missing or invalid'));
@@ -481,107 +492,107 @@ export const initSocket = (server: HttpServer) => {
   });
 
   // --- CALL NAMESPACE (WebRTC Signaling) ---
-  const callNs = io.of('/call');
-  callNs.use(checkAuth);
+  // const callNs = io.of('/call');
+  // callNs.use(checkAuth);
 
-  const activeCalls = new Map<string, Set<string>>();
+  // const activeCalls = new Map<string, Set<string>>();
   // roomId -> socketIds
 
-  callNs.on('connection', (socket) => {
-    const currentUserId = socket.handshake.query.userId as string;
-    console.log(`User connected to Call: ${currentUserId}`);
+  // callNs.on('connection', (socket) => {
+  //   const currentUserId = socket.handshake.query.userId as string;
+  //   console.log(`User connected to Call: ${currentUserId}`);
 
-    socket.on('call:join', ({ roomId }: { roomId: string }) => {
-      if (!roomId) return;
+  //   socket.on('call:join', ({ roomId }: { roomId: string }) => {
+  //     if (!roomId) return;
 
-      socket.join(`call:${roomId}`);
+  //     socket.join(`call:${roomId}`);
 
-      const members = activeCalls.get(roomId) || new Set();
-      members.add(socket.id);
-      activeCalls.set(roomId, members);
+  //     const members = activeCalls.get(roomId) || new Set();
+  //     members.add(socket.id);
+  //     activeCalls.set(roomId, members);
 
-      callNs.to(`call:${roomId}`).emit('call:user:joined', {
-        userId: currentUserId,
-        socketId: socket.id,
-      });
-    });
+  //     callNs.to(`call:${roomId}`).emit('call:user:joined', {
+  //       userId: currentUserId,
+  //       socketId: socket.id,
+  //     });
+  //   });
 
-    socket.on(
-      'call:offer',
-      ({
-        roomId,
-        offer,
-        to,
-      }: {
-        roomId: string;
-        offer: RTCSessionDescriptionInit;
-        to: string;
-      }) => {
-        callNs.to(`user:${to}`).emit('call:offer', {
-          roomId,
-          offer,
-          from: currentUserId,
-        });
-      },
-    );
+  //   socket.on(
+  //     'call:offer',
+  //     ({
+  //       roomId,
+  //       offer,
+  //       to,
+  //     }: {
+  //       roomId: string;
+  //       offer: RTCSessionDescriptionInit;
+  //       to: string;
+  //     }) => {
+  //       callNs.to(`user:${to}`).emit('call:offer', {
+  //         roomId,
+  //         offer,
+  //         from: currentUserId,
+  //       });
+  //     },
+  //   );
 
-    socket.on(
-      'call:answer',
-      ({
-        roomId,
-        answer,
-        to,
-      }: {
-        roomId: string;
-        answer: RTCSessionDescriptionInit;
-        to: string;
-      }) => {
-        callNs.to(`user:${to}`).emit('call:answer', {
-          roomId,
-          answer,
-          from: currentUserId,
-        });
-      },
-    );
+  //   socket.on(
+  //     'call:answer',
+  //     ({
+  //       roomId,
+  //       answer,
+  //       to,
+  //     }: {
+  //       roomId: string;
+  //       answer: RTCSessionDescriptionInit;
+  //       to: string;
+  //     }) => {
+  //       callNs.to(`user:${to}`).emit('call:answer', {
+  //         roomId,
+  //         answer,
+  //         from: currentUserId,
+  //       });
+  //     },
+  //   );
 
-    socket.on(
-      'call:ice-candidate',
-      ({
-        to,
-        candidate,
-        roomId,
-      }: {
-        to: string;
-        candidate: RTCIceCandidateInit;
-        roomId: string;
-      }) => {
-        callNs.to(`user:${to}`).emit('call:ice-candidate', {
-          candidate,
-          from: currentUserId,
-          roomId,
-        });
-      },
-    );
+  //   socket.on(
+  //     'call:ice-candidate',
+  //     ({
+  //       to,
+  //       candidate,
+  //       roomId,
+  //     }: {
+  //       to: string;
+  //       candidate: RTCIceCandidateInit;
+  //       roomId: string;
+  //     }) => {
+  //       callNs.to(`user:${to}`).emit('call:ice-candidate', {
+  //         candidate,
+  //         from: currentUserId,
+  //         roomId,
+  //       });
+  //     },
+  //   );
 
-    socket.on('call:end', ({ roomId }: { roomId: string }) => {
-      socket.leave(`call:${roomId}`);
+  //   socket.on('call:end', ({ roomId }: { roomId: string }) => {
+  //     socket.leave(`call:${roomId}`);
 
-      const members = activeCalls.get(roomId);
-      if (members) {
-        members.delete(socket.id);
-        if (members.size === 0) activeCalls.delete(roomId);
-      }
+  //     const members = activeCalls.get(roomId);
+  //     if (members) {
+  //       members.delete(socket.id);
+  //       if (members.size === 0) activeCalls.delete(roomId);
+  //     }
 
-      callNs.to(`call:${roomId}`).emit('call:ended', {
-        roomId,
-        userId: currentUserId,
-      });
-    });
+  //     callNs.to(`call:${roomId}`).emit('call:ended', {
+  //       roomId,
+  //       userId: currentUserId,
+  //     });
+  //   });
 
-    socket.on('disconnect', () => {
-      console.log(`User disconnected from Call: ${currentUserId}`);
-    });
-  });
+  //   socket.on('disconnect', () => {
+  //     console.log(`User disconnected from Call: ${currentUserId}`);
+  //   });
+  // });
 
   // Global connection
   io.on('connection', (socket) => {
