@@ -2,6 +2,8 @@ import DriverModel from './driver.model';
 import { Types } from 'mongoose';
 import OrderModel from '../Order/order.model';
 import { ORDER_STATUS } from '../../constants';
+import { AppError } from '../../utils';
+import httpStatus from 'http-status';
 
 // 1. upsertDriverProfileIntoDB
 const upsertDriverProfileIntoDB = async (
@@ -113,6 +115,60 @@ const cancelJobByDriverIntoDB = async (
   return { order: doc, reason };
 };
 
+const updateJobStageByDriverIntoDB = async (
+  userId: Types.ObjectId,
+  orderId: string,
+  stage: 'PICKUP' | 'WASHING' | 'DRYING' | 'FOLDING' | 'DELIVERY',
+  bagCount?: number,
+) => {
+  const now = new Date();
+  const patch: Record<string, unknown> = {};
+
+  if (stage === 'PICKUP') {
+    patch.status = ORDER_STATUS.PICKED_UP;
+    patch['timeline.pickedUpAt'] = now;
+    if (typeof bagCount === 'number' && Number.isFinite(bagCount)) {
+      patch.bagCountAtPickup = Math.max(0, bagCount);
+    }
+  }
+
+  if (stage === 'WASHING') {
+    patch.status = ORDER_STATUS.WASHING_DRYING;
+    patch['timeline.washingDryingAt'] = now;
+  }
+
+  if (stage === 'DRYING') {
+    patch.status = ORDER_STATUS.WASHING_DRYING;
+    patch['timeline.dryingAt'] = now;
+  }
+
+  if (stage === 'FOLDING') {
+    patch.status = ORDER_STATUS.WASHING_DRYING;
+    patch['timeline.foldingAt'] = now;
+  }
+
+  if (stage === 'DELIVERY') {
+    patch.status = ORDER_STATUS.OUT_FOR_DELIVERY;
+    patch['timeline.outForDeliveryAt'] = now;
+  }
+
+  if (Object.keys(patch).length === 0) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid job stage!');
+  }
+
+  const updatedOrder = await OrderModel.findOneAndUpdate(
+    { _id: orderId, driver: userId },
+    { $set: patch },
+    { returnDocument: 'after' },
+  ).populate('customer', 'name email phone image address');
+
+  if (!updatedOrder) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Driver job not found!');
+  }
+
+  return updatedOrder;
+};
+
 export const DriverService = {
   upsertDriverProfileIntoDB,
   setDriverAvailabilityIntoDB,
@@ -122,4 +178,5 @@ export const DriverService = {
   acceptJobByDriverIntoDB,
   declineJobByDriverIntoDB,
   cancelJobByDriverIntoDB,
+  updateJobStageByDriverIntoDB,
 };

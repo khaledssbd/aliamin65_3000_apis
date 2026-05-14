@@ -75,4 +75,10 @@ router.post(
   DriverController.cancelJobByDriver,
 );
 
+router.patch(
+  '/jobs/:orderId/stage',
+  auth(ROLE.DRIVER),
+  DriverController.updateJobStageByDriver,
+);
+
 export const DriverRoutes = router;

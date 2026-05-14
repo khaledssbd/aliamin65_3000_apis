@@ -164,6 +164,40 @@ const cancelJobByDriver = asyncHandler(async (req, res) => {
   });
 });
 
+const updateJobStageByDriver = asyncHandler(async (req, res) => {
+  const result = await DriverService.updateJobStageByDriverIntoDB(
+    req.user._id,
+    String(req.params.orderId),
+    req.body.stage,
+    req.body.bagCount,
+  );
+
+  const ordersNs = getIO()?.of('/orders');
+
+  if (result) {
+    const customerId = String(
+      (result.customer as { _id?: unknown })?._id ?? result.customer,
+    );
+
+    ordersNs?.to(`customer:${customerId}`).emit('order:stage:updated', {
+      orderId: req.params.orderId,
+      status: result.status,
+      stage: req.body.stage,
+    });
+    ordersNs?.to(`order:${req.params.orderId}`).emit('order:stage:updated', {
+      orderId: req.params.orderId,
+      status: result.status,
+      stage: req.body.stage,
+    });
+  }
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Job stage updated successfully!',
+    data: result,
+  });
+});
+
 export const DriverController = {
   onboardDriver,
   updateDriverInsurance,
@@ -175,4 +209,5 @@ export const DriverController = {
   acceptJobByDriver,
   declineJobByDriver,
   cancelJobByDriver,
+  updateJobStageByDriver,
 };
