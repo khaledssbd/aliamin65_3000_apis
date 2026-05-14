@@ -7,6 +7,7 @@ import PricingModel from '../Pricing/pricing.model';
 import EarningModel from '../Earning/earning.model';
 import InvoiceModel from '../Invoice/invoice.model';
 import { TDriverStatus } from '../Driver/driver.interface';
+import { PipelineStage } from 'mongoose';
 
 type TMonthlyRow = { _id: { month: number }; total: number };
 
@@ -23,6 +24,9 @@ const buildMonthlySeries = (rows: TMonthlyRow[]) => {
 
   return series;
 };
+
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // getDashboardFromDB
 const getDashboardFromDB = async () => {
@@ -295,60 +299,241 @@ const getBookingsFromDB = async (query: Record<string, unknown>) => {
 
 // getPaymentHistoriesFromDB
 const getPaymentHistoriesFromDB = async (query: Record<string, unknown>) => {
-  const page = Number(query.page) || 1;
-  const limit = Number(query.limit) || 10;
+  const page = Math.max(1, Number(query.page) || 1);
+  const limit = Math.max(1, Number(query.limit) || 10);
   const skip = (page - 1) * limit;
+  const searchTerm = String(query.searchTerm ?? '').trim();
+  const payoutStatus = String(query.payoutStatus ?? '').trim().toLowerCase();
+  const paymentStatus = String(query.paymentStatus ?? '').trim().toLowerCase();
+  const fromDate = String(query.fromDate ?? '').trim();
+  const toDate = String(query.toDate ?? '').trim();
 
-  const [payments, total] = await Promise.all([
-    PaymentModel.find({})
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate({
-        path: 'order',
-        populate: [
-          { path: 'customer', select: 'name email phone image role isActive' },
-          { path: 'driver', select: 'name email phone image role isActive' },
+  const paymentMatch: Record<string, unknown> = {};
+  const createdAtFilter: Record<string, Date> = {};
+
+  if (paymentStatus && paymentStatus !== 'all') {
+    paymentMatch.status = paymentStatus;
+  }
+
+  if (fromDate) {
+    createdAtFilter.$gte = new Date(`${fromDate}T00:00:00`);
+  }
+
+  if (toDate) {
+    createdAtFilter.$lte = new Date(`${toDate}T23:59:59.999`);
+  }
+
+  if (Object.keys(createdAtFilter).length) {
+    paymentMatch.createdAt = createdAtFilter;
+  }
+
+  const pipeline: PipelineStage[] = [
+    { $match: paymentMatch },
+    {
+      $lookup: {
+        from: OrderModel.collection.name,
+        localField: 'order',
+        foreignField: '_id',
+        as: 'orderDoc',
+      },
+    },
+    { $unwind: { path: '$orderDoc', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: UserModel.collection.name,
+        let: { customerId: '$customer' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ['$_id', '$$customerId'] },
+                  { $ne: ['$isDeleted', true] },
+                ],
+              },
+            },
+          },
+          {
+            $project: {
+              name: 1,
+              email: 1,
+              phone: 1,
+              image: 1,
+              role: 1,
+              isActive: 1,
+            },
+          },
         ],
-      })
-      .populate('customer', 'name email phone image role isActive')
-      .lean(),
-    PaymentModel.countDocuments({}),
-  ]);
+        as: 'paymentCustomer',
+      },
+    },
+    {
+      $unwind: {
+        path: '$paymentCustomer',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: UserModel.collection.name,
+        let: { customerId: '$orderDoc.customer' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ['$_id', '$$customerId'] },
+                  { $ne: ['$isDeleted', true] },
+                ],
+              },
+            },
+          },
+          {
+            $project: {
+              name: 1,
+              email: 1,
+              phone: 1,
+              image: 1,
+              role: 1,
+              isActive: 1,
+            },
+          },
+        ],
+        as: 'orderCustomer',
+      },
+    },
+    { $unwind: { path: '$orderCustomer', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: UserModel.collection.name,
+        let: { driverId: '$orderDoc.driver' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ['$_id', '$$driverId'] },
+                  { $ne: ['$isDeleted', true] },
+                ],
+              },
+            },
+          },
+          {
+            $project: {
+              name: 1,
+              email: 1,
+              phone: 1,
+              image: 1,
+              role: 1,
+              isActive: 1,
+            },
+          },
+        ],
+        as: 'orderDriver',
+      },
+    },
+    { $unwind: { path: '$orderDriver', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: EarningModel.collection.name,
+        localField: 'order',
+        foreignField: 'order',
+        as: 'earning',
+      },
+    },
+    { $unwind: { path: '$earning', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: InvoiceModel.collection.name,
+        localField: 'order',
+        foreignField: 'order',
+        as: 'invoice',
+      },
+    },
+    { $unwind: { path: '$invoice', preserveNullAndEmptyArrays: true } },
+    {
+      $set: {
+        customer: { $ifNull: ['$paymentCustomer', null] },
+        'orderDoc.customer': { $ifNull: ['$orderCustomer', null] },
+        'orderDoc.driver': { $ifNull: ['$orderDriver', null] },
+        amountGross: { $ifNull: ['$earning.amountGross', '$amount'] },
+        amountDriver: { $ifNull: ['$earning.amountDriver', 0] },
+        amountPlatform: { $ifNull: ['$earning.amountPlatform', 0] },
+        payoutStatus: { $ifNull: ['$earning.payoutStatus', null] },
+        invoiceNumber: { $ifNull: ['$invoice.invoiceNumber', null] },
+        invoiceGeneratedAt: { $ifNull: ['$invoice.generatedAt', null] },
+      },
+    },
+    {
+      $set: {
+        order: {
+          $cond: [
+            { $ifNull: ['$orderDoc._id', false] },
+            '$orderDoc',
+            '$order',
+          ],
+        },
+        orderIdText: {
+          $toString: { $ifNull: ['$orderDoc._id', '$order'] },
+        },
+      },
+    },
+  ];
 
-  const orderIds = payments
-    .map(payment => payment.order?._id ?? payment.order)
-    .filter(Boolean);
+  if (payoutStatus && payoutStatus !== 'all') {
+    pipeline.push({
+      $match: {
+        payoutStatus: payoutStatus.toUpperCase(),
+      },
+    });
+  }
 
-  const earnings = await EarningModel.find({ order: { $in: orderIds } })
-    .select('order amountGross amountDriver amountPlatform payoutStatus')
-    .lean();
-  const invoices = await InvoiceModel.find({ order: { $in: orderIds } })
-    .select('order invoiceNumber generatedAt')
-    .lean();
+  if (searchTerm) {
+    const searchRegex = new RegExp(escapeRegex(searchTerm), 'i');
 
-  const earningByOrderId = new Map(
-    earnings.map(earning => [String(earning.order), earning]),
+    pipeline.push({
+      $match: {
+        $or: [
+          { orderIdText: searchRegex },
+          { 'customer.name': searchRegex },
+          { 'customer.email': searchRegex },
+          { 'order.customer.name': searchRegex },
+          { 'order.customer.email': searchRegex },
+          { 'order.driver.name': searchRegex },
+          { 'order.driver.email': searchRegex },
+        ],
+      },
+    });
+  }
+
+  pipeline.push(
+    { $sort: { createdAt: -1 } },
+    {
+      $project: {
+        orderDoc: 0,
+        paymentCustomer: 0,
+        orderCustomer: 0,
+        orderDriver: 0,
+        earning: 0,
+        invoice: 0,
+        orderIdText: 0,
+      },
+    },
+    {
+      $facet: {
+        data: [{ $skip: skip }, { $limit: limit }],
+        meta: [{ $count: 'total' }],
+      },
+    },
   );
-  const invoiceByOrderId = new Map(
-    invoices.map(invoice => [String(invoice.order), invoice]),
-  );
 
-  const data = payments.map(payment => {
-    const orderId = String(payment.order?._id ?? payment.order ?? '');
-    const earning = earningByOrderId.get(orderId);
-    const invoice = invoiceByOrderId.get(orderId);
+  const [result] = await PaymentModel.aggregate<{
+    data: unknown[];
+    meta: { total: number }[];
+  }>(pipeline);
 
-    return {
-      ...payment,
-      amountGross: earning?.amountGross ?? payment.amount ?? 0,
-      amountDriver: earning?.amountDriver ?? 0,
-      amountPlatform: earning?.amountPlatform ?? 0,
-      payoutStatus: earning?.payoutStatus ?? null,
-      invoiceNumber: invoice?.invoiceNumber ?? null,
-      invoiceGeneratedAt: invoice?.generatedAt ?? null,
-    };
-  });
+  const data = result?.data ?? [];
+  const total = result?.meta[0]?.total ?? 0;
 
   return {
     data,
