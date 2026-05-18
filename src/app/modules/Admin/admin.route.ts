@@ -47,6 +47,13 @@ router.patch(
   AdminController.updateDriverStatus,
 );
 
+// updateDriverTier
+router.patch(
+  '/drivers/:id/tier',
+  auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
+  AdminController.updateDriverTier,
+);
+
 // getBookings
 router.get(
   '/get-all-bookings',

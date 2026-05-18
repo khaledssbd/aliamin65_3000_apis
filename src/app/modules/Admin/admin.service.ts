@@ -269,6 +269,18 @@ const updateDriverStatusIntoDB = async (
   ).lean();
 };
 
+// updateDriverTierIntoDB
+const updateDriverTierIntoDB = async (userId: string, reputationTier: number) => {
+  const tier = Math.max(1, Math.floor(Number(reputationTier) || 1));
+  const capacityLimit = tier * 3;
+
+  return DriverModel.findOneAndUpdate(
+    { user: userId },
+    { $set: { reputationTier: tier, capacityLimit } },
+    { returnDocument: 'after' },
+  ).lean();
+};
+
 // getBookingsFromDB
 const getBookingsFromDB = async (query: Record<string, unknown>) => {
   const page = Number(query.page) || 1;
@@ -303,8 +315,12 @@ const getPaymentHistoriesFromDB = async (query: Record<string, unknown>) => {
   const limit = Math.max(1, Number(query.limit) || 10);
   const skip = (page - 1) * limit;
   const searchTerm = String(query.searchTerm ?? '').trim();
-  const payoutStatus = String(query.payoutStatus ?? '').trim().toLowerCase();
-  const paymentStatus = String(query.paymentStatus ?? '').trim().toLowerCase();
+  const payoutStatus = String(query.payoutStatus ?? '')
+    .trim()
+    .toLowerCase();
+  const paymentStatus = String(query.paymentStatus ?? '')
+    .trim()
+    .toLowerCase();
   const fromDate = String(query.fromDate ?? '').trim();
   const toDate = String(query.toDate ?? '').trim();
 
@@ -467,11 +483,7 @@ const getPaymentHistoriesFromDB = async (query: Record<string, unknown>) => {
     {
       $set: {
         order: {
-          $cond: [
-            { $ifNull: ['$orderDoc._id', false] },
-            '$orderDoc',
-            '$order',
-          ],
+          $cond: [{ $ifNull: ['$orderDoc._id', false] }, '$orderDoc', '$order'],
         },
         orderIdText: {
           $toString: { $ifNull: ['$orderDoc._id', '$order'] },
@@ -553,6 +565,7 @@ export const AdminService = {
   getUsersByRoleFromDB,
   toggleUserStatusIntoDB,
   updateDriverStatusIntoDB,
+  updateDriverTierIntoDB,
   getBookingsFromDB,
   getPaymentHistoriesFromDB,
 };

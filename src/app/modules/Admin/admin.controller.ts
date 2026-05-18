@@ -106,6 +106,29 @@ const updateDriverStatus = asyncHandler(async (req, res) => {
   });
 });
 
+// updateDriverTier
+const updateDriverTier = asyncHandler(async (req, res) => {
+  const reputationTier = Number(req.body?.reputationTier);
+  const result = await AdminService.updateDriverTierIntoDB(
+    String(req.params.id),
+    reputationTier,
+  );
+
+  if (!result) {
+    return sendResponse(res, {
+      statusCode: httpStatus.BAD_REQUEST,
+      message: 'Driver profile not found or invalid tier provided!',
+      data: null,
+    });
+  }
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Driver tier updated successfully!',
+    data: result,
+  });
+});
+
 // getBookings
 const getBookings = asyncHandler(async (req, res) => {
   const result = await AdminService.getBookingsFromDB(req.query);
@@ -137,6 +160,7 @@ export const AdminController = {
   getUsers,
   toggleUserStatus,
   updateDriverStatus,
+  updateDriverTier,
   getBookings,
   getPaymentHistories,
 };

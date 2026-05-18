@@ -39,7 +39,25 @@ const getDriverProfileFromDB = async (userId: Types.ObjectId) => {
 
 // 4. getAvailableJobsForDriverFromDB
 const getAvailableJobsForDriverFromDB = async (userId: Types.ObjectId) => {
-  void userId;
+  const driver = await DriverModel.findOne({ user: userId }).select(
+    'capacityLimit status',
+  );
+
+  if (!driver || driver.status !== 'APPROVED') return [];
+
+  const activeJobsCount = await OrderModel.countDocuments({
+    driver: userId,
+    status: {
+      $nin: [
+        ORDER_STATUS.DELIVERED,
+        ORDER_STATUS.COMPLETED,
+        ORDER_STATUS.CANCELED,
+      ],
+    },
+  });
+
+  if (activeJobsCount >= Number(driver.capacityLimit ?? 3)) return [];
+
   return OrderModel.find({
     status: ORDER_STATUS.REQUESTED,
     driver: { $exists: false },
@@ -63,6 +81,21 @@ const acceptJobByDriverIntoDB = async (
 ) => {
   const driver = await DriverModel.findOne({ user: userId });
   if (!driver) return null;
+
+  const activeJobsCount = await OrderModel.countDocuments({
+    driver: userId,
+    status: {
+      $nin: [
+        ORDER_STATUS.DELIVERED,
+        ORDER_STATUS.COMPLETED,
+        ORDER_STATUS.CANCELED,
+      ],
+    },
+  });
+
+  if (activeJobsCount >= Number(driver.capacityLimit ?? 3)) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Driver capacity limit reached!');
+  }
 
   const doc = await OrderModel.findOneAndUpdate(
     {
