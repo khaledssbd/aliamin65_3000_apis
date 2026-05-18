@@ -41,6 +41,9 @@ const getValidatedTipAmount = (tipAmount?: number) => {
   return Math.round(tipAmount * 100) / 100;
 };
 
+const getEffectiveBagCount = (order: { bagCountAtPickup?: number; bagCountAtDelivery?: number; bags: number }) =>
+  Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0);
+
 const getOrderForCustomerPayment = async (
   userId: Types.ObjectId,
   orderId: string,
@@ -169,7 +172,8 @@ const createPaymentIntentForMyOrderIntoDB = async (
   const driverPct = activePricing
     ? activePricing.driverEarningPercentage
     : 70;
-  const totalAmount = order.total + getValidatedTipAmount(tipAmount);
+  const totalAmount =
+    getEffectiveBagCount(order) * Number(order.pricePerBag ?? 0) + getValidatedTipAmount(tipAmount);
 
   const card = await CardModel.findOne({
     user: userId,
@@ -226,7 +230,8 @@ const capturePaymentForMyOrderIntoDB = async (
   }
 
   const order = await getOrderForCustomerPayment(userId, orderId);
-  const totalAmount = order.total + getValidatedTipAmount(tipAmount);
+  const totalAmount =
+    getEffectiveBagCount(order) * Number(order.pricePerBag ?? 0) + getValidatedTipAmount(tipAmount);
   let payment = await PaymentModel.findOne({
     order: orderId,
     customer: userId,

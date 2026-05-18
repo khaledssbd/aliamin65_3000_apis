@@ -28,7 +28,8 @@ const createInvoiceIntoDB = async (orderId: string, totalOverride?: number) => {
     return existingInvoice;
   }
 
-  const baseTotal = order.total;
+  const bagCount = Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0);
+  const baseTotal = bagCount * order.pricePerBag;
   const total = totalOverride ?? baseTotal;
   const tipAmount = Math.max(0, total - baseTotal);
 
@@ -36,7 +37,7 @@ const createInvoiceIntoDB = async (orderId: string, totalOverride?: number) => {
     {
       name: 'Laundry Service',
       amount: order.pricePerBag,
-      quantity: order.bags,
+      quantity: bagCount,
     },
     ...(tipAmount
       ? [
@@ -55,9 +56,9 @@ const createInvoiceIntoDB = async (orderId: string, totalOverride?: number) => {
       order: order._id,
       customer: order.customer,
       invoiceNumber,
-      total,
-      currency: 'USD',
-      lineItems,
+        total,
+        currency: 'USD',
+        lineItems,
       paid: true,
       generatedAt: new Date(),
     },

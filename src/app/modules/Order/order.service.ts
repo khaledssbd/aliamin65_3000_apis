@@ -135,9 +135,19 @@ const updateBagCountIntoDB = async (
   count: number,
 ) => {
   const field = kind === 'pickup' ? 'bagCountAtPickup' : 'bagCountAtDelivery';
+  const order = await OrderModel.findById(id).select('pricePerBag bags');
+  if (!order) return null;
+
+  const effectiveCount = Math.max(0, count);
+  const nextTotal = effectiveCount * Number(order.pricePerBag ?? 0);
   return OrderModel.findByIdAndUpdate(
     id,
-    { $set: { [field]: count } },
+    {
+      $set: {
+        [field]: effectiveCount,
+        ...(kind === 'pickup' ? { total: nextTotal } : {}),
+      },
+    },
     { returnDocument: 'after' },
   );
 };
