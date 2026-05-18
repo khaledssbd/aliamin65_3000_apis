@@ -15,8 +15,9 @@ import { TPickupType, TServiceType } from './order.interface';
 const computeTotal = async (bags: number) => {
   const active = await PricingModel.findOne({});
   const pricePerBag = active?.pricePerBag ?? 45;
+  const driverEarningPercentage = active?.driverEarningPercentage ?? 70;
   const total = bags * pricePerBag;
-  return { pricePerBag, total };
+  return { driverEarningPercentage, pricePerBag, total };
 };
 
 // 1. createOrderIntoDB
@@ -33,7 +34,9 @@ const createOrderIntoDB = async (
     expectedRadiusKm?: number;
   },
 ) => {
-  const { total, pricePerBag } = await computeTotal(payload.bags);
+  const { driverEarningPercentage, total, pricePerBag } = await computeTotal(
+    payload.bags,
+  );
 
   const pickupLat =
     typeof payload.pickupLat === 'number'
@@ -73,6 +76,7 @@ const createOrderIntoDB = async (
     expectedRadiusKm,
     status: ORDER_STATUS.REQUESTED,
     pricePerBag,
+    driverEarningPercentage,
     total,
     timeline: { requestedAt: new Date() },
   });

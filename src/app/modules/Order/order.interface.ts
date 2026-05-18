@@ -22,6 +22,7 @@ export interface IOrder extends Document {
   specialInstructions?: string;
   status: TOrderStatus;
   pricePerBag: number;
+  driverEarningPercentage: number;
   // tip?: number;
   total: number;
   bagCountAtPickup?: number;

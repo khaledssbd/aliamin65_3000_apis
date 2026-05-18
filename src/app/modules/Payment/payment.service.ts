@@ -1,7 +1,6 @@
 import PaymentModel from './payment.model';
 import { Types } from 'mongoose';
 import OrderModel from '../Order/order.model';
-import PricingModel from '../Pricing/pricing.model';
 import CardModel from '../Card/card.model';
 import DriverModel from '../Driver/driver.model';
 import EarningModel from '../Earning/earning.model';
@@ -43,6 +42,14 @@ const getValidatedTipAmount = (tipAmount?: number) => {
 
 const getEffectiveBagCount = (order: { bagCountAtPickup?: number; bagCountAtDelivery?: number; bags: number }) =>
   Math.max(0, order.bagCountAtDelivery ?? order.bagCountAtPickup ?? order.bags ?? 0);
+
+const getOrderDriverEarningPercentage = (order: {
+  driverEarningPercentage?: number;
+}) => {
+  const percentage = Number(order.driverEarningPercentage);
+
+  return Number.isFinite(percentage) && percentage > 0 ? percentage : 70;
+};
 
 const getOrderForCustomerPayment = async (
   userId: Types.ObjectId,
@@ -134,15 +141,13 @@ const finalizeSucceededPayment = async (
   const order = await OrderModel.findById(updated.order);
   if (!order) return updated;
 
-  const activePricing = await PricingModel.findOne({}).sort({ createdAt: -1 });
   const driverPct =
     Number(
       stripePaymentIntent.metadata
         ? stripePaymentIntent.metadata.driverEarningPercentage
         : undefined,
     ) ||
-    (activePricing ? activePricing.driverEarningPercentage : undefined) ||
-    70;
+    getOrderDriverEarningPercentage(order);
   const driverProfile = order.driver
     ? await DriverModel.findOne({ user: order.driver })
     : null;
@@ -187,10 +192,7 @@ const createPaymentIntentForMyOrderIntoDB = async (
   }
 
   const order = await getOrderForCustomerPayment(userId, orderId);
-  const activePricing = await PricingModel.findOne({}).sort({ createdAt: -1 });
-  const driverPct = activePricing
-    ? activePricing.driverEarningPercentage
-    : 70;
+  const driverPct = getOrderDriverEarningPercentage(order);
   const totalAmount =
     getEffectiveBagCount(order) * Number(order.pricePerBag ?? 0) + getValidatedTipAmount(tipAmount);
 
@@ -266,10 +268,7 @@ const capturePaymentForMyOrderIntoDB = async (
     return payment;
   }
 
-  const activePricing = await PricingModel.findOne({}).sort({ createdAt: -1 });
-  const driverPct = activePricing
-    ? activePricing.driverEarningPercentage
-    : 70;
+  const driverPct = getOrderDriverEarningPercentage(order);
   const card = await getPreferredCardForPayment(userId);
 
   if (!card || !card.stripeCustomerId || !card.stripePaymentMethodId) {

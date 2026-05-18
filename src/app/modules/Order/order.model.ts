@@ -38,6 +38,7 @@ const orderSchema = new Schema<IOrder>(
       index: true,
     },
     pricePerBag: { type: Number, required: true },
+    driverEarningPercentage: { type: Number, required: true, default: 70 },
     // tip: { type: Number, default: 0 },
     total: { type: Number, required: true },
     bagCountAtPickup: { type: Number },
