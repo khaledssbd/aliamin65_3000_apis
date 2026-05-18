@@ -16,6 +16,7 @@ import { PageRoutes } from '../modules/Page/page.route';
 import { DispatchRoutes } from '../modules/Dispatch/dispatch.route';
 import { ZoneRoutes } from '../modules/Zone/zone.route';
 import { AdminRoutes } from '../modules/Admin/admin.route';
+import { RatingRoutes } from '../modules/Rating/rating.route';
 // import { AdminLogRoutes } from '../modules/AdminLog/adminLog.route';
 
 const router = Router();
@@ -88,6 +89,10 @@ const moduleRoutes = [
   {
     path: '/admin',
     route: AdminRoutes,
+  },
+  {
+    path: '/ratings',
+    route: RatingRoutes,
   },
   // {
   //   path: '/admin-logs',
