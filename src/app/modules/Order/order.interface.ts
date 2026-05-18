@@ -1,14 +1,7 @@
 import { Document, Types } from 'mongoose';
+import { ORDER_STATUS_VALUES } from '../../constants';
 
-export type TOrderStatus =
-  | 'REQUESTED'
-  | 'DRIVER_ASSIGNED'
-  | 'PICKED_UP'
-  | 'WASHING_DRYING'
-  | 'OUT_FOR_DELIVERY'
-  | 'DELIVERED'
-  | 'COMPLETED'
-  | 'CANCELED';
+export type TOrderStatus = (typeof ORDER_STATUS_VALUES)[number];
 
 export type TServiceType = 'WASH_DRY' | 'DRY_CLEAN';
 export type TPickupType = 'ASAP' | 'SCHEDULED';
@@ -38,6 +31,8 @@ export interface IOrder extends Document {
     driverAssignedAt?: Date;
     pickedUpAt?: Date;
     washingDryingAt?: Date;
+    dryingAt?: Date;
+    foldingAt?: Date;
     outForDeliveryAt?: Date;
     deliveredAt?: Date;
     completedAt?: Date;

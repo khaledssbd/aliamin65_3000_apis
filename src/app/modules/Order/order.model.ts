@@ -1,5 +1,6 @@
 import { Schema, model } from 'mongoose';
 import { IOrder } from './order.interface';
+import { ORDER_STATUS, ORDER_STATUS_VALUES } from '../../constants';
 
 const orderSchema = new Schema<IOrder>(
   {
@@ -32,17 +33,8 @@ const orderSchema = new Schema<IOrder>(
     address: { type: String, required: true, trim: true },
     status: {
       type: String,
-      enum: [
-        'REQUESTED',
-        'DRIVER_ASSIGNED',
-        'PICKED_UP',
-        'WASHING_DRYING',
-        'OUT_FOR_DELIVERY',
-        'DELIVERED',
-        'COMPLETED',
-        'CANCELED',
-      ],
-      default: 'REQUESTED',
+      enum: ORDER_STATUS_VALUES,
+      default: ORDER_STATUS.REQUESTED,
       index: true,
     },
     pricePerBag: { type: Number, required: true },
@@ -55,6 +47,8 @@ const orderSchema = new Schema<IOrder>(
       driverAssignedAt: { type: Date },
       pickedUpAt: { type: Date },
       washingDryingAt: { type: Date },
+      dryingAt: { type: Date },
+      foldingAt: { type: Date },
       outForDeliveryAt: { type: Date },
       deliveredAt: { type: Date },
       completedAt: { type: Date },

@@ -171,12 +171,12 @@ const updateJobStageByDriverIntoDB = async (
   }
 
   if (stage === 'DRYING') {
-    patch.status = ORDER_STATUS.WASHING_DRYING;
+    patch.status = ORDER_STATUS.DRYING;
     patch['timeline.dryingAt'] = now;
   }
 
   if (stage === 'FOLDING') {
-    patch.status = ORDER_STATUS.WASHING_DRYING;
+    patch.status = ORDER_STATUS.FOLDING;
     patch['timeline.foldingAt'] = now;
   }
 
