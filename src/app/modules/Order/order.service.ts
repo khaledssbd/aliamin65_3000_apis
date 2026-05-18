@@ -82,7 +82,10 @@ const createOrderIntoDB = async (
 
 // 2. getMyOrdersFromDB
 const getMyOrdersFromDB = async (customerId: Types.ObjectId) => {
-  return OrderModel.find({ customer: customerId }).sort({ createdAt: -1 });
+  return OrderModel.find({ customer: customerId })
+    .sort({ createdAt: -1 })
+    .populate('customer', 'name email phone image address')
+    .populate('driver', 'name email phone image role isActive');
 };
 
 // 3. getOrderByIdFromDB
