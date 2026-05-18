@@ -56,6 +56,25 @@ const getOrderForCustomerPayment = async (
   return order;
 };
 
+const getPreferredCardForPayment = async (userId: Types.ObjectId) => {
+  const card = await CardModel.findOne({ user: userId }).sort({ isDefault: -1, createdAt: -1 });
+
+  if (!card) {
+    return null;
+  }
+
+  if (!card.isDefault) {
+    await CardModel.updateMany(
+      { user: userId },
+      { $set: { isDefault: false } },
+    );
+    card.isDefault = true;
+    await CardModel.findByIdAndUpdate(card._id, { $set: { isDefault: true } });
+  }
+
+  return card;
+};
+
 const createStripePaymentIntent = async (
   orderId: string,
   userId: Types.ObjectId,
@@ -175,15 +194,12 @@ const createPaymentIntentForMyOrderIntoDB = async (
   const totalAmount =
     getEffectiveBagCount(order) * Number(order.pricePerBag ?? 0) + getValidatedTipAmount(tipAmount);
 
-  const card = await CardModel.findOne({
-    user: userId,
-    isDefault: true,
-  });
+  const card = await getPreferredCardForPayment(userId);
 
   if (!card || !card.stripeCustomerId || !card.stripePaymentMethodId) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      'Default payment card not found',
+      'No saved payment card found. Please add a card first.',
     );
   }
 
@@ -254,15 +270,12 @@ const capturePaymentForMyOrderIntoDB = async (
   const driverPct = activePricing
     ? activePricing.driverEarningPercentage
     : 70;
-  const card = await CardModel.findOne({
-    user: userId,
-    isDefault: true,
-  });
+  const card = await getPreferredCardForPayment(userId);
 
   if (!card || !card.stripeCustomerId || !card.stripePaymentMethodId) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      'Default payment card not found',
+      'No saved payment card found. Please add a card first.',
     );
   }
 
