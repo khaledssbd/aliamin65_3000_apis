@@ -4,6 +4,7 @@ import { Server as IOServer, type Socket } from 'socket.io';
 import OrderModel from '../modules/Order/order.model';
 import UserModel from '../modules/User/user.model';
 import ChatMessageModel from '../modules/Chat/chat.model';
+import { ChatService } from '../modules/Chat/chat.service';
 import mongoose from 'mongoose';
 import { ROLE } from '../modules/User/user.constant';
 import { verifyToken } from '../lib';
@@ -175,106 +176,7 @@ export const initSocket = (server: HttpServer) => {
 
   const listThreadsForUserFromDB = async (userId: string, role?: string) => {
     const uid = new mongoose.Types.ObjectId(userId);
-    const isAdmin = role === ROLE.ADMIN || role === ROLE.SUPER_ADMIN;
-    const matchStage = isAdmin
-      ? { order: { $exists: true, $ne: null } }
-      : { $or: [{ from: uid }, { to: uid }] };
-
-    const threads = await ChatMessageModel.aggregate([
-      { $match: matchStage },
-      { $sort: { createdAt: 1 } },
-      {
-        $group: {
-          _id: '$order',
-          lastMessageAt: { $last: '$createdAt' },
-          lastMessage: { $last: '$content' },
-          lastContentType: { $last: '$contentType' },
-          lastFrom: { $last: '$from' },
-          unreadCount: {
-            $sum: {
-              $cond: [
-                {
-                  $and: [
-                    { $eq: ['$to', uid] },
-                    {
-                      $or: [{ $eq: ['$readAt', null] }, { $not: ['$readAt'] }],
-                    },
-                  ],
-                },
-                1,
-                0,
-              ],
-            },
-          },
-        },
-      },
-      {
-        $lookup: {
-          from: 'orders',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'order',
-        },
-      },
-      { $unwind: { path: '$order', preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'order.customer',
-          foreignField: '_id',
-          as: 'customer',
-        },
-      },
-      { $unwind: { path: '$customer', preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'order.driver',
-          foreignField: '_id',
-          as: 'driver',
-        },
-      },
-      { $unwind: { path: '$driver', preserveNullAndEmptyArrays: true } },
-      {
-        $project: {
-          orderId: '$_id',
-          lastMessageAt: 1,
-          lastMessage: 1,
-          lastContentType: 1,
-          lastFrom: 1,
-          unreadCount: 1,
-          order: {
-            _id: '$order._id',
-            status: '$order.status',
-            serviceType: '$order.serviceType',
-            address: '$order.address',
-            total: '$order.total',
-            createdAt: '$order.createdAt',
-          },
-          customer: {
-            _id: '$customer._id',
-            name: '$customer.name',
-            email: '$customer.email',
-            phone: '$customer.phone',
-            image: '$customer.image',
-            role: '$customer.role',
-            isActive: '$customer.isActive',
-          },
-          driver: {
-            _id: '$driver._id',
-            name: '$driver.name',
-            email: '$driver.email',
-            phone: '$driver.phone',
-            image: '$driver.image',
-            role: '$driver.role',
-            isActive: '$driver.isActive',
-          },
-        },
-      },
-      { $sort: { lastMessageAt: -1 } },
-    ]);
-
-    return threads;
+    return ChatService.getChatThreadsFromDB(uid, role as never);
   };
 
   const markConversationAsReadInDB = async (

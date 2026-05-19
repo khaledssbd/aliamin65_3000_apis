@@ -1,6 +1,7 @@
 import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { ChatService } from './chat.service';
+import { getIO } from '../../socket';
 
 // 1. getChatMessages
 const getChatMessages = asyncHandler(async (req, res) => {
@@ -53,6 +54,8 @@ const sendSupportMessage = asyncHandler(async (req, res) => {
     content: req.body?.content,
   });
 
+  getIO()?.of('/chat').emit('chat:message:notify', { threadType: 'SUPPORT' });
+
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     message: 'Support message sent',
@@ -82,6 +85,8 @@ const sendSupportImage = asyncHandler(async (req, res) => {
     to: req.body?.to ?? (req.query?.to ? String(req.query.to) : undefined),
     imageFile: req.file as Express.Multer.File,
   });
+
+  getIO()?.of('/chat').emit('chat:message:notify', { threadType: 'SUPPORT' });
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,

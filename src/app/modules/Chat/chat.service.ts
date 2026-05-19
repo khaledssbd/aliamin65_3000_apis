@@ -100,6 +100,16 @@ const getSupportMessagesFromDB = async (userId: string, to?: string) => {
   const receiverId = await getSupportReceiverId(userId, to);
   const supportUserId = receiverId === userId ? String(to ?? '') : receiverId;
 
+  await ChatMessageModel.updateMany(
+    {
+      order: { $exists: false },
+      from: supportUserId,
+      to: userId,
+      $or: [{ readAt: { $exists: false } }, { readAt: null }],
+    },
+    { $set: { readAt: new Date() } },
+  );
+
   return ChatMessageModel.find(supportPairFilter(userId, supportUserId))
     .sort({ createdAt: 1 })
     .populate('from', 'name email phone image role isActive')
@@ -259,12 +269,21 @@ const sendChatImageIntoDB = async (payload: TSendChatImagePayload) => {
 // 2. getChatThreadsFromDB
 const getChatThreadsFromDB = async (userId: Types.ObjectId, role?: TRole) => {
   const isAdmin = role === ROLE.ADMIN || role === ROLE.SUPER_ADMIN;
-  const matchStage = isAdmin
+  const orderMatchStage = isAdmin
     ? { order: { $exists: true, $ne: null } }
-    : { $or: [{ from: userId }, { to: userId }] };
+    : {
+        order: { $exists: true, $ne: null },
+        $or: [{ from: userId }, { to: userId }],
+      };
+  const supportMatchStage = isAdmin
+    ? { order: { $exists: false } }
+    : {
+        order: { $exists: false },
+        $or: [{ from: userId }, { to: userId }],
+      };
 
-  return ChatMessageModel.aggregate([
-    { $match: matchStage },
+  const orderThreads = await ChatMessageModel.aggregate([
+    { $match: orderMatchStage },
     { $sort: { createdAt: 1 } },
     {
       $group: {
@@ -320,6 +339,7 @@ const getChatThreadsFromDB = async (userId: Types.ObjectId, role?: TRole) => {
     { $unwind: { path: '$driver', preserveNullAndEmptyArrays: true } },
     {
       $project: {
+        threadType: { $literal: 'ORDER' },
         orderId: '$_id',
         lastMessageAt: 1,
         lastMessage: 1,
@@ -356,6 +376,102 @@ const getChatThreadsFromDB = async (userId: Types.ObjectId, role?: TRole) => {
     },
     { $sort: { lastMessageAt: -1 } },
   ]);
+
+  const supportThreads = await ChatMessageModel.aggregate([
+    { $match: supportMatchStage },
+    { $sort: { createdAt: 1 } },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'from',
+        foreignField: '_id',
+        as: 'fromUser',
+      },
+    },
+    { $unwind: { path: '$fromUser', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'to',
+        foreignField: '_id',
+        as: 'toUser',
+      },
+    },
+    { $unwind: { path: '$toUser', preserveNullAndEmptyArrays: true } },
+    {
+      $addFields: {
+        supportUser: {
+          $cond: [
+            { $in: ['$fromUser.role', [ROLE.ADMIN, ROLE.SUPER_ADMIN]] },
+            '$toUser',
+            '$fromUser',
+          ],
+        },
+      },
+    },
+    {
+      $group: {
+        _id: '$supportUser._id',
+        supportUser: { $last: '$supportUser' },
+        lastMessageAt: { $last: '$createdAt' },
+        lastMessage: { $last: '$content' },
+        lastContentType: { $last: '$contentType' },
+        lastFrom: { $last: '$from' },
+        unreadCount: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $eq: ['$to', userId] },
+                  {
+                    $or: [{ $eq: ['$readAt', null] }, { $not: ['$readAt'] }],
+                  },
+                ],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        threadType: { $literal: 'SUPPORT' },
+        orderId: null,
+        supportUser: {
+          _id: '$supportUser._id',
+          name: '$supportUser.name',
+          email: '$supportUser.email',
+          phone: '$supportUser.phone',
+          image: '$supportUser.image',
+          role: '$supportUser.role',
+          isActive: '$supportUser.isActive',
+        },
+        customer: {
+          _id: '$supportUser._id',
+          name: '$supportUser.name',
+          email: '$supportUser.email',
+          phone: '$supportUser.phone',
+          image: '$supportUser.image',
+          role: '$supportUser.role',
+          isActive: '$supportUser.isActive',
+        },
+        lastMessageAt: 1,
+        lastMessage: 1,
+        lastContentType: 1,
+        lastFrom: 1,
+        unreadCount: 1,
+      },
+    },
+    { $sort: { lastMessageAt: -1 } },
+  ]);
+
+  return [...orderThreads, ...supportThreads].sort(
+    (a, b) =>
+      new Date(b.lastMessageAt ?? 0).getTime() -
+      new Date(a.lastMessageAt ?? 0).getTime(),
+  );
 };
 
 export const ChatService = {
