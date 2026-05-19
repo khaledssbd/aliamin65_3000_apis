@@ -48,23 +48,25 @@ const capturePaymentForMyOrder = asyncHandler(async (req, res) => {
       paymentId: String(doc._id),
       status: doc.status,
       orderStatus: order?.status,
+      stage: 'PAYMENT_CONFIRMED',
     };
 
-    ordersNs?.to(`customer:${String(doc.customer)}`).emit(
-      'order:payment:confirmed',
-      payload,
-    );
+    ordersNs
+      ?.to(`customer:${String(doc.customer)}`)
+      .emit('order:payment:confirmed', payload);
+    ordersNs
+      ?.to(`customer:${String(doc.customer)}`)
+      .emit('order:stage:updated', payload);
 
     if (order?.driver) {
-      ordersNs
-        ?.to(`driver:${String(order.driver)}`)
-        .emit('order:payment:confirmed', payload);
+      const driverRoom = `driver:${String(order.driver)}`;
+      ordersNs?.to(driverRoom).emit('order:payment:confirmed', payload);
+      ordersNs?.to(driverRoom).emit('order:stage:updated', payload);
     }
 
-    ordersNs?.to(`order:${String(doc.order)}`).emit(
-      'order:payment:confirmed',
-      payload,
-    );
+    const orderRoom = `order:${String(doc.order)}`;
+    ordersNs?.to(orderRoom).emit('order:payment:confirmed', payload);
+    ordersNs?.to(orderRoom).emit('order:stage:updated', payload);
   }
 
   sendResponse(res, {
