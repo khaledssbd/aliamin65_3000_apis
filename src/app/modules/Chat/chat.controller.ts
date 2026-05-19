@@ -15,6 +15,19 @@ const getChatMessages = asyncHandler(async (req, res) => {
   });
 });
 
+const getSupportMessages = asyncHandler(async (req, res) => {
+  const docs = await ChatService.getSupportMessagesFromDB(
+    String(req.user._id),
+    req.query?.to ? String(req.query.to) : undefined,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Support messages retrieved',
+    data: docs,
+  });
+});
+
 // sendChatMessage
 const sendChatMessage = asyncHandler(async (req, res) => {
   const doc = await ChatService.sendChatMessageIntoDB({
@@ -28,6 +41,21 @@ const sendChatMessage = asyncHandler(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     message: 'Chat message sent',
+    data: doc,
+  });
+});
+
+const sendSupportMessage = asyncHandler(async (req, res) => {
+  const doc = await ChatService.sendSupportMessageIntoDB({
+    senderId: String(req.user._id),
+    to: req.body?.to,
+    contentType: req.body?.contentType,
+    content: req.body?.content,
+  });
+
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    message: 'Support message sent',
     data: doc,
   });
 });
@@ -48,6 +76,20 @@ const sendChatImage = asyncHandler(async (req, res) => {
   });
 });
 
+const sendSupportImage = asyncHandler(async (req, res) => {
+  const doc = await ChatService.sendSupportImageIntoDB({
+    senderId: String(req.user._id),
+    to: req.body?.to ?? (req.query?.to ? String(req.query.to) : undefined),
+    imageFile: req.file as Express.Multer.File,
+  });
+
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    message: 'Support image sent',
+    data: doc,
+  });
+});
+
 // 2. getChatThreads
 const getChatThreads = asyncHandler(async (req, res) => {
   const docs = await ChatService.getChatThreadsFromDB(
@@ -64,7 +106,10 @@ const getChatThreads = asyncHandler(async (req, res) => {
 
 export const ChatController = {
   getChatMessages,
+  getSupportMessages,
   sendChatMessage,
+  sendSupportMessage,
   sendChatImage,
+  sendSupportImage,
   getChatThreads,
 };

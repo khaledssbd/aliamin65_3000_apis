@@ -20,6 +20,7 @@ const chatMessageSchema = new Schema<IChatMessage>(
 );
 
 chatMessageSchema.index({ order: 1, createdAt: -1 });
+chatMessageSchema.index({ from: 1, to: 1, createdAt: -1 });
 
 const ChatMessageModel = model<IChatMessage>('ChatMessage', chatMessageSchema);
 export default ChatMessageModel;

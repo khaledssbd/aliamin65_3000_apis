@@ -4,6 +4,7 @@ import httpStatus from 'http-status';
 import { AppError } from '../../utils';
 import { ROLE, TRole } from '../User/user.constant';
 import OrderModel from '../Order/order.model';
+import UserModel from '../User/user.model';
 import { TChatContentType } from './chat.interface';
 import { sendImageToCloudinary } from '../../lib';
 
@@ -33,6 +34,126 @@ type TSendChatImagePayload = {
   senderId: string;
   to?: string;
   imageFile: Express.Multer.File;
+};
+
+type TSupportMessagePayload = {
+  senderId: string;
+  to?: string;
+  contentType?: TChatContentType;
+  content?: string;
+};
+
+type TSupportImagePayload = {
+  senderId: string;
+  to?: string;
+  imageFile: Express.Multer.File;
+};
+
+const getSuperAdminUser = async () => {
+  const superAdmin = await UserModel.findOne({
+    role: ROLE.SUPER_ADMIN,
+    isActive: true,
+  }).select('name email phone image role isActive');
+
+  if (!superAdmin) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Support admin not found');
+  }
+
+  return superAdmin;
+};
+
+const getSupportReceiverId = async (senderId: string, to?: string) => {
+  if (!Types.ObjectId.isValid(senderId)) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid sender id');
+  }
+
+  const sender = await UserModel.findById(senderId).select('role');
+  if (!sender) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Sender not found');
+  }
+
+  const isAdmin =
+    sender.role === ROLE.ADMIN || sender.role === ROLE.SUPER_ADMIN;
+
+  if (isAdmin && to && Types.ObjectId.isValid(to)) return to;
+  if (sender.role === ROLE.SUPER_ADMIN) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Support user is required');
+  }
+
+  const superAdmin = await getSuperAdminUser();
+  return String(superAdmin._id);
+};
+
+const supportPairFilter = (userId: string, supportUserId: string) => ({
+  order: { $exists: false },
+  $or: [
+    { from: userId, to: supportUserId },
+    { from: supportUserId, to: userId },
+  ],
+});
+
+const getSupportMessagesFromDB = async (userId: string, to?: string) => {
+  if (!Types.ObjectId.isValid(userId)) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid user id');
+  }
+
+  const receiverId = await getSupportReceiverId(userId, to);
+  const supportUserId = receiverId === userId ? String(to ?? '') : receiverId;
+
+  return ChatMessageModel.find(supportPairFilter(userId, supportUserId))
+    .sort({ createdAt: 1 })
+    .populate('from', 'name email phone image role isActive')
+    .populate('to', 'name email phone image role isActive')
+    .lean();
+};
+
+const sendSupportMessageIntoDB = async (payload: TSupportMessagePayload) => {
+  const content = String(payload.content ?? '').trim();
+  const contentType = payload.contentType ?? 'TEXT';
+
+  if (!content) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Message content is required');
+  }
+
+  if (!['TEXT', 'IMAGE'].includes(contentType)) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid message content type');
+  }
+
+  const receiverId = await getSupportReceiverId(payload.senderId, payload.to);
+
+  const created = await ChatMessageModel.create({
+    from: payload.senderId,
+    to: receiverId,
+    contentType,
+    content,
+    deliveredAt: new Date(),
+  });
+
+  return ChatMessageModel.findById(created._id)
+    .populate('from', 'name email phone image role isActive')
+    .populate('to', 'name email phone image role isActive')
+    .lean();
+};
+
+const sendSupportImageIntoDB = async (payload: TSupportImagePayload) => {
+  if (!payload.imageFile) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Image is required');
+  }
+
+  const receiverId = await getSupportReceiverId(payload.senderId, payload.to);
+  const uploaded = await sendImageToCloudinary(payload.imageFile);
+  const created = await ChatMessageModel.create({
+    from: payload.senderId,
+    to: receiverId,
+    contentType: 'IMAGE',
+    content: uploaded.secure_url,
+    deliveredAt: new Date(),
+  });
+
+  return ChatMessageModel.findById(created._id)
+    .populate('from', 'name email phone image role isActive')
+    .populate('to', 'name email phone image role isActive')
+    .lean();
 };
 
 // sendChatMessageIntoDB
@@ -239,7 +360,10 @@ const getChatThreadsFromDB = async (userId: Types.ObjectId, role?: TRole) => {
 
 export const ChatService = {
   getChatMessagesFromDB,
+  getSupportMessagesFromDB,
   sendChatMessageIntoDB,
+  sendSupportMessageIntoDB,
   sendChatImageIntoDB,
+  sendSupportImageIntoDB,
   getChatThreadsFromDB,
 };

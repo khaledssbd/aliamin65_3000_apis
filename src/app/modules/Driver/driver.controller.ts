@@ -55,6 +55,32 @@ const getMyDriverProfile = asyncHandler(async (req, res) => {
   });
 });
 
+const createStripeConnectAccountLink = asyncHandler(async (req, res) => {
+  const result = await DriverService.createStripeConnectAccountLinkIntoDB(
+    req.user._id,
+    {
+      returnUrl: req.body?.returnUrl,
+      refreshUrl: req.body?.refreshUrl,
+    },
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Stripe onboarding link created successfully!',
+    data: result,
+  });
+});
+
+const getStripeConnectStatus = asyncHandler(async (req, res) => {
+  const result = await DriverService.getStripeConnectStatusFromDB(req.user._id);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Stripe connect status fetched successfully!',
+    data: result,
+  });
+});
+
 // 5. updateDriverAvailability
 const updateDriverAvailability = asyncHandler(async (req, res) => {
   const result = await DriverService.setDriverAvailabilityIntoDB(
@@ -203,6 +229,8 @@ export const DriverController = {
   updateDriverInsurance,
   updateDriverVehicle,
   getMyDriverProfile,
+  createStripeConnectAccountLink,
+  getStripeConnectStatus,
   updateDriverAvailability,
   getAvailableJobsForDriver,
   getMyJobsForDriver,

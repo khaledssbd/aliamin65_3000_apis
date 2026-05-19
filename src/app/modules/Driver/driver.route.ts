@@ -33,6 +33,18 @@ router.post(
 // 4. getMyDriverProfile
 router.get('/me', auth(ROLE.DRIVER), DriverController.getMyDriverProfile);
 
+router.post(
+  '/stripe/connect-account',
+  auth(ROLE.DRIVER),
+  DriverController.createStripeConnectAccountLink,
+);
+
+router.get(
+  '/stripe/connect-status',
+  auth(ROLE.DRIVER),
+  DriverController.getStripeConnectStatus,
+);
+
 // 5. updateDriverAvailability
 router.patch(
   '/availability',

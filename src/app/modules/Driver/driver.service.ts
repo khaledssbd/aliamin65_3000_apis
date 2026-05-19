@@ -1,9 +1,18 @@
 import DriverModel from './driver.model';
 import { Types } from 'mongoose';
 import OrderModel from '../Order/order.model';
+import UserModel from '../User/user.model';
 import { ORDER_STATUS } from '../../constants';
 import { AppError } from '../../utils';
 import httpStatus from 'http-status';
+import Stripe from 'stripe';
+import config from '../../config';
+
+const stripe = config.stripe_secret_key
+  ? new Stripe(config.stripe_secret_key, {
+      apiVersion: '2026-04-22.dahlia',
+    })
+  : null;
 
 // 1. upsertDriverProfileIntoDB
 const upsertDriverProfileIntoDB = async (
@@ -37,13 +46,126 @@ const getDriverProfileFromDB = async (userId: Types.ObjectId) => {
   return DriverModel.findOne({ user: userId });
 };
 
+const getStripeAccountSummary = async (accountId?: string) => {
+  if (!accountId || !stripe) {
+    return {
+      accountId,
+      chargesEnabled: false,
+      payoutsEnabled: false,
+      detailsSubmitted: false,
+    };
+  }
+
+  const account = await stripe.accounts.retrieve(accountId);
+
+  return {
+    accountId: account.id,
+    chargesEnabled: Boolean(account.charges_enabled),
+    payoutsEnabled: Boolean(account.payouts_enabled),
+    detailsSubmitted: Boolean(account.details_submitted),
+  };
+};
+
+const createStripeConnectAccountLinkIntoDB = async (
+  userId: Types.ObjectId,
+  payload?: { returnUrl?: string; refreshUrl?: string },
+) => {
+  if (!stripe) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Stripe is not configured');
+  }
+
+  const user = await UserModel.findById(userId).select('email name phone');
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, 'User not found!');
+  }
+
+  const driver = await DriverModel.findOneAndUpdate(
+    { user: userId },
+    { $setOnInsert: { user: userId } },
+    {
+      upsert: true,
+      returnDocument: 'after',
+      setDefaultsOnInsert: true,
+    },
+  );
+
+  let accountId = driver.stripeConnectedAccountId;
+
+  if (!accountId) {
+    const account = await stripe.accounts.create({
+      type: 'express',
+      country: 'US',
+      email: user.email,
+      business_type: 'individual',
+      capabilities: {
+        transfers: { requested: true },
+      },
+      metadata: {
+        driverUserId: String(userId),
+      },
+    });
+
+    accountId = account.id;
+    driver.stripeConnectedAccountId = account.id;
+    await driver.save();
+  }
+
+  const returnUrl =
+    payload?.returnUrl ||
+    config.stripe_connect_return_url ||
+    'https://example.com/stripe-connect/return';
+  const refreshUrl =
+    payload?.refreshUrl ||
+    config.stripe_connect_refresh_url ||
+    returnUrl;
+
+  const accountLink = await stripe.accountLinks.create({
+    account: accountId,
+    type: 'account_onboarding',
+    return_url: returnUrl,
+    refresh_url: refreshUrl,
+  });
+
+  return {
+    ...(await getStripeAccountSummary(accountId)),
+    onboardingUrl: accountLink.url,
+  };
+};
+
+const getStripeConnectStatusFromDB = async (userId: Types.ObjectId) => {
+  const driver = await DriverModel.findOne({ user: userId }).select(
+    'stripeConnectedAccountId',
+  );
+
+  return getStripeAccountSummary(driver?.stripeConnectedAccountId);
+};
+
+const ensureDriverStripeConnectReady = async (accountId?: string) => {
+  const status = await getStripeAccountSummary(accountId);
+
+  if (!status.accountId || !status.detailsSubmitted || !status.payoutsEnabled) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'Please connect Stripe before accepting orders.',
+    );
+  }
+};
+
 // 4. getAvailableJobsForDriverFromDB
 const getAvailableJobsForDriverFromDB = async (userId: Types.ObjectId) => {
   const driver = await DriverModel.findOne({ user: userId }).select(
-    'capacityLimit status',
+    'capacityLimit status stripeConnectedAccountId',
   );
 
   if (!driver || driver.status !== 'APPROVED') return [];
+
+  const stripeStatus = await getStripeAccountSummary(
+    driver.stripeConnectedAccountId,
+  );
+
+  if (!stripeStatus.detailsSubmitted || !stripeStatus.payoutsEnabled) {
+    return [];
+  }
 
   const activeJobsCount = await OrderModel.countDocuments({
     driver: userId,
@@ -81,6 +203,8 @@ const acceptJobByDriverIntoDB = async (
 ) => {
   const driver = await DriverModel.findOne({ user: userId });
   if (!driver) return null;
+
+  await ensureDriverStripeConnectReady(driver.stripeConnectedAccountId);
 
   const activeJobsCount = await OrderModel.countDocuments({
     driver: userId,
@@ -154,6 +278,25 @@ const updateJobStageByDriverIntoDB = async (
   stage: 'PICKUP' | 'WASHING' | 'DRYING' | 'FOLDING' | 'DELIVERY',
   bagCount?: number,
 ) => {
+  const currentOrder = await OrderModel.findOne({
+    _id: orderId,
+    driver: userId,
+  }).select('status');
+
+  if (!currentOrder) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Driver job not found!');
+  }
+
+  if (
+    currentOrder.status === ORDER_STATUS.COMPLETED ||
+    currentOrder.status === ORDER_STATUS.CANCELED
+  ) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'This order is already completed and cannot be updated.',
+    );
+  }
+
   const now = new Date();
   const patch: Record<string, unknown> = {};
 
@@ -195,10 +338,6 @@ const updateJobStageByDriverIntoDB = async (
     { returnDocument: 'after' },
   ).populate('customer', 'name email phone image address');
 
-  if (!updatedOrder) {
-    throw new AppError(httpStatus.NOT_FOUND, 'Driver job not found!');
-  }
-
   return updatedOrder;
 };
 
@@ -206,6 +345,8 @@ export const DriverService = {
   upsertDriverProfileIntoDB,
   setDriverAvailabilityIntoDB,
   getDriverProfileFromDB,
+  createStripeConnectAccountLinkIntoDB,
+  getStripeConnectStatusFromDB,
   getAvailableJobsForDriverFromDB,
   getMyJobsForDriverFromDB,
   acceptJobByDriverIntoDB,
