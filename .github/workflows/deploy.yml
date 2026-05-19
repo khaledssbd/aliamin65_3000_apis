@@ -1,0 +1,80 @@
+name: Deploy SudsyGo API to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.AWS_HOST }}
+          username: ${{ secrets.AWS_USER }}
+          key: ${{ secrets.AWS_SSH_KEY }}
+          port: ${{ secrets.AWS_PORT }}
+          script: |
+            # কোনো কমান্ড ফেইল করলে স্ক্রিপ্ট যেন সাথে সাথে বন্ধ হয়ে যায়
+            set -e
+
+            # নোড এবং গ্লোবাল পাথ সেটআপ (PM2 বা PNPM খুঁজে না পেলে এটি সাহায্য করবে)
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+            echo "=================================================="
+            echo "🚀 Starting SudsyGo API Deployment Process..."
+            echo "=================================================="
+
+            # ১. প্রজেক্ট ডিরেক্টরিতে যাওয়া
+            echo "📂 Navigating to project directory..."
+            cd ${{ secrets.PROJECT_PATH }}
+            echo "✅ Inside project directory: $(pwd)"
+
+            # ২. কোড আপডেট করা
+            echo "🔄 Pulling latest changes from GitHub (main branch)..."
+            git pull origin main
+            echo "✅ Git pull completed successfully!"
+
+            # ৩. Node Environment / Packagemanager কনফিগারেশন
+            echo "📦 Enabling Corepack and preparing PNPM..."
+            corepack enable
+            corepack prepare pnpm@latest --activate
+            echo "✅ PNPM Version: $(pnpm --version)"
+
+            # ৪. ডিপেনডেন্সি ইনস্টল এবং বিল্ড
+            echo "⏳ Installing dependencies (--frozen-lockfile)..."
+            pnpm install --frozen-lockfile
+
+            echo "🏗️ Building the application..."
+            pnpm build
+            echo "✅ Build completed successfully!"
+
+            # ৫. এনভায়রনমেন্ট ভেরিয়েবল (.env) তৈরি করা
+            echo "🔒 Updating .env file from GitHub Secrets..."
+            echo "${{ secrets.ENV_VARIABLES }}" > .env
+            echo "✅ .env file written successfully."
+
+            # ৬. PM2 দিয়ে অ্যাপ্লিকেশন রিস্টার্ট বা স্টার্ট করা
+            # --update-env ফ্ল্যাগটি নতুন .env ভেরিয়েবলগুলোকে PM2 তে লোড করতে সাহায্য করবে
+            echo "🔄 Checking PM2 process status..."
+            if pm2 list | grep -q "sudsygo-api"; then
+              echo "🔄 [PM2] 'sudsygo-api' process found. Restarting and updating env..."
+              pm2 restart sudsygo-api --update-env
+              echo "✅ [PM2] Process restarted!"
+            else
+              echo "🚀 [PM2] 'sudsygo-api' process NOT found. Starting a new process..."
+              pm2 start dist/server.js --name sudsygo-api
+              echo "✅ [PM2] New process started!"
+            fi
+
+            # ৭. PM2 স্টেট সেভ করা
+            echo "💾 Saving PM2 process list..."
+            pm2 save
+
+            echo "=================================================="
+            echo "🎉 Deployment successfully finished for SudsyGo API!"
+            echo "=================================================="
