@@ -10,6 +10,7 @@ import { AppError } from '../../utils';
 import httpStatus from 'http-status';
 import { InvoiceService } from '../Invoice/invoice.service';
 import { ROLE } from '../User/user.constant';
+import { ORDER_STATUS } from '../../constants';
 
 const stripe = config.stripe_secret_key
   ? new Stripe(config.stripe_secret_key, {
@@ -127,6 +128,18 @@ const createStripePaymentIntent = async (
   });
 };
 
+const isReturnUrlRequiredError = (error: unknown) => {
+  const message =
+    error &&
+    typeof error === 'object' &&
+    'message' in error &&
+    typeof error.message === 'string'
+      ? error.message
+      : '';
+
+  return message.includes('return_url') || message.includes('allow_redirects');
+};
+
 const finalizeSucceededPayment = async (
   paymentId: Types.ObjectId,
   stripePaymentIntent: TStripePaymentIntent,
@@ -154,6 +167,15 @@ const finalizeSucceededPayment = async (
 
   const order = await OrderModel.findById(updated.order);
   if (!order) return updated;
+
+  if (order.status !== ORDER_STATUS.COMPLETED) {
+    await OrderModel.findByIdAndUpdate(order._id, {
+      $set: {
+        status: ORDER_STATUS.COMPLETED,
+        'timeline.completedAt': new Date(),
+      },
+    });
+  }
 
   const driverPct =
     Number(
@@ -189,6 +211,55 @@ const finalizeSucceededPayment = async (
   await InvoiceService.createInvoiceIntoDB(String(order._id), updated.amount);
 
   return updated;
+};
+
+const replacePaymentIntentForPayment = async ({
+  payment,
+  orderId,
+  userId,
+  totalAmount,
+  card,
+  driverPct,
+}: {
+  payment: NonNullable<Awaited<ReturnType<typeof PaymentModel.findOne>>>;
+  orderId: string;
+  userId: Types.ObjectId;
+  totalAmount: number;
+  card: {
+    stripeCustomerId: string;
+    stripePaymentMethodId: string;
+  };
+  driverPct: number;
+}) => {
+  if (payment.stripePaymentIntentId) {
+    await stripe?.paymentIntents
+      .cancel(payment.stripePaymentIntentId)
+      .catch(() => undefined);
+  }
+
+  const replacementIntent = await createStripePaymentIntent(
+    orderId,
+    userId,
+    totalAmount,
+    card,
+    driverPct,
+  );
+
+  return PaymentModel.findOneAndUpdate(
+    { _id: payment._id },
+    {
+      $set: {
+        amount: totalAmount,
+        stripePaymentIntentId: replacementIntent.id,
+        status: 'requires_confirmation',
+      },
+      $unset: {
+        stripeChargeId: 1,
+        capturedAt: 1,
+      },
+    },
+    { returnDocument: 'after' },
+  );
 };
 
 // 1. createPaymentIntentForMyOrderIntoDB
@@ -302,31 +373,14 @@ const capturePaymentForMyOrderIntoDB = async (
   }
 
   if (Math.round(payment.amount * 100) !== Math.round(totalAmount * 100)) {
-    await stripe.paymentIntents
-      .cancel(payment.stripePaymentIntentId)
-      .catch(() => undefined);
-    const replacementIntent = await createStripePaymentIntent(
-      String(order._id),
+    payment = await replacePaymentIntentForPayment({
+      payment,
+      orderId: String(order._id),
       userId,
       totalAmount,
       card,
       driverPct,
-    );
-    payment = await PaymentModel.findOneAndUpdate(
-      { _id: payment._id },
-      {
-        $set: {
-          amount: totalAmount,
-          stripePaymentIntentId: replacementIntent.id,
-          status: 'requires_confirmation',
-        },
-        $unset: {
-          stripeChargeId: 1,
-          capturedAt: 1,
-        },
-      },
-      { returnDocument: 'after' },
-    );
+    });
   }
 
   if (!payment || !payment.stripePaymentIntentId) {
@@ -336,9 +390,33 @@ const capturePaymentForMyOrderIntoDB = async (
     );
   }
 
-  const intent = await stripe.paymentIntents.confirm(
-    payment.stripePaymentIntentId,
-  );
+  let intent: TStripePaymentIntent;
+
+  try {
+    intent = await stripe.paymentIntents.confirm(payment.stripePaymentIntentId);
+  } catch (error) {
+    if (!isReturnUrlRequiredError(error)) {
+      throw error;
+    }
+
+    payment = await replacePaymentIntentForPayment({
+      payment,
+      orderId: String(order._id),
+      userId,
+      totalAmount,
+      card,
+      driverPct,
+    });
+
+    if (!payment || !payment.stripePaymentIntentId) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        'Payment intent is missing for this order',
+      );
+    }
+
+    intent = await stripe.paymentIntents.confirm(payment.stripePaymentIntentId);
+  }
 
   if (intent.status !== 'succeeded') {
     const updated = await PaymentModel.findOneAndUpdate(

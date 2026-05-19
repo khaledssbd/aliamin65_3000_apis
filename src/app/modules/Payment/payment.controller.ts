@@ -1,6 +1,8 @@
 import httpStatus from 'http-status';
 import { asyncHandler, sendResponse } from '../../utils';
 import { PaymentService } from './payment.service';
+import { getIO } from '../../socket';
+import OrderModel from '../Order/order.model';
 
 // 1. createPaymentIntentForMyOrder
 const createPaymentIntentForMyOrder = asyncHandler(async (req, res) => {
@@ -35,6 +37,35 @@ const capturePaymentForMyOrder = asyncHandler(async (req, res) => {
     req.body.orderId,
     Number.isFinite(tipAmount as number) ? tipAmount : undefined,
   );
+
+  if (doc && doc.status === 'succeeded') {
+    const order = await OrderModel.findById(doc.order).select(
+      'customer driver status',
+    );
+    const ordersNs = getIO()?.of('/orders');
+    const payload = {
+      orderId: String(doc.order),
+      paymentId: String(doc._id),
+      status: doc.status,
+      orderStatus: order?.status,
+    };
+
+    ordersNs?.to(`customer:${String(doc.customer)}`).emit(
+      'order:payment:confirmed',
+      payload,
+    );
+
+    if (order?.driver) {
+      ordersNs
+        ?.to(`driver:${String(order.driver)}`)
+        .emit('order:payment:confirmed', payload);
+    }
+
+    ordersNs?.to(`order:${String(doc.order)}`).emit(
+      'order:payment:confirmed',
+      payload,
+    );
+  }
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
