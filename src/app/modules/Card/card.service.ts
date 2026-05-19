@@ -92,16 +92,58 @@ const setDefaultCardIntoDB = async (userId: Types.ObjectId, id: string) => {
     { $set: { isDefault: true } },
     { returnDocument: 'after' },
   );
+
+  if (!doc) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Card not found');
+  }
+
   await CardModel.updateMany(
     { user: userId, _id: { $ne: id } },
     { $set: { isDefault: false } },
   );
+
+  if (stripe) {
+    await stripe.customers.update(doc.stripeCustomerId, {
+      invoice_settings: {
+        default_payment_method: doc.stripePaymentMethodId,
+      },
+    });
+  }
+
   return doc;
 };
 
 // 4. deleteCardFromDB
 const deleteCardFromDB = async (userId: Types.ObjectId, id: string) => {
-  return CardModel.findOneAndDelete({ _id: id, user: userId });
+  const doc = await CardModel.findOneAndDelete({ _id: id, user: userId });
+
+  if (!doc) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Card not found');
+  }
+
+  if (stripe) {
+    await stripe.paymentMethods
+      .detach(doc.stripePaymentMethodId)
+      .catch(() => undefined);
+  }
+
+  if (doc.isDefault) {
+    const nextDefault = await CardModel.findOneAndUpdate(
+      { user: userId },
+      { $set: { isDefault: true } },
+      { sort: { createdAt: -1 }, returnDocument: 'after' },
+    );
+
+    if (stripe && nextDefault) {
+      await stripe.customers.update(nextDefault.stripeCustomerId, {
+        invoice_settings: {
+          default_payment_method: nextDefault.stripePaymentMethodId,
+        },
+      });
+    }
+  }
+
+  return doc;
 };
 
 export const CardService = {
