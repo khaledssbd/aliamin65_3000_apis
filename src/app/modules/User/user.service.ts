@@ -28,7 +28,7 @@ import BackgroundCheckModel from '../BackgroundCheck/backgroundCheck.model';
 import {
   deleteImageFromCloudinary,
   sendImageToCloudinary,
-} from '../../lib/upload';
+} from '../../lib';
 import { ClientSession, PipelineStage, startSession } from 'mongoose';
 import { TBackgroundProvider } from '../BackgroundCheck/backgroundCheck.interface';
 

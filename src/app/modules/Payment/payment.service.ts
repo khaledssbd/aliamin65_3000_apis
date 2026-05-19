@@ -104,6 +104,10 @@ const createStripePaymentIntent = async (
     currency: 'usd',
     customer: card.stripeCustomerId,
     payment_method: card.stripePaymentMethodId,
+    automatic_payment_methods: {
+      enabled: true,
+      allow_redirects: 'never',
+    },
     confirm: false,
     metadata: {
       orderId,
