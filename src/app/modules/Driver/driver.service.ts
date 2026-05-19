@@ -66,6 +66,17 @@ const getStripeAccountSummary = async (accountId?: string) => {
   };
 };
 
+const getStripeConnectRedirectUrl = (value?: string) => {
+  if (!value) return undefined;
+
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' ? value : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 const createStripeConnectAccountLinkIntoDB = async (
   userId: Types.ObjectId,
   payload?: { returnUrl?: string; refreshUrl?: string },
@@ -111,12 +122,12 @@ const createStripeConnectAccountLinkIntoDB = async (
   }
 
   const returnUrl =
-    payload?.returnUrl ||
-    config.stripe_connect_return_url ||
+    getStripeConnectRedirectUrl(payload?.returnUrl) ||
+    getStripeConnectRedirectUrl(config.stripe_connect_return_url) ||
     'https://example.com/stripe-connect/return';
   const refreshUrl =
-    payload?.refreshUrl ||
-    config.stripe_connect_refresh_url ||
+    getStripeConnectRedirectUrl(payload?.refreshUrl) ||
+    getStripeConnectRedirectUrl(config.stripe_connect_refresh_url) ||
     returnUrl;
 
   const accountLink = await stripe.accountLinks.create({
