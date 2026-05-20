@@ -271,15 +271,39 @@ const cancelJobByDriverIntoDB = async (
   const driver = await DriverModel.findOne({ user: userId });
   if (!driver) return null;
 
+  const currentOrder = await OrderModel.findOne({
+    _id: orderId,
+    driver: userId,
+  }).select('status');
+
+  if (!currentOrder) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Driver job not found!');
+  }
+
+  if (currentOrder.status !== ORDER_STATUS.DRIVER_ASSIGNED) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'This order cannot be canceled after pickup.',
+    );
+  }
+
   const doc = await OrderModel.findOneAndUpdate(
     // Order.driver references User, not Driver
     { _id: orderId, driver: userId },
     {
-      $set: { driver: null, status: ORDER_STATUS.REQUESTED },
-      $push: { 'timeline.canceledAt': new Date() },
+      $set: {
+        status: ORDER_STATUS.CANCELED,
+        canceledBy: userId,
+        canceledByRole: 'DRIVER',
+        cancelReason: reason?.trim() || undefined,
+        'timeline.canceledAt': new Date(),
+      },
     },
     { returnDocument: 'after' },
-  );
+  )
+    .populate('customer', 'name email phone image address')
+    .populate('driver', 'name email phone image role isActive');
+
   return { order: doc, reason };
 };
 

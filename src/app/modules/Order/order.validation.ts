@@ -57,6 +57,16 @@ const updateOrderStageSchema = z.object({
   }),
 });
 
+// 7. cancelOrderSchema
+const cancelOrderSchema = z.object({
+  params: z.object({ id: z.string() }),
+  body: z
+    .object({
+      reason: z.string().trim().max(500).optional(),
+    })
+    .optional(),
+});
+
 export const OrderValidation = {
   createOrderSchema,
   assignDriverToOrderSchema,
@@ -64,4 +74,5 @@ export const OrderValidation = {
   setBagCountSchema,
   setOrderReadyTimeSchema,
   updateOrderStageSchema,
+  cancelOrderSchema,
 };

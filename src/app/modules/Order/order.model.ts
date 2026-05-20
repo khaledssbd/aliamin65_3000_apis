@@ -43,6 +43,9 @@ const orderSchema = new Schema<IOrder>(
     total: { type: Number, required: true },
     bagCountAtPickup: { type: Number },
     bagCountAtDelivery: { type: Number },
+    canceledBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    canceledByRole: { type: String },
+    cancelReason: { type: String, trim: true },
     timeline: {
       requestedAt: { type: Date },
       driverAssignedAt: { type: Date },

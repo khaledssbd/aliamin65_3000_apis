@@ -206,6 +206,52 @@ const updateBagCount = asyncHandler(async (req, res) => {
   });
 });
 
+// 7. cancelOrderBeforePickup
+const cancelOrderBeforePickup = asyncHandler(async (req, res) => {
+  const result = await OrderService.cancelOrderBeforePickupIntoDB(
+    String(req.params.id),
+    req.user,
+    req.body?.reason,
+  );
+
+  const ordersNs = getIO()?.of('/orders');
+  const customerId = String(
+    (result?.customer as { _id?: unknown })?._id ?? result?.customer,
+  );
+  const driverId = result?.driver
+    ? String((result.driver as { _id?: unknown })?._id ?? result.driver)
+    : undefined;
+
+  ordersNs?.to(`customer:${customerId}`).emit('order:canceled', {
+    orderId: req.params.id,
+    status: result?.status,
+    canceledBy: String(req.user._id),
+    canceledByRole: req.user.role,
+  });
+
+  if (driverId) {
+    ordersNs?.to(`driver:${driverId}`).emit('order:canceled', {
+      orderId: req.params.id,
+      status: result?.status,
+      canceledBy: String(req.user._id),
+      canceledByRole: req.user.role,
+    });
+  }
+
+  ordersNs?.to(`order:${req.params.id}`).emit('order:canceled', {
+    orderId: req.params.id,
+    status: result?.status,
+    canceledBy: String(req.user._id),
+    canceledByRole: req.user.role,
+  });
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Order canceled successfully!',
+    data: result,
+  });
+});
+
 export const OrderController = {
   createOrder,
   getMyOrders,
@@ -214,4 +260,5 @@ export const OrderController = {
   updateOrderStatus,
   updateBagCount,
   completeDeliveryAndCapturePayment,
+  cancelOrderBeforePickup,
 };

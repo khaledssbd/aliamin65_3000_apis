@@ -39,6 +39,9 @@ export interface IOrder extends Document {
     completedAt?: Date;
     canceledAt?: Date;
   };
+  canceledBy?: Types.ObjectId;
+  canceledByRole?: string;
+  cancelReason?: string;
   createdAt: Date;
   updatedAt: Date;
 }

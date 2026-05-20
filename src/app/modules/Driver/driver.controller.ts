@@ -183,9 +183,37 @@ const cancelJobByDriver = asyncHandler(async (req, res) => {
     req.body?.reason,
   );
 
+  const ordersNs = getIO()?.of('/orders');
+  const order = result?.order;
+
+  if (order) {
+    const customerId = String(
+      (order.customer as { _id?: unknown })?._id ?? order.customer,
+    );
+
+    ordersNs?.to(`customer:${customerId}`).emit('order:canceled', {
+      orderId: req.params.orderId,
+      status: order.status,
+      canceledBy: String(req.user._id),
+      canceledByRole: req.user.role,
+    });
+    ordersNs?.to(`driver:${String(req.user._id)}`).emit('order:canceled', {
+      orderId: req.params.orderId,
+      status: order.status,
+      canceledBy: String(req.user._id),
+      canceledByRole: req.user.role,
+    });
+    ordersNs?.to(`order:${req.params.orderId}`).emit('order:canceled', {
+      orderId: req.params.orderId,
+      status: order.status,
+      canceledBy: String(req.user._id),
+      canceledByRole: req.user.role,
+    });
+  }
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Job canceled successfully!',
+    message: 'Order canceled successfully!',
     data: result,
   });
 });

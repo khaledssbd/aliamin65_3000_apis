@@ -3,7 +3,14 @@ import PricingModel from '../Pricing/pricing.model';
 import { ORDER_STATUS } from '../../constants';
 import { Types } from 'mongoose';
 import { IUser } from '../User/user.interface';
-import { TPickupType, TServiceType } from './order.interface';
+import { TOrderStatus, TPickupType, TServiceType } from './order.interface';
+import { AppError } from '../../utils';
+import httpStatus from 'http-status';
+
+const CANCELLABLE_BEFORE_PICKUP_STATUSES: TOrderStatus[] = [
+  ORDER_STATUS.REQUESTED,
+  ORDER_STATUS.DRIVER_ASSIGNED,
+];
 
 // 0. computeTotal
 // const computeTotal = async (bags: number, tip = 0) => {
@@ -159,6 +166,59 @@ const updateBagCountIntoDB = async (
   );
 };
 
+// 7. cancelOrderBeforePickupIntoDB
+const cancelOrderBeforePickupIntoDB = async (
+  orderId: string,
+  user: IUser,
+  reason?: string,
+) => {
+  if (!Types.ObjectId.isValid(orderId)) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid order id');
+  }
+
+  const order = await OrderModel.findById(orderId).select(
+    'customer driver status',
+  );
+
+  if (!order) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Order not found!');
+  }
+
+  const userId = String(user._id);
+  const isCustomer = String(order.customer) === userId;
+  const isAssignedDriver = order.driver && String(order.driver) === userId;
+
+  if (!isCustomer && !isAssignedDriver) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      'You are not allowed to cancel this order.',
+    );
+  }
+
+  if (!CANCELLABLE_BEFORE_PICKUP_STATUSES.includes(order.status)) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'This order cannot be canceled after pickup.',
+    );
+  }
+
+  return OrderModel.findByIdAndUpdate(
+    orderId,
+    {
+      $set: {
+        status: ORDER_STATUS.CANCELED,
+        canceledBy: user._id,
+        canceledByRole: user.role,
+        cancelReason: reason?.trim() || undefined,
+        'timeline.canceledAt': new Date(),
+      },
+    },
+    { returnDocument: 'after' },
+  )
+    .populate('customer', 'name email phone image address')
+    .populate('driver', 'name email phone image role isActive');
+};
+
 export const OrderService = {
   computeTotal,
   createOrderIntoDB,
@@ -167,4 +227,5 @@ export const OrderService = {
   assignDriverToOrderIntoDB,
   updateOrderStatusIntoDB,
   updateBagCountIntoDB,
+  cancelOrderBeforePickupIntoDB,
 };

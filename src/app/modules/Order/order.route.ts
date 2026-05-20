@@ -24,7 +24,15 @@ router.get(
   OrderController.getOrderById,
 );
 
-// 4. assignDriverToOrder
+// 4. cancelOrderBeforePickup
+router.post(
+  '/:id/cancel',
+  auth(ROLE.CUSTOMER, ROLE.DRIVER),
+  validateRequest(OrderValidation.cancelOrderSchema),
+  OrderController.cancelOrderBeforePickup,
+);
+
+// 5. assignDriverToOrder
 router.patch(
   '/:id/assign-driver',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
@@ -32,7 +40,7 @@ router.patch(
   OrderController.assignDriverToOrder,
 );
 
-// 5. updateOrderStatus
+// 6. updateOrderStatus
 router.patch(
   '/:id/status',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
@@ -40,7 +48,7 @@ router.patch(
   OrderController.updateOrderStatus,
 );
 
-// 6. setPickupBagCount
+// 7. setPickupBagCount
 router.patch(
   '/:id/bag-count/pickup',
   auth(ROLE.DRIVER),
@@ -48,7 +56,7 @@ router.patch(
   OrderController.updateBagCount,
 );
 
-// 7. setDeliveryBagCount
+// 8. setDeliveryBagCount
 router.patch(
   '/:id/bag-count/delivery',
   auth(ROLE.DRIVER),
@@ -56,7 +64,7 @@ router.patch(
   OrderController.updateBagCount,
 );
 
-// 8. setOrderReadyTime
+// 9. setOrderReadyTime
 router.post(
   '/:id/ready-time',
   auth(ROLE.DRIVER),
@@ -64,7 +72,7 @@ router.post(
   OrderController.updateOrderStatus,
 );
 
-// 9. completeDeliveryAndCapturePayment
+// 10. completeDeliveryAndCapturePayment
 router.post(
   '/:id/stage/delivery/complete',
   auth(ROLE.CUSTOMER, ROLE.DRIVER, ROLE.ADMIN, ROLE.SUPER_ADMIN),
