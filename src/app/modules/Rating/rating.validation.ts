@@ -5,7 +5,7 @@ export const RatingValidation = {
     body: z.object({
       orderId: z.string(),
       driverId: z.string(),
-      rating: z.number().min(1).max(5),
+      rating: z.coerce.number().min(1).max(5),
       feedback: z.string().optional(),
     }),
   }),
