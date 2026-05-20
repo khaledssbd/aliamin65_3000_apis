@@ -4,6 +4,18 @@ import { IRating } from './rating.interface';
 
 // 1. createRatingIntoDB
 const createRatingIntoDB = async (payload: Partial<IRating>) => {
+  const existingRating = await RatingModel.findOne({
+    order: payload.order,
+    customer: payload.customer,
+  });
+
+  if (existingRating) {
+    existingRating.rating = payload.rating ?? existingRating.rating;
+    existingRating.feedback = payload.feedback ?? existingRating.feedback;
+    const updatedDoc = await existingRating.save();
+    return updatedDoc;
+  }
+
   const result = await RatingModel.create(payload);
   return result;
 };
