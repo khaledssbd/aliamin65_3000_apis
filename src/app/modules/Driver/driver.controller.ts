@@ -145,9 +145,9 @@ const acceptJobByDriver = asyncHandler(async (req, res) => {
     }).select('user');
 
     availableDrivers
-      .map((d) => String(d.user))
-      .filter((id) => id !== String(req.user._id))
-      .forEach((id) => {
+      .map(d => String(d.user))
+      .filter(id => id !== String(req.user._id))
+      .forEach(id => {
         ordersNs?.to(`driver:${id}`).emit('order:hidden', {
           orderId: req.params.orderId,
         });

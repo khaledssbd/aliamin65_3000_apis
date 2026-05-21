@@ -123,7 +123,8 @@ const createStripeConnectAccountLinkIntoDB = async (
 
   const returnUrl =
     getStripeConnectRedirectUrl(payload?.returnUrl) ||
-    getStripeConnectRedirectUrl(config.stripe_connect_return_url);
+    getStripeConnectRedirectUrl(config.stripe_connect_return_url) ||
+    'https://example.com/stripe-connect/return';
 
   const refreshUrl =
     getStripeConnectRedirectUrl(payload?.refreshUrl) ||
