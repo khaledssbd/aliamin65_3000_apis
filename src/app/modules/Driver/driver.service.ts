@@ -288,20 +288,27 @@ const cancelJobByDriverIntoDB = async (
   if (currentOrder.status !== ORDER_STATUS.DRIVER_ASSIGNED) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      'This order cannot be canceled after pickup.',
+      'This order can only be canceled after assignment and before pickup.',
     );
   }
 
+  const releasedDriverId = String(userId);
   const doc = await OrderModel.findOneAndUpdate(
     // Order.driver references User, not Driver
     { _id: orderId, driver: userId },
     {
       $set: {
-        status: ORDER_STATUS.CANCELED,
+        status: ORDER_STATUS.REQUESTED,
         canceledBy: userId,
         canceledByRole: 'DRIVER',
         cancelReason: reason?.trim() || undefined,
         'timeline.canceledAt': new Date(),
+      },
+      $unset: {
+        driver: 1,
+        'timeline.driverAssignedAt': 1,
+        bagCountAtPickup: 1,
+        bagCountAtDelivery: 1,
       },
     },
     { returnDocument: 'after' },
@@ -309,7 +316,7 @@ const cancelJobByDriverIntoDB = async (
     .populate('customer', 'name email phone image address')
     .populate('driver', 'name email phone image role isActive');
 
-  return { order: doc, reason };
+  return { order: doc, releasedDriverId, reason };
 };
 
 const updateJobStageByDriverIntoDB = async (

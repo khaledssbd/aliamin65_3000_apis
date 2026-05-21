@@ -10,7 +10,6 @@ import DriverModel from '../Driver/driver.model';
 import RatingModel from '../Rating/rating.model';
 
 const CANCELLABLE_BEFORE_PICKUP_STATUSES: TOrderStatus[] = [
-  ORDER_STATUS.REQUESTED,
   ORDER_STATUS.DRIVER_ASSIGNED,
 ];
 
@@ -152,8 +151,8 @@ const getOrderByIdFromDB = async (id: string, userId?: Types.ObjectId) => {
       : 'Vehicle info unavailable';
   const hasInsurance = Boolean(
     driverProfile?.insurance?.provider ||
-      driverProfile?.insurance?.policyNumber ||
-      driverProfile?.insurance?.documentImageUrl,
+    driverProfile?.insurance?.policyNumber ||
+    driverProfile?.insurance?.documentImageUrl,
   );
   const ratingSummary = ratingAgg[0] ?? {
     _id: driverUserId,
@@ -268,25 +267,34 @@ const cancelOrderBeforePickupIntoDB = async (
   if (!CANCELLABLE_BEFORE_PICKUP_STATUSES.includes(order.status)) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      'This order cannot be canceled after pickup.',
+      'This order can only be canceled after driver assignment and before pickup.',
     );
   }
 
-  return OrderModel.findByIdAndUpdate(
+  const releasedDriverId = order.driver ? String(order.driver) : undefined;
+  const updatedOrder = await OrderModel.findByIdAndUpdate(
     orderId,
     {
       $set: {
-        status: ORDER_STATUS.CANCELED,
+        status: ORDER_STATUS.REQUESTED,
         canceledBy: user._id,
         canceledByRole: user.role,
         cancelReason: reason?.trim() || undefined,
         'timeline.canceledAt': new Date(),
+      },
+      $unset: {
+        driver: 1,
+        'timeline.driverAssignedAt': 1,
+        bagCountAtPickup: 1,
+        bagCountAtDelivery: 1,
       },
     },
     { returnDocument: 'after' },
   )
     .populate('customer', 'name email phone image address')
     .populate('driver', 'name email phone image role isActive');
+
+  return { order: updatedOrder, releasedDriverId, reason };
 };
 
 export const OrderService = {

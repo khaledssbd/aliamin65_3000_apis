@@ -6,6 +6,47 @@ import DriverModel from '../Driver/driver.model';
 import UserModel from '../User/user.model';
 import { ORDER_STATUS } from '../../constants';
 
+const emitOrderToAvailableDrivers = async (
+  order: {
+    _id?: unknown;
+    address?: string;
+    serviceType?: string;
+    pickupLocation?: unknown;
+    pickupType?: string;
+    scheduledPickupAt?: Date;
+    bags?: number;
+    expectedRadiusKm?: number;
+    total?: number;
+    status?: string;
+    createdAt?: Date;
+  },
+) => {
+  const ordersNs = getIO()?.of('/orders');
+  const availableDrivers = await DriverModel.find({ isAvailable: true }).select(
+    'user',
+  );
+
+  availableDrivers
+    .map((driver) => String(driver.user))
+    .forEach((driverUserId) => {
+      ordersNs?.to(`driver:${driverUserId}`).emit('driver:job:new', {
+        order: {
+          orderId: order._id,
+          address: order.address,
+          serviceType: order.serviceType,
+          pickupLocation: order.pickupLocation,
+          pickupType: order.pickupType,
+          scheduledPickupAt: order.scheduledPickupAt,
+          bags: order.bags,
+          expectedRadiusKm: order.expectedRadiusKm,
+          total: order.total,
+          status: order.status,
+          createdAt: order.createdAt,
+        },
+      });
+    });
+};
+
 // 1. createOrder
 const createOrder = asyncHandler(async (req, res) => {
   const result = await OrderService.createOrderIntoDB(req.user, req.body);
@@ -213,42 +254,45 @@ const cancelOrderBeforePickup = asyncHandler(async (req, res) => {
     req.user,
     req.body?.reason,
   );
+  const order = result.order;
 
   const ordersNs = getIO()?.of('/orders');
   const customerId = String(
-    (result?.customer as { _id?: unknown })?._id ?? result?.customer,
+    (order?.customer as { _id?: unknown })?._id ?? order?.customer,
   );
-  const driverId = result?.driver
-    ? String((result.driver as { _id?: unknown })?._id ?? result.driver)
-    : undefined;
+  const releasedDriverId = result.releasedDriverId;
 
-  ordersNs?.to(`customer:${customerId}`).emit('order:canceled', {
+  ordersNs?.to(`customer:${customerId}`).emit('order:assignment:released', {
     orderId: req.params.id,
-    status: result?.status,
+    status: order?.status,
     canceledBy: String(req.user._id),
     canceledByRole: req.user.role,
   });
 
-  if (driverId) {
-    ordersNs?.to(`driver:${driverId}`).emit('order:canceled', {
+  if (releasedDriverId) {
+    ordersNs?.to(`driver:${releasedDriverId}`).emit('order:assignment:released', {
       orderId: req.params.id,
-      status: result?.status,
+      status: order?.status,
       canceledBy: String(req.user._id),
       canceledByRole: req.user.role,
     });
   }
 
-  ordersNs?.to(`order:${req.params.id}`).emit('order:canceled', {
+  ordersNs?.to(`order:${req.params.id}`).emit('order:assignment:released', {
     orderId: req.params.id,
-    status: result?.status,
+    status: order?.status,
     canceledBy: String(req.user._id),
     canceledByRole: req.user.role,
   });
 
+  if (order) {
+    await emitOrderToAvailableDrivers(order);
+  }
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: 'Order canceled successfully!',
-    data: result,
+    message: 'Order assignment canceled and sent back to drivers!',
+    data: order,
   });
 });
 
