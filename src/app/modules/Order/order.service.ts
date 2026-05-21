@@ -6,6 +6,8 @@ import { IUser } from '../User/user.interface';
 import { TOrderStatus, TPickupType, TServiceType } from './order.interface';
 import { AppError } from '../../utils';
 import httpStatus from 'http-status';
+import DriverModel from '../Driver/driver.model';
+import RatingModel from '../Rating/rating.model';
 
 const CANCELLABLE_BEFORE_PICKUP_STATUSES: TOrderStatus[] = [
   ORDER_STATUS.REQUESTED,
@@ -104,9 +106,77 @@ const getOrderByIdFromDB = async (id: string, userId?: Types.ObjectId) => {
   const filter: Record<string, unknown> = { _id: id };
 
   if (userId) filter.$or = [{ customer: userId }, { driver: userId }];
-  return OrderModel.findOne(filter)
+  const order = await OrderModel.findOne(filter)
     .populate('customer', 'name email phone image address')
-    .populate('driver', 'name email phone image role isActive');
+    .populate('driver', 'name email phone image role isActive')
+    .lean();
+
+  if (!order) return null;
+
+  const driverUser =
+    order.driver && typeof order.driver === 'object'
+      ? (order.driver as { _id?: Types.ObjectId })
+      : undefined;
+  const driverUserId = driverUser?._id ?? order.driver;
+
+  if (!driverUserId) return order;
+
+  const [driverProfile, ratingAgg, trips] = await Promise.all([
+    DriverModel.findOne({ user: driverUserId })
+      .select(
+        'user stripeConnectedAccountId licenseImageUrl selfieImageUrl identity isAvailable insurance vehicle backgroundCheckStatus reputationTier capacityLimit status createdAt updatedAt',
+      )
+      .lean(),
+    RatingModel.aggregate([
+      { $match: { driver: new Types.ObjectId(String(driverUserId)) } },
+      {
+        $group: {
+          _id: '$driver',
+          count: { $sum: 1 },
+          avg: { $avg: '$rating' },
+        },
+      },
+    ]),
+    OrderModel.countDocuments({
+      driver: driverUserId,
+      status: ORDER_STATUS.COMPLETED,
+    }),
+  ]);
+
+  const vehicle = driverProfile?.vehicle;
+  const vehicleText =
+    vehicle && (vehicle.make || vehicle.model || vehicle.year || vehicle.plate)
+      ? [vehicle.year, vehicle.make, vehicle.model, vehicle.plate]
+          .filter(Boolean)
+          .join(' ')
+      : 'Vehicle info unavailable';
+  const hasInsurance = Boolean(
+    driverProfile?.insurance?.provider ||
+      driverProfile?.insurance?.policyNumber ||
+      driverProfile?.insurance?.documentImageUrl,
+  );
+  const ratingSummary = ratingAgg[0] ?? {
+    _id: driverUserId,
+    count: 0,
+    avg: 0,
+  };
+
+  return {
+    ...order,
+    driverProfile,
+    driverRatingSummary: ratingSummary,
+    driverRating: Number(ratingSummary.avg ?? 0),
+    driverRatingCount: Number(ratingSummary.count ?? 0),
+    driverTrips: trips,
+    driverVehicleText: vehicleText,
+    driverSafety: {
+      verifiedDriver: driverProfile?.backgroundCheckStatus === 'APPROVED',
+      insuredVehicle: hasInsurance,
+      topRated:
+        Number(ratingSummary.count ?? 0) > 0 &&
+        Number(ratingSummary.avg ?? 0) >= 4.5,
+    },
+  };
 };
 
 // 4. assignDriverToOrderIntoDB
