@@ -32,6 +32,13 @@ type TStripePaymentIntent = {
   metadata?: Record<string, string>;
 };
 
+type TDriverTransferDetails = {
+  driverAccountId: string;
+  driverPct: number;
+  driverAmount: number;
+  platformAmount: number;
+};
+
 const getValidatedTipAmount = (tipAmount?: number) => {
   if (tipAmount === undefined || tipAmount === null) return 0;
   if (!Number.isFinite(tipAmount) || tipAmount < 0) {
@@ -57,6 +64,49 @@ const getOrderDriverEarningPercentage = (order: {
   const percentage = Number(order.driverEarningPercentage);
 
   return Number.isFinite(percentage) && percentage > 0 ? percentage : 70;
+};
+
+const getPaymentSplitAmounts = (amount: number, driverPct: number) => {
+  const amountDriver = Math.round(((amount * driverPct) / 100) * 100) / 100;
+  const amountPlatform = Math.round((amount - amountDriver) * 100) / 100;
+
+  return { amountDriver, amountPlatform };
+};
+
+const getDriverTransferDetailsForOrder = async (order: {
+  driver?: Types.ObjectId;
+  driverEarningPercentage?: number;
+}, amount: number): Promise<TDriverTransferDetails> => {
+  if (!order.driver) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'Driver is required before payment can be collected.',
+    );
+  }
+
+  const driverProfile = await DriverModel.findOne({ user: order.driver }).select(
+    'stripeConnectedAccountId',
+  );
+
+  if (!driverProfile?.stripeConnectedAccountId) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'Driver Stripe account is not connected.',
+    );
+  }
+
+  const driverPct = getOrderDriverEarningPercentage(order);
+  const { amountDriver, amountPlatform } = getPaymentSplitAmounts(
+    amount,
+    driverPct,
+  );
+
+  return {
+    driverAccountId: driverProfile.stripeConnectedAccountId,
+    driverPct,
+    driverAmount: amountDriver,
+    platformAmount: amountPlatform,
+  };
 };
 
 const getOrderForCustomerPayment = async (
@@ -101,7 +151,7 @@ const createStripePaymentIntent = async (
     stripeCustomerId: string;
     stripePaymentMethodId: string;
   },
-  driverPct: number,
+  transferDetails: TDriverTransferDetails,
 ) => {
   if (!stripe) {
     throw new AppError(
@@ -115,6 +165,10 @@ const createStripePaymentIntent = async (
     currency: 'usd',
     customer: card.stripeCustomerId,
     payment_method: card.stripePaymentMethodId,
+    application_fee_amount: Math.round(transferDetails.platformAmount * 100),
+    transfer_data: {
+      destination: transferDetails.driverAccountId,
+    },
     automatic_payment_methods: {
       enabled: true,
       allow_redirects: 'never',
@@ -123,7 +177,10 @@ const createStripePaymentIntent = async (
     metadata: {
       orderId,
       customerId: String(userId),
-      driverEarningPercentage: String(driverPct),
+      driverEarningPercentage: String(transferDetails.driverPct),
+      driverAmount: String(transferDetails.driverAmount),
+      platformAmount: String(transferDetails.platformAmount),
+      driverStripeAccountId: transferDetails.driverAccountId,
     },
   });
 };
@@ -183,14 +240,26 @@ const finalizeSucceededPayment = async (
         ? stripePaymentIntent.metadata.driverEarningPercentage
         : undefined,
     ) || getOrderDriverEarningPercentage(order);
+  const metadataDriverAmount = Number(stripePaymentIntent.metadata?.driverAmount);
+  const metadataPlatformAmount = Number(
+    stripePaymentIntent.metadata?.platformAmount,
+  );
+  const wasTransferredToDriver = Boolean(
+    stripePaymentIntent.metadata?.driverStripeAccountId,
+  );
   const driverProfile = order.driver
     ? await DriverModel.findOne({ user: order.driver })
     : null;
 
   if (driverProfile) {
     const amountGross = updated.amount;
-    const amountDriver = (amountGross * driverPct) / 100;
-    const amountPlatform = amountGross - amountDriver;
+    const split = getPaymentSplitAmounts(amountGross, driverPct);
+    const amountDriver = Number.isFinite(metadataDriverAmount)
+      ? metadataDriverAmount
+      : split.amountDriver;
+    const amountPlatform = Number.isFinite(metadataPlatformAmount)
+      ? metadataPlatformAmount
+      : split.amountPlatform;
 
     await EarningModel.findOneAndUpdate(
       { order: order._id },
@@ -201,7 +270,8 @@ const finalizeSucceededPayment = async (
           amountGross,
           amountDriver,
           amountPlatform,
-          payoutStatus: 'PENDING',
+          payoutStatus: wasTransferredToDriver ? 'PAID' : 'PENDING',
+          ...(wasTransferredToDriver ? { payoutAt: new Date() } : {}),
         },
       },
       { upsert: true, returnDocument: 'after' },
@@ -219,7 +289,7 @@ const replacePaymentIntentForPayment = async ({
   userId,
   totalAmount,
   card,
-  driverPct,
+  transferDetails,
 }: {
   payment: NonNullable<Awaited<ReturnType<typeof PaymentModel.findOne>>>;
   orderId: string;
@@ -229,7 +299,7 @@ const replacePaymentIntentForPayment = async ({
     stripeCustomerId: string;
     stripePaymentMethodId: string;
   };
-  driverPct: number;
+  transferDetails: TDriverTransferDetails;
 }) => {
   if (payment.stripePaymentIntentId) {
     await stripe?.paymentIntents
@@ -242,7 +312,7 @@ const replacePaymentIntentForPayment = async ({
     userId,
     totalAmount,
     card,
-    driverPct,
+    transferDetails,
   );
 
   return PaymentModel.findOneAndUpdate(
@@ -276,10 +346,13 @@ const createPaymentIntentForMyOrderIntoDB = async (
   }
 
   const order = await getOrderForCustomerPayment(userId, orderId);
-  const driverPct = getOrderDriverEarningPercentage(order);
   const totalAmount =
     getEffectiveBagCount(order) * Number(order.pricePerBag ?? 0) +
     getValidatedTipAmount(tipAmount);
+  const transferDetails = await getDriverTransferDetailsForOrder(
+    order,
+    totalAmount,
+  );
 
   const card = await getPreferredCardForPayment(userId);
 
@@ -295,7 +368,7 @@ const createPaymentIntentForMyOrderIntoDB = async (
     userId,
     totalAmount,
     card,
-    driverPct,
+    transferDetails,
   );
 
   const doc = await PaymentModel.findOneAndUpdate(
@@ -336,6 +409,10 @@ const capturePaymentForMyOrderIntoDB = async (
   const totalAmount =
     getEffectiveBagCount(order) * Number(order.pricePerBag ?? 0) +
     getValidatedTipAmount(tipAmount);
+  const transferDetails = await getDriverTransferDetailsForOrder(
+    order,
+    totalAmount,
+  );
 
   let payment = await PaymentModel.findOne({
     order: orderId,
@@ -355,7 +432,6 @@ const capturePaymentForMyOrderIntoDB = async (
     return payment;
   }
 
-  const driverPct = getOrderDriverEarningPercentage(order);
   const card = await getPreferredCardForPayment(userId);
 
   if (!card || !card.stripeCustomerId || !card.stripePaymentMethodId) {
@@ -379,7 +455,36 @@ const capturePaymentForMyOrderIntoDB = async (
       userId,
       totalAmount,
       card,
-      driverPct,
+      transferDetails,
+    });
+  }
+
+  if (!payment || !payment.stripePaymentIntentId) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'Payment intent is missing for this order',
+    );
+  }
+
+  const existingIntent = await stripe.paymentIntents.retrieve(
+    payment.stripePaymentIntentId,
+  );
+
+  if (
+    existingIntent.metadata?.driverStripeAccountId !==
+      transferDetails.driverAccountId ||
+    Number(existingIntent.metadata?.driverAmount) !==
+      transferDetails.driverAmount ||
+    Number(existingIntent.metadata?.platformAmount) !==
+      transferDetails.platformAmount
+  ) {
+    payment = await replacePaymentIntentForPayment({
+      payment,
+      orderId: String(order._id),
+      userId,
+      totalAmount,
+      card,
+      transferDetails,
     });
   }
 
@@ -405,7 +510,7 @@ const capturePaymentForMyOrderIntoDB = async (
       userId,
       totalAmount,
       card,
-      driverPct,
+      transferDetails,
     });
 
     if (!payment || !payment.stripePaymentIntentId) {
