@@ -7,6 +7,7 @@ import { AppError } from '../../utils';
 import httpStatus from 'http-status';
 import Stripe from 'stripe';
 import config from '../../config';
+import RatingModel from '../Rating/rating.model';
 
 const stripe = config.stripe_secret_key
   ? new Stripe(config.stripe_secret_key, {
@@ -227,10 +228,24 @@ const getAvailableJobsForDriverFromDB = async (userId: Types.ObjectId) => {
 
 // getMyJobsForDriverFromDB
 const getMyJobsForDriverFromDB = async (userId: Types.ObjectId) => {
-  return OrderModel.find({ driver: userId })
+  const orders = await OrderModel.find({ driver: userId })
     .sort({ createdAt: -1 })
     .populate('customer', 'name email phone image address')
-    .limit(100);
+    .limit(100)
+    .lean();
+
+  const ratings = await RatingModel.find({
+    driver: userId,
+    order: { $in: orders.map((order) => order._id) },
+  }).lean();
+  const ratingByOrder = new Map(
+    ratings.map((rating) => [String(rating.order), rating]),
+  );
+
+  return orders.map((order) => ({
+    ...order,
+    customerRating: ratingByOrder.get(String(order._id)) ?? null,
+  }));
 };
 
 // 5. acceptJobByDriverIntoDB
