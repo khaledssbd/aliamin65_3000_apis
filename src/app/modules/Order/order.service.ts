@@ -135,7 +135,7 @@ const getOrderByIdFromDB = async (id: string, userId?: Types.ObjectId) => {
 
   if (!driverUserId) return order;
 
-  const [driverProfile, ratingAgg, trips] = await Promise.all([
+  const [driverProfile, ratingAgg, trips, customerRating] = await Promise.all([
     DriverModel.findOne({ user: driverUserId })
       .select(
         'user stripeConnectedAccountId licenseImageUrl selfieImageUrl identity isAvailable insurance vehicle backgroundCheckStatus reputationTier capacityLimit status createdAt updatedAt',
@@ -155,6 +155,13 @@ const getOrderByIdFromDB = async (id: string, userId?: Types.ObjectId) => {
       driver: driverUserId,
       status: ORDER_STATUS.COMPLETED,
     }),
+    RatingModel.findOne({
+      order: id,
+      driver: driverUserId,
+      customer: order.customer && typeof order.customer === 'object'
+        ? (order.customer as { _id?: Types.ObjectId })?._id
+        : order.customer,
+    }).lean(),
   ]);
 
   const vehicle = driverProfile?.vehicle;
@@ -182,6 +189,7 @@ const getOrderByIdFromDB = async (id: string, userId?: Types.ObjectId) => {
     driverRating: Number(ratingSummary.avg ?? 0),
     driverRatingCount: Number(ratingSummary.count ?? 0),
     driverTrips: trips,
+    customerRating,
     driverVehicleText: vehicleText,
     driverSafety: {
       verifiedDriver: driverProfile?.backgroundCheckStatus === 'APPROVED',
