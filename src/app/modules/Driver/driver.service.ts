@@ -123,8 +123,8 @@ const createStripeConnectAccountLinkIntoDB = async (
 
   const returnUrl =
     getStripeConnectRedirectUrl(payload?.returnUrl) ||
-    getStripeConnectRedirectUrl(config.stripe_connect_return_url) ||
-    'https://example.com/stripe-connect/return';
+    getStripeConnectRedirectUrl(config.stripe_connect_return_url);
+
   const refreshUrl =
     getStripeConnectRedirectUrl(payload?.refreshUrl) ||
     getStripeConnectRedirectUrl(config.stripe_connect_refresh_url) ||
@@ -229,7 +229,10 @@ const acceptJobByDriverIntoDB = async (
   });
 
   if (activeJobsCount >= Number(driver.capacityLimit ?? 3)) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'Driver capacity limit reached!');
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'Driver capacity limit reached!',
+    );
   }
 
   const doc = await OrderModel.findOneAndUpdate(
