@@ -63,7 +63,7 @@ router.get(
 
 // getPaymentHistories
 router.get(
-  '/payment-history/admin',
+  '/payment-history',
   auth(ROLE.ADMIN, ROLE.SUPER_ADMIN),
   AdminController.getPaymentHistories,
 );
