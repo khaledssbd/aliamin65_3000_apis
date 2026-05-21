@@ -73,10 +73,13 @@ const getPaymentSplitAmounts = (amount: number, driverPct: number) => {
   return { amountDriver, amountPlatform };
 };
 
-const getDriverTransferDetailsForOrder = async (order: {
-  driver?: Types.ObjectId;
-  driverEarningPercentage?: number;
-}, amount: number): Promise<TDriverTransferDetails> => {
+const getDriverTransferDetailsForOrder = async (
+  order: {
+    driver?: Types.ObjectId;
+    driverEarningPercentage?: number;
+  },
+  amount: number,
+): Promise<TDriverTransferDetails> => {
   if (!order.driver) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
@@ -84,9 +87,9 @@ const getDriverTransferDetailsForOrder = async (order: {
     );
   }
 
-  const driverProfile = await DriverModel.findOne({ user: order.driver }).select(
-    'stripeConnectedAccountId',
-  );
+  const driverProfile = await DriverModel.findOne({
+    user: order.driver,
+  }).select('stripeConnectedAccountId');
 
   if (!driverProfile?.stripeConnectedAccountId) {
     throw new AppError(
@@ -240,7 +243,9 @@ const finalizeSucceededPayment = async (
         ? stripePaymentIntent.metadata.driverEarningPercentage
         : undefined,
     ) || getOrderDriverEarningPercentage(order);
-  const metadataDriverAmount = Number(stripePaymentIntent.metadata?.driverAmount);
+  const metadataDriverAmount = Number(
+    stripePaymentIntent.metadata?.driverAmount,
+  );
   const metadataPlatformAmount = Number(
     stripePaymentIntent.metadata?.platformAmount,
   );
@@ -592,11 +597,14 @@ const handleStripeWebhookIntoDB = async (
     const message =
       error instanceof Error ? error.message : 'Invalid Stripe webhook';
 
-    throw new AppError(httpStatus.BAD_REQUEST, `Stripe webhook error: ${message}`);
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      `Stripe webhook error: ${message}`,
+    );
   }
 
   if (event.type === 'payment_intent.succeeded') {
-    const intent = event.data.object as unknown as TStripePaymentIntent;
+    const intent = event.data.object as TStripePaymentIntent;
     const payment = await PaymentModel.findOne({
       stripePaymentIntentId: intent.id,
     });
@@ -612,7 +620,7 @@ const handleStripeWebhookIntoDB = async (
     event.type === 'payment_intent.processing' ||
     event.type === 'payment_intent.requires_action'
   ) {
-    const intent = event.data.object as unknown as TStripePaymentIntent;
+    const intent = event.data.object as TStripePaymentIntent;
     await PaymentModel.findOneAndUpdate(
       { stripePaymentIntentId: intent.id },
       { $set: { status: intent.status } },
