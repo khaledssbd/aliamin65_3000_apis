@@ -32,7 +32,22 @@ const getDriverRatings = asyncHandler(async (req, res) => {
   });
 });
 
+// 3. getMyOrderRating
+const getMyOrderRating = asyncHandler(async (req, res) => {
+  const result = await RatingService.getMyOrderRatingFromDB(
+    String(req.params.orderId),
+    String(req.user._id),
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: 'Order rating fetched successfully!',
+    data: result,
+  });
+});
+
 export const RatingController = {
   createRating,
   getDriverRatings,
+  getMyOrderRating,
 };

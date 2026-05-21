@@ -71,7 +71,19 @@ const getStripeConnectRedirectUrl = (value?: string) => {
 
   try {
     const url = new URL(value);
-    return url.protocol === 'https:' ? value : undefined;
+    const protocol = url.protocol.replace(':', '');
+    const isLocalHttp =
+      protocol === 'http' &&
+      (url.hostname === 'localhost' ||
+        url.hostname === '127.0.0.1' ||
+        url.hostname.startsWith('10.') ||
+        url.hostname.startsWith('192.168.'));
+
+    if (protocol === 'https' || isLocalHttp) {
+      return value;
+    }
+
+    return undefined;
   } catch {
     return undefined;
   }
@@ -121,14 +133,26 @@ const createStripeConnectAccountLinkIntoDB = async (
     await driver.save();
   }
 
+  const payloadReturnUrl = getStripeConnectRedirectUrl(payload?.returnUrl);
+  const payloadRefreshUrl = getStripeConnectRedirectUrl(payload?.refreshUrl);
+
+  console.log({ payload, payloadReturnUrl, payloadRefreshUrl });
+
+  if (payload?.returnUrl && !payloadReturnUrl) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid Stripe return URL');
+  }
+
+  if (payload?.refreshUrl && !payloadRefreshUrl) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid Stripe refresh URL');
+  }
+
   const returnUrl =
-    getStripeConnectRedirectUrl(payload?.returnUrl) ||
+    payloadReturnUrl ||
     getStripeConnectRedirectUrl(config.stripe_connect_return_url) ||
     'https://khaled-siddique.vercel.app';
-  // 'https://example.com/stripe-connect/return';
 
   const refreshUrl =
-    getStripeConnectRedirectUrl(payload?.refreshUrl) ||
+    payloadRefreshUrl ||
     getStripeConnectRedirectUrl(config.stripe_connect_refresh_url) ||
     returnUrl;
 

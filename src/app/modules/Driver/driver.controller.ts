@@ -1,8 +1,40 @@
 import httpStatus from 'http-status';
+import { Request } from 'express';
 import { asyncHandler, sendResponse } from '../../utils';
 import { DriverService } from './driver.service';
 import { getIO } from '../../socket';
 import DriverModel from './driver.model';
+
+const isAppDeepLink = (value?: string) => {
+  if (!value) return false;
+
+  try {
+    const protocol = new URL(value).protocol;
+    return protocol === 'sudsygo:' || protocol === 'exp:';
+  } catch {
+    return false;
+  }
+};
+
+const getBackendBaseUrl = (req: Request) => {
+  const forwardedProto = req.headers['x-forwarded-proto'];
+  const protocol =
+    typeof forwardedProto === 'string'
+      ? forwardedProto.split(',')[0]
+      : req.protocol;
+  return `${protocol}://${req.get('host')}`;
+};
+
+const toStripeConnectBridgeUrl = (req: Request, value?: string) => {
+  if (!isAppDeepLink(value)) return value;
+
+  const url = new URL(
+    '/api/v1/drivers/stripe/connect-return',
+    getBackendBaseUrl(req),
+  );
+  url.searchParams.set('appReturnUrl', value as string);
+  return url.toString();
+};
 
 const emitOrderToAvailableDrivers = async (
   order: {
@@ -99,11 +131,24 @@ const getMyDriverProfile = asyncHandler(async (req, res) => {
 });
 
 const createStripeConnectAccountLink = asyncHandler(async (req, res) => {
+  const returnUrl =
+    typeof req.body?.returnUrl === 'string'
+      ? req.body.returnUrl
+      : typeof req.query?.returnUrl === 'string'
+        ? req.query.returnUrl
+        : undefined;
+  const refreshUrl =
+    typeof req.body?.refreshUrl === 'string'
+      ? req.body.refreshUrl
+      : typeof req.query?.refreshUrl === 'string'
+        ? req.query.refreshUrl
+        : undefined;
+
   const result = await DriverService.createStripeConnectAccountLinkIntoDB(
     req.user._id,
     {
-      returnUrl: req.body?.returnUrl,
-      refreshUrl: req.body?.refreshUrl,
+      returnUrl: toStripeConnectBridgeUrl(req, returnUrl),
+      refreshUrl: toStripeConnectBridgeUrl(req, refreshUrl),
     },
   );
 
@@ -112,6 +157,36 @@ const createStripeConnectAccountLink = asyncHandler(async (req, res) => {
     message: 'Stripe onboarding link created successfully!',
     data: result,
   });
+});
+
+const stripeConnectReturn = asyncHandler(async (req, res) => {
+  const appReturnUrl =
+    typeof req.query?.appReturnUrl === 'string'
+      ? req.query.appReturnUrl
+      : undefined;
+
+  if (!appReturnUrl) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .send('Missing app return URL. Please return to the SudsyGo app.');
+    return;
+  }
+
+  res.status(httpStatus.OK).type('html').send(`<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Returning to SudsyGo</title>
+  </head>
+  <body style="font-family:Arial,sans-serif;text-align:center;padding:48px 20px;">
+    <h2>Returning to SudsyGo...</h2>
+    <p>If the app does not open automatically, please return to the SudsyGo app.</p>
+    <script>
+      window.location.replace(${JSON.stringify(appReturnUrl)});
+    </script>
+  </body>
+</html>`);
 });
 
 const getStripeConnectStatus = asyncHandler(async (req, res) => {
@@ -309,6 +384,7 @@ export const DriverController = {
   updateDriverVehicle,
   getMyDriverProfile,
   createStripeConnectAccountLink,
+  stripeConnectReturn,
   getStripeConnectStatus,
   updateDriverAvailability,
   getAvailableJobsForDriver,

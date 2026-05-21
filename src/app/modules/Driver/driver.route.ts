@@ -39,6 +39,8 @@ router.post(
   DriverController.createStripeConnectAccountLink,
 );
 
+router.get('/stripe/connect-return', DriverController.stripeConnectReturn);
+
 router.get(
   '/stripe/connect-status',
   auth(ROLE.DRIVER),
@@ -60,11 +62,7 @@ router.get(
   DriverController.getAvailableJobsForDriver,
 );
 
-router.get(
-  '/jobs/my',
-  auth(ROLE.DRIVER),
-  DriverController.getMyJobsForDriver,
-);
+router.get('/jobs/my', auth(ROLE.DRIVER), DriverController.getMyJobsForDriver);
 
 // 7. acceptJobByDriver
 router.post(

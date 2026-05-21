@@ -94,10 +94,25 @@ const createOrderIntoDB = async (
 
 // 2. getMyOrdersFromDB
 const getMyOrdersFromDB = async (customerId: Types.ObjectId) => {
-  return OrderModel.find({ customer: customerId })
+  const orders = await OrderModel.find({ customer: customerId })
     .sort({ createdAt: -1 })
     .populate('customer', 'name email phone image address')
-    .populate('driver', 'name email phone image role isActive');
+    .populate('driver', 'name email phone image role isActive')
+    .lean();
+
+  const orderIds = orders.map((order) => order._id);
+  const ratings = await RatingModel.find({
+    customer: customerId,
+    order: { $in: orderIds },
+  }).lean();
+  const ratingByOrder = new Map(
+    ratings.map((rating) => [String(rating.order), rating]),
+  );
+
+  return orders.map((order) => ({
+    ...order,
+    myRating: ratingByOrder.get(String(order._id)) ?? null,
+  }));
 };
 
 // 3. getOrderByIdFromDB

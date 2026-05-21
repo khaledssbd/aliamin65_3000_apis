@@ -12,6 +12,14 @@ router.get(
   InvoiceController.getInvoiceByOrderId,
 );
 
+router.get(
+  '/order/:orderId/download-link',
+  auth(ROLE.CUSTOMER, ROLE.DRIVER, ROLE.ADMIN, ROLE.SUPER_ADMIN),
+  InvoiceController.createInvoiceDownloadLink,
+);
+
+router.get('/download/:token', InvoiceController.downloadInvoice);
+
 // 2. getInvoiceByNumber
 router.get(
   '/:invoiceNumber',

@@ -20,7 +20,7 @@ Per-bag laundry request lifecycle. Status flow: `REQUESTED → DRIVER_ASSIGNED �
 - POST `/:id/stage/drying` – [Driver] Mark Drying in progress.
 - POST `/:id/stage/folding` – [Driver] Mark Folding & Packaging.
 - POST `/:id/stage/delivery/start` – [Driver] Start delivery leg → status `OUT_FOR_DELIVERY`.
-- POST `/:id/stage/delivery/complete` – [Driver] Complete delivery → status `DELIVERED` and triggers Payment capture + Ratings prompt.
+- POST `/:id/stage/delivery/complete` – [Driver] Confirm delivery → status `DELIVERED` and triggers Payment capture + Ratings prompt.
 - GET `/:id/timeline` – Order timeline.
 
 ## Socket Events

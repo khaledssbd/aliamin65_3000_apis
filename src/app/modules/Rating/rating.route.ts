@@ -17,4 +17,11 @@ router.post(
 // 2. getDriverRatings
 router.get('/driver/:driverId', RatingController.getDriverRatings);
 
+// 3. getMyOrderRating
+router.get(
+  '/order/:orderId/me',
+  auth(ROLE.CUSTOMER),
+  RatingController.getMyOrderRating,
+);
+
 export const RatingRoutes = router;

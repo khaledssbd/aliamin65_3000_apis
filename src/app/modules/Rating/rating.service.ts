@@ -44,7 +44,16 @@ const getDriverRatingsFromDB = async (driverId: string) => {
   };
 };
 
+// 3. getMyOrderRatingFromDB
+const getMyOrderRatingFromDB = async (orderId: string, customerId: string) => {
+  return RatingModel.findOne({
+    order: orderId,
+    customer: customerId,
+  });
+};
+
 export const RatingService = {
   createRatingIntoDB,
   getDriverRatingsFromDB,
+  getMyOrderRatingFromDB,
 };
