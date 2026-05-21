@@ -580,11 +580,20 @@ const handleStripeWebhookIntoDB = async (
     throw new AppError(httpStatus.BAD_REQUEST, 'Missing Stripe signature');
   }
 
-  const event = stripe.webhooks.constructEvent(
-    payload,
-    signature,
-    config.stripe_webhook_secret,
-  );
+  let event: ReturnType<typeof stripe.webhooks.constructEvent>;
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      payload,
+      signature,
+      config.stripe_webhook_secret,
+    );
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Invalid Stripe webhook';
+
+    throw new AppError(httpStatus.BAD_REQUEST, `Stripe webhook error: ${message}`);
+  }
 
   if (event.type === 'payment_intent.succeeded') {
     const intent = event.data.object as unknown as TStripePaymentIntent;
