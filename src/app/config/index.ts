@@ -26,8 +26,8 @@ export default {
   otp_expiry_minutes: process.env.OTP_EXPIRY_MINUTES,
   stripe_secret_key: process.env.STRIPE_SECRET_KEY,
   stripe_webhook_secret: process.env.STRIPE_WEBHOOK_SECRET,
-  stripe_connect_return_url: process.env.STRIPE_CONNECT_RETURN_URL,
-  stripe_connect_refresh_url: process.env.STRIPE_CONNECT_REFRESH_URL,
+  // stripe_connect_return_url: process.env.STRIPE_CONNECT_RETURN_URL,
+  // stripe_connect_refresh_url: process.env.STRIPE_CONNECT_REFRESH_URL,
 
   jwt: {
     access_secret: process.env.JWT_ACCESS_SECRET,

@@ -137,8 +137,6 @@ const createStripeConnectAccountLinkIntoDB = async (
   const payloadReturnUrl = getStripeConnectRedirectUrl(payload?.returnUrl);
   const payloadRefreshUrl = getStripeConnectRedirectUrl(payload?.refreshUrl);
 
-  console.log({ payload, payloadReturnUrl, payloadRefreshUrl });
-
   if (payload?.returnUrl && !payloadReturnUrl) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Invalid Stripe return URL');
   }
@@ -147,15 +145,19 @@ const createStripeConnectAccountLinkIntoDB = async (
     throw new AppError(httpStatus.BAD_REQUEST, 'Invalid Stripe refresh URL');
   }
 
-  const returnUrl =
-    payloadReturnUrl ||
-    getStripeConnectRedirectUrl(config.stripe_connect_return_url) ||
-    'https://khaled-siddique.vercel.app';
+  // const returnUrl =
+  //   payloadReturnUrl ||
+  //   getStripeConnectRedirectUrl(config.stripe_connect_return_url) ||
+  //   'https://khaled-siddique.vercel.app';
 
-  const refreshUrl =
-    payloadRefreshUrl ||
-    getStripeConnectRedirectUrl(config.stripe_connect_refresh_url) ||
-    returnUrl;
+  // const refreshUrl =
+  //   payloadRefreshUrl ||
+  //   getStripeConnectRedirectUrl(config.stripe_connect_refresh_url) ||
+  //   returnUrl;
+
+  const returnUrl = payloadReturnUrl;
+
+  const refreshUrl = payloadRefreshUrl || returnUrl;
 
   const accountLink = await stripe.accountLinks.create({
     account: accountId,
@@ -236,13 +238,13 @@ const getMyJobsForDriverFromDB = async (userId: Types.ObjectId) => {
 
   const ratings = await RatingModel.find({
     driver: userId,
-    order: { $in: orders.map((order) => order._id) },
+    order: { $in: orders.map(order => order._id) },
   }).lean();
   const ratingByOrder = new Map(
-    ratings.map((rating) => [String(rating.order), rating]),
+    ratings.map(rating => [String(rating.order), rating]),
   );
 
-  return orders.map((order) => ({
+  return orders.map(order => ({
     ...order,
     customerRating: ratingByOrder.get(String(order._id)) ?? null,
   }));
