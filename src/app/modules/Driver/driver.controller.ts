@@ -358,17 +358,15 @@ const updateJobStageByDriver = asyncHandler(async (req, res) => {
     const customerId = String(
       (result.customer as { _id?: unknown })?._id ?? result.customer,
     );
+    const payload = {
+      orderId: req.params.orderId,
+      status: result.status,
+      stage: req.body.stage,
+      order: result,
+    };
 
-    ordersNs?.to(`customer:${customerId}`).emit('order:stage:updated', {
-      orderId: req.params.orderId,
-      status: result.status,
-      stage: req.body.stage,
-    });
-    ordersNs?.to(`order:${req.params.orderId}`).emit('order:stage:updated', {
-      orderId: req.params.orderId,
-      status: result.status,
-      stage: req.body.stage,
-    });
+    ordersNs?.to(`customer:${customerId}`).emit('order:stage:updated', payload);
+    ordersNs?.to(`order:${req.params.orderId}`).emit('order:stage:updated', payload);
   }
 
   sendResponse(res, {

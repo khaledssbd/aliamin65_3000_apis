@@ -203,6 +203,27 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     req.body.status,
   );
 
+  if (result) {
+    const ordersNs = getIO()?.of('/orders');
+    const payload = {
+      orderId: req.params.id,
+      status: result.status,
+      order: result,
+    };
+    const customerId = String(
+      (result.customer as { _id?: unknown })?._id ?? result.customer,
+    );
+    const driverId = result.driver
+      ? String((result.driver as { _id?: unknown })?._id ?? result.driver)
+      : undefined;
+
+    ordersNs?.to(`customer:${customerId}`).emit('order:stage:updated', payload);
+    if (driverId) {
+      ordersNs?.to(`driver:${driverId}`).emit('order:stage:updated', payload);
+    }
+    ordersNs?.to(`order:${req.params.id}`).emit('order:stage:updated', payload);
+  }
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: 'Order status updated successfully!',
