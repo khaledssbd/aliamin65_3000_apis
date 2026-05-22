@@ -2,7 +2,7 @@ import httpStatus from 'http-status';
 import { AppError, asyncHandler } from '../../utils';
 import { UserService } from './user.service';
 import { sendResponse } from '../../utils';
-import { OTP_EXPIRY_MINUTES } from './user.constant';
+import { otpExpiryMinutes } from './user.constant';
 
 // 1. createUser
 const createUser = asyncHandler(async (req, res) => {
@@ -22,7 +22,7 @@ const sendSignupOtpAgain = asyncHandler(async (req, res) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: `OTP sent again successfully, verify in ${OTP_EXPIRY_MINUTES} minutes!`,
+    message: `OTP sent again successfully, verify in ${otpExpiryMinutes} minutes!`,
     data: result,
   });
 });

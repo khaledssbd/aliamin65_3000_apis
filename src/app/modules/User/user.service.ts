@@ -13,7 +13,7 @@ import { IUser } from './user.interface';
 import UserModel from './user.model';
 import {
   defaultUserImage,
-  OTP_EXPIRY_MINUTES,
+  otpExpiryMinutes,
   ROLE,
   TDeactiveAccountPayload,
   TUpdateUserPayload,
@@ -25,10 +25,7 @@ import BackgroundCheckModel from '../BackgroundCheck/backgroundCheck.model';
 // import { startVerificationWithVERIFF } from '../BackgroundCheck/backgroundCheck.util';
 // import BookModel from '../Book/book.model';
 // import { OrderModel } from '../Order/order.model';
-import {
-  deleteImageFromCloudinary,
-  sendImageToCloudinary,
-} from '../../lib';
+import { deleteImageFromCloudinary, sendImageToCloudinary } from '../../lib';
 import { ClientSession, PipelineStage, startSession } from 'mongoose';
 import { TBackgroundProvider } from '../BackgroundCheck/backgroundCheck.interface';
 
@@ -56,7 +53,7 @@ const createUserIntoDB = async (payload: IUser) => {
 
       existingUser.otp = otp;
       existingUser.otpExpiry = new Date(
-        now.getTime() + OTP_EXPIRY_MINUTES * 60 * 1000,
+        now.getTime() + otpExpiryMinutes * 60 * 1000,
       );
       await existingUser.save();
 
@@ -90,7 +87,7 @@ const createUserIntoDB = async (payload: IUser) => {
     const newUser = await UserModel.create({
       ...payload,
       otp,
-      otpExpiry: new Date(now.getTime() + OTP_EXPIRY_MINUTES * 60 * 1000),
+      otpExpiry: new Date(now.getTime() + otpExpiryMinutes * 60 * 1000),
       isVerifiedByOTP: false,
     });
 
@@ -124,7 +121,7 @@ const sendSignupOtpAgainIntoDB = async (userEmail: string) => {
     await sendOtpEmail({ email: user?.email, otp, name: user?.name });
 
     user.otp = otp;
-    user.otpExpiry = new Date(now.getTime() + OTP_EXPIRY_MINUTES * 60 * 1000);
+    user.otpExpiry = new Date(now.getTime() + otpExpiryMinutes * 60 * 1000);
     await user.save();
 
     return {
@@ -392,7 +389,7 @@ const createDriverProfileIntoDB = async (
     // Delete uploaded images from cloudinary
     if (uploadedUrls.length > 0) {
       await Promise.all(
-        uploadedUrls.map((url) => deleteImageFromCloudinary(url)),
+        uploadedUrls.map(url => deleteImageFromCloudinary(url)),
       );
     }
     throw error;
@@ -426,7 +423,7 @@ const signinIntoDB = async (payload: { email: string; password: string }) => {
       await sendOtpEmail({ email: user?.email, otp, name: user?.name });
 
       user.otp = otp;
-      user.otpExpiry = new Date(now.getTime() + OTP_EXPIRY_MINUTES * 60 * 1000);
+      user.otpExpiry = new Date(now.getTime() + otpExpiryMinutes * 60 * 1000);
       await user.save();
 
       throw new AppError(
@@ -651,7 +648,7 @@ const forgotPasswordIntoDB = async (email: string) => {
   } else {
     // Generate new OTP
     const otp = generateOtp();
-    const otpExpiry = new Date(now.getTime() + OTP_EXPIRY_MINUTES * 60 * 1000);
+    const otpExpiry = new Date(now.getTime() + otpExpiryMinutes * 60 * 1000);
 
     user.otp = otp;
     user.otpExpiry = otpExpiry;
@@ -709,7 +706,7 @@ const sendForgotPasswordOtpAgainIntoDB = async (forgotPassToken: string) => {
   } else {
     // Generate new OTP
     const otp = generateOtp();
-    const otpExpiry = new Date(now.getTime() + OTP_EXPIRY_MINUTES * 60 * 1000);
+    const otpExpiry = new Date(now.getTime() + otpExpiryMinutes * 60 * 1000);
 
     user.otp = otp;
     user.otpExpiry = otpExpiry;
@@ -748,7 +745,7 @@ const verifyOtpForForgotPasswordIntoDB = async (payload: {
   if (!user.otp || !user.otpExpiry || Date.now() > user.otpExpiry.getTime()) {
     // Generate and send new OTP
     const newOtp = generateOtp();
-    const newExpiry = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
+    const newExpiry = new Date(Date.now() + otpExpiryMinutes * 60 * 1000);
 
     user.otp = newOtp;
     user.otpExpiry = newExpiry;
