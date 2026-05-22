@@ -168,7 +168,7 @@ const stripeConnectReturn = asyncHandler(async (req, res) => {
   if (!appReturnUrl) {
     res
       .status(httpStatus.BAD_REQUEST)
-      .send('Missing app return URL. Please return to the SudsyGo app.');
+      .send('Missing app return URL. Please return to the sudsygo app.');
     return;
   }
 
@@ -177,11 +177,11 @@ const stripeConnectReturn = asyncHandler(async (req, res) => {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Returning to SudsyGo</title>
+    <title>Returning to sudsygo</title>
   </head>
   <body style="font-family:Arial,sans-serif;text-align:center;padding:48px 20px;">
-    <h2>Returning to SudsyGo...</h2>
-    <p>If the app does not open automatically, please return to the SudsyGo app.</p>
+    <h2>Returning to sudsygo...</h2>
+    <p>If the app does not open automatically, please return to the sudsygo app.</p>
     <script>
       window.location.replace(${JSON.stringify(appReturnUrl)});
     </script>

@@ -57,7 +57,7 @@ const renderInvoiceHtml = (invoice: any) => {
     <main class="page">
       <section class="top">
         <div>
-          <h1>SudsyGo Invoice</h1>
+          <h1>sudsygo Invoice</h1>
           <p class="muted">Invoice #${escapeHtml(invoice.invoiceNumber)}</p>
           <p class="muted">Generated ${escapeHtml(generatedAt)}</p>
         </div>
