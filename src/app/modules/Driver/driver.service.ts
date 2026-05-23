@@ -369,7 +369,7 @@ const updateJobStageByDriverIntoDB = async (
   const currentOrder = await OrderModel.findOne({
     _id: orderId,
     driver: userId,
-  }).select('status');
+  }).select('status pricePerBag');
 
   if (!currentOrder) {
     throw new AppError(httpStatus.NOT_FOUND, 'Driver job not found!');
@@ -392,7 +392,9 @@ const updateJobStageByDriverIntoDB = async (
     patch.status = ORDER_STATUS.PICKED_UP;
     patch['timeline.pickedUpAt'] = now;
     if (typeof bagCount === 'number' && Number.isFinite(bagCount)) {
-      patch.bagCountAtPickup = Math.max(0, bagCount);
+      const effectiveBagCount = Math.max(0, bagCount);
+      patch.bagCountAtPickup = effectiveBagCount;
+      patch.total = effectiveBagCount * Number(currentOrder.pricePerBag ?? 0);
     }
   }
 
