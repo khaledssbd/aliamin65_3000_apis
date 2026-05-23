@@ -153,5 +153,4 @@ package-lock.json
 bun.lock
 yarn.lock
 .vscode
-branch_structure.json
 *.pem
